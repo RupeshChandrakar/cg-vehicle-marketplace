@@ -24,7 +24,9 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "predb:seed": "tsc -p tsconfig.seed.json",
+    "db:seed": "node dist-seed/prisma/seed.js"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -34,6 +36,8 @@
     "@nestjs/terminus": "^11.1.1",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "7.10.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
     "joi": "^18.2.5",
     "pg": "^8.23.0",
     "reflect-metadata": "^0.2.2",

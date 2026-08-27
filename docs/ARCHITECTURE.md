@@ -136,6 +136,18 @@ npm's `latest` tag for `prisma`/`@prisma/client` currently points at an `8.0.0-r
 candidate. Both packages are pinned to the last stable line, `7.10.0`, matched exactly — never
 install an RC for this project without a deliberate decision to do so.
 
+The generated client's own source uses `.js`-suffixed relative imports (valid under our
+`nodenext` TypeScript config, resolved to the sibling `.ts` file at compile time). Two tools
+don't replicate that resolution at runtime:
+
+- **Jest** — fixed with a `moduleNameMapper` entry in `apps/api/package.json` that strips the
+  trailing `.js` so its resolver finds the `.ts` file.
+- **`ts-node` running a standalone script** (e.g. the seed script) — `ts-node` only intercepts
+  requires for files literally ending in `.ts`, so a `.js`-suffixed require aimed at a `.ts` file
+  fails with `MODULE_NOT_FOUND` before ts-node ever sees it. Rather than patching Node's module
+  resolution, `db:seed` builds first and runs the compiled output (`node dist/prisma/seed.js`) —
+  the same pattern `start:prod` already uses, just extended to the seed script.
+
 ## Development phases
 
 | Phase                        | Goal                                                                                                                                 |

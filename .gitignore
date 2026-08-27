@@ -5,6 +5,7 @@ node_modules/
 # build output
 .next/
 dist/
+dist-seed/
 build/
 out/
 
@@ -18,7 +19,7 @@ out/
 
 # prisma
 apps/api/prisma/dev.db
-apps/api/generated/
+apps/api/src/generated/
 
 # logs
 *.log

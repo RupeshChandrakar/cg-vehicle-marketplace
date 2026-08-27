@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
@@ -9,6 +9,16 @@ async function bootstrap(): Promise<void> {
 
   // Customer web and admin web run on separate origins in development.
   app.enableCors();
+
+  // Never trust client-side validation alone: strip unknown fields and
+  // reject requests that don't match a DTO's shape.
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
   const port = config.get<number>('PORT', 4000);
   await app.listen(port);
