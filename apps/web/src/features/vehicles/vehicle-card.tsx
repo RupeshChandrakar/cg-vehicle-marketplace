@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ShieldCheck, MapPin } from 'lucide-react';
 import type { Vehicle } from '@/types/vehicle';
 import { formatFuelType, formatKm, formatPrice, formatTransmission } from '@/lib/format';
 
@@ -25,7 +26,8 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-medium text-foreground">{vehicle.title}</h3>
           {vehicle.verification && (
-            <span className="shrink-0 border border-primary px-1.5 py-0.5 text-xs text-primary">
+            <span className="flex shrink-0 items-center gap-1 border border-primary px-1.5 py-0.5 text-xs text-primary">
+              <ShieldCheck className="h-3 w-3" />
               Verified
             </span>
           )}
@@ -39,7 +41,10 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
         </p>
 
         <div className="flex items-center justify-between pt-1 text-sm text-muted">
-          <span>{vehicle.location.district}</span>
+          <span className="flex items-center gap-1">
+            <MapPin className="h-3.5 w-3.5" />
+            {vehicle.location.district}
+          </span>
           <span>ID: {vehicle.publicId}</span>
         </div>
       </div>

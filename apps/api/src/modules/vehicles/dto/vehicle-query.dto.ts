@@ -1,11 +1,24 @@
 import { Type } from 'class-transformer';
-import { IsIn, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import {
+  IsIn,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+  MinLength,
+} from 'class-validator';
 import { PaginationQueryDto } from '../../../common/dto/pagination-query.dto';
 
 const SORT_OPTIONS = ['newest', 'price_asc', 'price_desc'] as const;
 export type VehicleSortOption = (typeof SORT_OPTIONS)[number];
 
 export class VehicleQueryDto extends PaginationQueryDto {
+  /** Matched against title/brand/model — plain Postgres ILIKE, no search index yet. */
+  @IsOptional()
+  @IsString()
+  @MinLength(2)
+  q?: string;
+
   @IsOptional()
   @IsString()
   categorySlug?: string;

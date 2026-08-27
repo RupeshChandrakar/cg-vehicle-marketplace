@@ -10,6 +10,7 @@ import type {
 } from '@/types/vehicle';
 
 export interface VehicleFilters {
+  q?: string;
   categorySlug?: string;
   locationSlug?: string;
   page?: number;
@@ -74,6 +75,7 @@ export function detectLocation(
 
 export function getVehicles(filters: VehicleFilters): Promise<PaginatedResult<Vehicle>> {
   const params = new URLSearchParams();
+  if (filters.q) params.set('q', filters.q);
   if (filters.categorySlug) params.set('categorySlug', filters.categorySlug);
   if (filters.locationSlug) params.set('locationSlug', filters.locationSlug);
   if (filters.page) params.set('page', String(filters.page));
@@ -93,6 +95,12 @@ export async function getVehicleByPublicId(publicId: number): Promise<Vehicle | 
   }
 }
 
+export interface CreateVehicleSpecsPayload {
+  registrationNumber?: string;
+  areaText?: string;
+  preferredContact?: 'call' | 'chat' | 'both';
+}
+
 export interface CreateVehiclePayload {
   categorySlug: string;
   locationSlug: string;
@@ -105,6 +113,7 @@ export interface CreateVehiclePayload {
   fuelType: FuelType;
   transmission: Transmission;
   description?: string;
+  specs?: CreateVehicleSpecsPayload;
   sellerName: string;
   sellerPhone: string;
 }

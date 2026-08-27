@@ -3,19 +3,20 @@ import {
   IsIn,
   IsInt,
   IsNumber,
-  IsObject,
   IsOptional,
   IsString,
   Matches,
   Max,
   Min,
   MinLength,
+  ValidateNested,
 } from 'class-validator';
 import {
   FuelType,
   Transmission,
   VehicleCondition,
 } from '../../../generated/prisma/client';
+import { VehicleSpecsDto } from './vehicle-specs.dto';
 
 const OLDEST_ACCEPTED_YEAR = 1980;
 const INDIAN_MOBILE_PATTERN = /^\+91[6-9]\d{9}$/;
@@ -67,10 +68,10 @@ export class CreateVehicleDto {
   @IsString()
   description?: string;
 
-  /** Category-specific extras (e.g. tractor horsepower) that don't warrant their own column yet. */
   @IsOptional()
-  @IsObject()
-  specs?: Record<string, unknown>;
+  @ValidateNested()
+  @Type(() => VehicleSpecsDto)
+  specs?: VehicleSpecsDto;
 
   @IsString()
   sellerName!: string;

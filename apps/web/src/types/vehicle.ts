@@ -34,6 +34,17 @@ export interface VehicleVerification {
   notes: string | null;
 }
 
+/** Public-safe subset — the API strips registrationNumber before this ever reaches the browser. */
+export interface VehicleSpecs {
+  rcAvailable?: boolean;
+  insuranceValidUntil?: string;
+  noChallan?: boolean;
+  nonAccident?: boolean;
+  ownerCount?: number;
+  areaText?: string;
+  preferredContact?: 'call' | 'chat' | 'both';
+}
+
 export interface Vehicle {
   id: string;
   publicId: number;
@@ -49,6 +60,7 @@ export interface Vehicle {
   transmission: Transmission;
   condition: VehicleCondition;
   description: string | null;
+  specs: VehicleSpecs;
   category: Category;
   location: Location;
   media: VehicleMedia[];

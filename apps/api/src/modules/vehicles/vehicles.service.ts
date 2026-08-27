@@ -113,6 +113,13 @@ export class VehiclesService {
       category: query.categorySlug ? { slug: query.categorySlug } : undefined,
       location: query.locationSlug ? { slug: query.locationSlug } : undefined,
       price: { gte: query.minPrice, lte: query.maxPrice },
+      OR: query.q
+        ? [
+            { title: { contains: query.q, mode: 'insensitive' } },
+            { brand: { contains: query.q, mode: 'insensitive' } },
+            { model: { contains: query.q, mode: 'insensitive' } },
+          ]
+        : undefined,
     };
 
     const orderBy: Prisma.VehicleOrderByWithRelationInput =
@@ -263,11 +270,26 @@ export class VehiclesService {
   }
 
   private toPublicVehicle(vehicle: VehicleWithPublicInclude): PublicVehicle {
-    return { ...vehicle, media: this.toPublicMedia(vehicle.media) };
+    return {
+      ...vehicle,
+      specs: this.toPublicSpecs(vehicle.specs),
+      media: this.toPublicMedia(vehicle.media),
+    };
   }
 
   private toAdminVehicle(vehicle: VehicleWithAdminInclude): AdminVehicle {
+    // Admins see the raw specs, registration number included.
     return { ...vehicle, media: this.toPublicMedia(vehicle.media) };
+  }
+
+  /** registrationNumber is the one spec field that's genuinely sensitive — admin-only. */
+  private toPublicSpecs(specs: Prisma.JsonValue): Prisma.JsonValue {
+    if (!specs || typeof specs !== 'object' || Array.isArray(specs)) {
+      return specs;
+    }
+    const publicSpecs = { ...(specs as Record<string, unknown>) };
+    delete publicSpecs.registrationNumber;
+    return publicSpecs as Prisma.JsonValue;
   }
 
   /** Media is stored as a bucket-relative key; resolve it to a URL only when serving. */

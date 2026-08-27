@@ -9,7 +9,7 @@ export function SiteHeader() {
           {brand.name}
         </Link>
         <Link href="/sell" className="border border-primary px-3 py-1.5 text-sm text-primary">
-          Sell your vehicle
+          Sell Your Vehicle
         </Link>
       </div>
     </header>

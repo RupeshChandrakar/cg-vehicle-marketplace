@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { MapPin, ChevronDown } from 'lucide-react';
 import type { Location } from '@/types/vehicle';
 import { detectLocation } from '@/lib/api';
 
@@ -63,16 +64,23 @@ export function LocationSelector({
     router.push(`/?${params.toString()}`);
   }
 
+  const activeDistrict = locations.find((location) => location.slug === activeDistrictSlug);
+
   return (
-    <div className="flex items-center gap-2 text-sm">
-      <label htmlFor="district-select" className="text-muted">
-        Location
-      </label>
+    <div className="relative flex items-center gap-2 border border-line px-3 py-2">
+      <MapPin className="h-4 w-4 shrink-0 text-primary" />
+      <div className="min-w-0 leading-tight">
+        <p className="truncate text-sm font-medium text-foreground">
+          {activeDistrict?.district ?? 'All Chhattisgarh'}
+        </p>
+        <p className="text-xs text-muted">Chhattisgarh</p>
+      </div>
+      <ChevronDown className="h-4 w-4 shrink-0 text-muted" />
       <select
-        id="district-select"
+        aria-label="District"
         value={activeDistrictSlug ?? ''}
         onChange={(event) => navigateToDistrict(event.target.value)}
-        className="border border-line px-2 py-1.5 text-foreground"
+        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
       >
         <option value="">All Chhattisgarh</option>
         {locations.map((location) => (

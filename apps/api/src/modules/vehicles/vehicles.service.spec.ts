@@ -35,6 +35,7 @@ function buildService() {
   const vehicleTable = {
     create: jest.fn(record),
     findUnique: jest.fn(),
+    findFirst: jest.fn(),
     findMany: jest.fn().mockResolvedValue([]),
     count: jest.fn().mockResolvedValue(0),
     update: jest.fn(record),
@@ -161,6 +162,43 @@ describe('VehiclesService', () => {
     await expect(
       service.approveAndPublish('vehicle-1', 'admin-1'),
     ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('findByPublicId() strips registrationNumber from specs before returning', async () => {
+    const { service, prisma } = buildService();
+    prisma.vehicle.findFirst.mockResolvedValue({
+      id: 'vehicle-1',
+      publicId: 10000,
+      specs: { registrationNumber: 'CG 08 AB 1234', rcAvailable: true },
+      media: [],
+      category: {},
+      location: {},
+      verification: null,
+    });
+
+    const result = await service.findByPublicId(10000);
+
+    expect(result.specs).toEqual({ rcAvailable: true });
+  });
+
+  it('findByIdForAdmin() keeps registrationNumber in specs', async () => {
+    const { service, prisma } = buildService();
+    prisma.vehicle.findUnique.mockResolvedValue({
+      id: 'vehicle-1',
+      specs: { registrationNumber: 'CG 08 AB 1234', rcAvailable: true },
+      media: [],
+      category: {},
+      location: {},
+      verification: null,
+      seller: { id: 'user-1', name: 'Rahul', phone: '+919876543210' },
+    });
+
+    const result = await service.findByIdForAdmin('vehicle-1');
+
+    expect(result.specs).toEqual({
+      registrationNumber: 'CG 08 AB 1234',
+      rcAvailable: true,
+    });
   });
 
   it('reject() records the reason and moves status to rejected', async () => {

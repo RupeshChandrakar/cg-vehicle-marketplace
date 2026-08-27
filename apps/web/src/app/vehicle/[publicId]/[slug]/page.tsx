@@ -1,9 +1,11 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import { ShieldCheck, MessageCircle, Phone, Gauge, Fuel, Settings2, User } from 'lucide-react';
 import { getVehicleByPublicId } from '@/lib/api';
 import { formatFuelType, formatKm, formatPrice, formatTransmission } from '@/lib/format';
 import { brand } from '@cg/shared-config';
 import type { Vehicle } from '@/types/vehicle';
+import { VehicleGallery } from '@/features/vehicles/vehicle-gallery';
 
 async function loadVehicle(publicIdParam: string): Promise<Vehicle | null> {
   const publicId = Number(publicIdParam);
@@ -41,7 +43,7 @@ export default async function VehiclePage(props: PageProps<'/vehicle/[publicId]/
     <div className="mx-auto max-w-5xl px-4 py-8">
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
         <div className="lg:col-span-3">
-          <Gallery media={vehicle.media} title={vehicle.title} />
+          <VehicleGallery media={vehicle.media} title={vehicle.title} />
         </div>
 
         <div className="space-y-6 lg:col-span-2">
@@ -49,19 +51,23 @@ export default async function VehiclePage(props: PageProps<'/vehicle/[publicId]/
             <div className="flex items-start justify-between gap-2">
               <h1 className="text-2xl font-semibold text-foreground">{vehicle.title}</h1>
               {vehicle.verification && (
-                <span className="shrink-0 border border-primary px-2 py-1 text-xs text-primary">
+                <span className="flex shrink-0 items-center gap-1 border border-primary px-2 py-1 text-xs text-primary">
+                  <ShieldCheck className="h-3.5 w-3.5" />
                   Verified
                 </span>
               )}
             </div>
             <p className="text-2xl font-semibold text-foreground">{formatPrice(vehicle.price)}</p>
             <p className="text-sm text-muted">
-              {vehicle.location.district}, {vehicle.location.state} &middot; Vehicle ID{' '}
-              {vehicle.publicId}
+              {vehicle.location.district}
+              {vehicle.specs.areaText ? `, ${vehicle.specs.areaText}` : ''},{' '}
+              {vehicle.location.state} &middot; Vehicle ID {vehicle.publicId}
             </p>
           </div>
 
           <SpecsGrid vehicle={vehicle} />
+
+          <Highlights vehicle={vehicle} />
 
           <EnquiryActions />
 
@@ -71,46 +77,88 @@ export default async function VehiclePage(props: PageProps<'/vehicle/[publicId]/
               <p className="text-sm text-muted">{vehicle.description}</p>
             </div>
           )}
+
+          <Overview vehicle={vehicle} />
         </div>
       </div>
     </div>
   );
 }
 
-function Gallery({ media, title }: { media: Vehicle['media']; title: string }) {
-  const cover = media[0];
+function SpecsGrid({ vehicle }: { vehicle: Vehicle }) {
+  const specs: Array<{ icon: typeof Gauge; label: string; value: string }> = [
+    { icon: Gauge, label: 'KM Driven', value: formatKm(vehicle.kmDriven) },
+    { icon: Fuel, label: 'Fuel', value: formatFuelType(vehicle.fuelType) },
+    { icon: Settings2, label: 'Transmission', value: formatTransmission(vehicle.transmission) },
+    {
+      icon: User,
+      label: 'Owner',
+      value: vehicle.specs.ownerCount ? ordinal(vehicle.specs.ownerCount) : '—',
+    },
+  ];
+
   return (
-    <div className="aspect-[4/3] w-full bg-primary-light">
-      {cover ? (
-        // eslint-disable-next-line @next/next/no-img-element -- remote media host isn't configured until Phase 2's upload flow lands
-        <img src={cover.url} alt={title} className="h-full w-full object-cover" />
-      ) : (
-        <div className="flex h-full w-full items-center justify-center text-sm text-muted">
-          Photos coming soon
+    <div className="grid grid-cols-2 gap-3 border border-line p-4 sm:grid-cols-4">
+      {specs.map(({ icon: Icon, label, value }) => (
+        <div key={label} className="space-y-1 text-center">
+          <Icon className="mx-auto h-4 w-4 text-muted" />
+          <p className="text-sm font-medium text-foreground">{value}</p>
+          <p className="text-xs text-muted">{label}</p>
         </div>
-      )}
+      ))}
     </div>
   );
 }
 
-function SpecsGrid({ vehicle }: { vehicle: Vehicle }) {
-  const specs: Array<[string, string]> = [
-    ['Year', String(vehicle.year)],
-    ['KM Driven', formatKm(vehicle.kmDriven)],
-    ['Fuel Type', formatFuelType(vehicle.fuelType)],
-    ['Transmission', formatTransmission(vehicle.transmission)],
-    ['Category', vehicle.category.name],
-  ];
+function Highlights({ vehicle }: { vehicle: Vehicle }) {
+  const insuranceValid =
+    vehicle.specs.insuranceValidUntil && new Date(vehicle.specs.insuranceValidUntil) > new Date();
+
+  const highlights = [
+    vehicle.specs.rcAvailable && 'RC Available',
+    insuranceValid && 'Insurance Valid',
+    vehicle.specs.noChallan && 'No Challan',
+    vehicle.specs.nonAccident && 'Non-Accident',
+  ].filter((label): label is string => Boolean(label));
+
+  if (highlights.length === 0) return null;
 
   return (
-    <dl className="grid grid-cols-2 gap-3 border border-line p-4 text-sm">
-      {specs.map(([label, value]) => (
-        <div key={label}>
-          <dt className="text-muted">{label}</dt>
-          <dd className="text-foreground">{value}</dd>
-        </div>
+    <div className="flex flex-wrap gap-2">
+      {highlights.map((label) => (
+        <span
+          key={label}
+          className="flex items-center gap-1 border border-line px-2 py-1 text-xs text-foreground"
+        >
+          <ShieldCheck className="h-3 w-3 text-primary" />
+          {label}
+        </span>
       ))}
-    </dl>
+    </div>
+  );
+}
+
+function Overview({ vehicle }: { vehicle: Vehicle }) {
+  const rows: Array<[string, string]> = [
+    ['Category', vehicle.category.name],
+    ['Year', String(vehicle.year)],
+  ];
+  if (vehicle.specs.insuranceValidUntil) {
+    rows.push(['Insurance Valid Up To', formatDate(vehicle.specs.insuranceValidUntil)]);
+  }
+
+  return (
+    <div className="space-y-2 border-t border-line pt-4">
+      <h2 className="text-sm font-medium text-foreground">Overview</h2>
+      <dl className="space-y-1.5 text-sm">
+        {rows.map(([label, value]) => (
+          <div key={label} className="flex justify-between gap-4">
+            <dt className="text-muted">{label}</dt>
+            <dd className="text-foreground">{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
   );
 }
 
@@ -119,12 +167,35 @@ function EnquiryActions() {
   // intended layout, not wired to fake functionality in the meantime.
   return (
     <div className="flex gap-3">
-      <button disabled className="flex-1 border border-line px-4 py-2.5 text-sm text-muted">
-        Chat — coming soon
+      <button
+        disabled
+        className="flex flex-1 items-center justify-center gap-2 border border-primary px-4 py-2.5 text-sm font-medium text-primary opacity-60"
+      >
+        <MessageCircle className="h-4 w-4" />
+        Chat Now
       </button>
-      <button disabled className="flex-1 border border-line px-4 py-2.5 text-sm text-muted">
-        Call — coming soon
+      <button
+        disabled
+        className="flex flex-1 items-center justify-center gap-2 bg-primary px-4 py-2.5 text-sm font-medium text-white opacity-60"
+      >
+        <Phone className="h-4 w-4" />
+        Call Now
       </button>
     </div>
   );
+}
+
+function ordinal(n: number): string {
+  if (n === 1) return '1st Owner';
+  if (n === 2) return '2nd Owner';
+  if (n === 3) return '3rd Owner';
+  return `${n}th Owner`;
+}
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
 }

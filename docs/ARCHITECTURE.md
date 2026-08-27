@@ -7,6 +7,26 @@ platform's local agents, never directly.
 This document is the reference for how the system is put together. It reflects what is actually
 built, not a wishlist — update it as real architectural decisions are made.
 
+## Design language and copy voice
+
+Applied from a mobile design mockup the product owner shared, adapted to responsive web (its
+bottom tab bar and full-screen search became a top nav + inline filters — mobile chrome doesn't
+translate literally to web):
+
+- **Icons**: `lucide-react` on the customer web app — categories, nav, and trust badges all use
+  it rather than hand-maintained inline SVGs.
+- **Copy voice**: structural labels (page titles, form field labels, buttons — "Sell Your
+  Vehicle", "Vehicle Details", "Location") stay in plain English; supporting copy (taglines,
+  helper text, empty/loading/error states, placeholders) uses Hinglish. This mirrors the source
+  mockup exactly rather than translating indiscriminately — don't make loading/error copy
+  English-only or field labels Hinglish; that would break the established pattern.
+- **Trust-signal fields** (RC available, insurance validity, no-challan, non-accident, owner
+  count, plus the free-text area/village and preferred-contact-method) live in `Vehicle.specs`,
+  validated by `VehicleSpecsDto` — not dedicated columns. `registrationNumber` is the one field
+  in there that's genuinely sensitive: `VehiclesService.toPublicSpecs()` strips it before a
+  response ever reaches a public endpoint; `toAdminVehicle()` keeps it. If you add another
+  sensitive field to specs, it needs the same treatment — specs isn't public-safe by default.
+
 ## Brand configuration
 
 The brand name is not finalized. Every app reads it from `packages/shared-config/src/brand.ts` —

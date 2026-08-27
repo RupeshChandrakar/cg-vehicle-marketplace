@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Category } from '@/types/vehicle';
+import { getCategoryIcon } from '@/features/vehicles/category-icons';
 
 interface CategoryFilterProps {
   categories: Category[];
@@ -21,33 +22,32 @@ export function CategoryFilter({
   activeDistrictSlug,
 }: CategoryFilterProps) {
   return (
-    <nav className="flex flex-wrap gap-2" aria-label="Vehicle categories">
-      <CategoryLink
-        label="All"
-        href={hrefFor(undefined, activeDistrictSlug)}
-        active={!activeCategorySlug}
-      />
-      {categories.map((category) => (
-        <CategoryLink
-          key={category.id}
-          label={category.name}
-          href={hrefFor(category.slug, activeDistrictSlug)}
-          active={activeCategorySlug === category.slug}
-        />
-      ))}
-    </nav>
-  );
-}
-
-function CategoryLink({ label, href, active }: { label: string; href: string; active: boolean }) {
-  return (
-    <Link
-      href={href}
-      className={`border px-3 py-1.5 text-sm ${
-        active ? 'border-primary text-primary' : 'border-line text-foreground'
-      }`}
+    <nav
+      className="grid grid-cols-4 gap-3 sm:grid-cols-6 lg:grid-cols-9"
+      aria-label="Vehicle categories"
     >
-      {label}
-    </Link>
+      {categories.map((category) => {
+        const Icon = getCategoryIcon(category.slug);
+        const active = activeCategorySlug === category.slug;
+        return (
+          <Link
+            key={category.id}
+            href={hrefFor(active ? undefined : category.slug, activeDistrictSlug)}
+            className="flex flex-col items-center gap-1.5 text-center"
+          >
+            <span
+              className={`flex h-12 w-12 items-center justify-center border ${
+                active
+                  ? 'border-primary bg-primary-light text-primary'
+                  : 'border-line text-foreground'
+              }`}
+            >
+              <Icon className="h-5 w-5" />
+            </span>
+            <span className="text-xs text-muted">{category.name}</span>
+          </Link>
+        );
+      })}
+    </nav>
   );
 }
