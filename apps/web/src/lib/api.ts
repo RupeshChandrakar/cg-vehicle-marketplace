@@ -5,6 +5,8 @@ import type {
   LocationDetectionResult,
   PaginatedResult,
   Vehicle,
+  FuelType,
+  Transmission,
 } from '@/types/vehicle';
 
 export interface VehicleFilters {
@@ -13,7 +15,7 @@ export interface VehicleFilters {
   page?: number;
 }
 
-class ApiError extends Error {
+export class ApiError extends Error {
   constructor(
     message: string,
     public readonly status: number,
@@ -31,10 +33,24 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new ApiError(`Request to ${path} failed with ${response.status}`, response.status);
+    throw new ApiError(await extractErrorMessage(response), response.status);
   }
 
   return response.json() as Promise<T>;
+}
+
+/** The API's validation errors carry a useful message; fall back if the body isn't JSON. */
+async function extractErrorMessage(response: Response): Promise<string> {
+  try {
+    const body: unknown = await response.json();
+    if (body && typeof body === 'object' && 'message' in body) {
+      const { message } = body as { message: string | string[] };
+      return Array.isArray(message) ? message.join(', ') : message;
+    }
+  } catch {
+    // Body wasn't JSON — fall through to the generic message below.
+  }
+  return `Request failed with status ${response.status}`;
 }
 
 export function getCategories(): Promise<Category[]> {
@@ -75,4 +91,43 @@ export async function getVehicleByPublicId(publicId: number): Promise<Vehicle | 
     }
     throw error;
   }
+}
+
+export interface CreateVehiclePayload {
+  categorySlug: string;
+  locationSlug: string;
+  title: string;
+  brand: string;
+  model: string;
+  year: number;
+  price: number;
+  kmDriven: number;
+  fuelType: FuelType;
+  transmission: Transmission;
+  description?: string;
+  sellerName: string;
+  sellerPhone: string;
+}
+
+export function createVehicle(payload: CreateVehiclePayload): Promise<{ id: string }> {
+  return request<{ id: string }>('/vehicles', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function uploadVehicleMedia(
+  vehicleId: string,
+  files: File[],
+): Promise<Array<{ id: string; url: string }>> {
+  const formData = new FormData();
+  files.forEach((file) => formData.append('files', file));
+
+  // No Content-Type header: fetch sets the multipart boundary itself when
+  // given a FormData body, and overriding it manually breaks the upload.
+  return request<Array<{ id: string; url: string }>>(`/vehicles/${vehicleId}/media`, {
+    method: 'POST',
+    body: formData,
+  });
 }

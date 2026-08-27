@@ -1,14 +1,18 @@
 import 'dotenv/config';
+import * as bcrypt from 'bcrypt';
 import { PrismaPg } from '@prisma/adapter-pg';
 import {
   PrismaClient,
   FuelType,
   Transmission,
+  UserRole,
 } from '../src/generated/prisma/client';
 import { slugify } from '../src/common/utils/slug.util';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
+
+const PASSWORD_HASH_ROUNDS = 10;
 
 // Matches the categories named in the product spec, in display order.
 const CATEGORIES = [
@@ -185,7 +189,32 @@ const SAMPLE_VEHICLES: SeedVehicle[] = [
   },
 ];
 
+async function seedAdmin(): Promise<{ id: string }> {
+  const email = process.env.SEED_ADMIN_EMAIL;
+  const password = process.env.SEED_ADMIN_PASSWORD;
+  if (!email || !password) {
+    throw new Error(
+      'SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD must be set to seed the dev admin account',
+    );
+  }
+
+  const passwordHash = await bcrypt.hash(password, PASSWORD_HASH_ROUNDS);
+  return prisma.user.upsert({
+    where: { email },
+    update: { passwordHash, role: UserRole.admin },
+    create: {
+      email,
+      passwordHash,
+      role: UserRole.admin,
+      name: 'Dev Admin',
+      phone: '+910000000000',
+    },
+  });
+}
+
 async function main(): Promise<void> {
+  const admin = await seedAdmin();
+
   const categories = await Promise.all(
     CATEGORIES.map((name, index) =>
       prisma.category.upsert({
@@ -261,7 +290,7 @@ async function main(): Promise<void> {
       await prisma.vehicleVerification.create({
         data: {
           vehicleId: vehicle.id,
-          verifiedBy: 'seed-script',
+          verifiedBy: admin.id,
           notes: 'Seed data',
         },
       });
@@ -269,7 +298,8 @@ async function main(): Promise<void> {
   }
 
   console.log(
-    `Seeded ${categories.length} categories, ${locations.length} locations, ${SAMPLE_VEHICLES.length} vehicles.`,
+    `Seeded 1 admin (${process.env.SEED_ADMIN_EMAIL}), ${categories.length} categories, ` +
+      `${locations.length} locations, ${SAMPLE_VEHICLES.length} vehicles.`,
   );
 }
 

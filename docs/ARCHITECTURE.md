@@ -124,9 +124,9 @@ Prisma 7 is a recent major version with real breaking changes from what most gui
 
 - No bundled query engine — connections go through a driver adapter (`@prisma/adapter-pg` + `pg`
   for Postgres).
-- The client generates to a custom output folder (`apps/api/generated/prisma`, gitignored,
+- The client generates to a custom output folder (`apps/api/src/generated/prisma`, gitignored,
   regenerated via `prisma generate` — wired into `postinstall` and `prebuild`), not into
-  `node_modules/@prisma/client`.
+  `node_modules/@prisma/client`. It lives under `src/` specifically — see the rootDir note below.
 - The CLI no longer auto-loads `.env`; `prisma7.config.ts` imports `dotenv/config` explicitly.
 - `prisma init`'s "install agent skills" step (which drops reference docs into `.claude/`,
   `.windsurf/`, `.agents/`) was removed after generation — it's unrelated to the app and not
@@ -145,21 +145,45 @@ don't replicate that resolution at runtime:
 - **`ts-node` running a standalone script** (e.g. the seed script) — `ts-node` only intercepts
   requires for files literally ending in `.ts`, so a `.js`-suffixed require aimed at a `.ts` file
   fails with `MODULE_NOT_FOUND` before ts-node ever sees it. Rather than patching Node's module
-  resolution, `db:seed` builds first and runs the compiled output (`node dist/prisma/seed.js`) —
-  the same pattern `start:prod` already uses, just extended to the seed script.
+  resolution, `db:seed` compiles via its own `tsconfig.seed.json` and runs the output
+  (`node dist-seed/prisma/seed.js`) — the same pattern `start:prod` uses for the main app.
+
+The generated client also has to live under `src/`, not as a sibling `apps/api/generated/` —
+any file outside `src/` that ends up in the compiled dependency graph (the seed script,
+`prisma7.config.ts`, or a sibling `generated/`) widens tsc's inferred `rootDir` to the repo-level
+common ancestor, which silently moves `dist/main.js` to `dist/src/main.js` and breaks
+`start:prod`. `tsconfig.build.json` explicitly excludes `prisma/` and `prisma7.config.ts` for
+the same reason.
 
 ## Development phases
 
-| Phase                        | Goal                                                                                                                                 |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| 0 — Foundation               | Repo scaffold, both Next.js apps, NestJS boot, Prisma+Postgres, health check, lint/format/CI _(this phase)_                          |
-| 1 — Core Marketplace         | Categories, locations + district fallback, vehicle CRUD + status workflow, public ID, browse/search/filter/sort, vehicle detail page |
-| 2 — Sell + Verification      | Sell flow, media upload, admin review/approve/reject queue                                                                           |
-| 3 — Enquiry & Agent Workflow | Enquiry creation, agent assignment, status state machine, basic chat, call logging                                                   |
-| 4 — Accounts & Engagement    | OTP auth polish, favorites, notifications, reviews                                                                                   |
-| 5 — Intelligent Chat Layer   | AI orchestration on top of Phase 3's deterministic data — never a source of truth                                                    |
-| 6 — Reel Studio              | Template-based FFmpeg video generation, only after 1–4 are stable                                                                    |
-| 7 — Mobile App               | React Native consuming the same API                                                                                                  |
+| Phase                        | Goal                                                                                                                                          |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0 — Foundation               | Repo scaffold, both Next.js apps, NestJS boot, Prisma+Postgres, health check, lint/format/CI _(done)_                                         |
+| 1 — Core Marketplace         | Categories, locations + district fallback, vehicle CRUD + status workflow, public ID, browse/search/filter/sort, vehicle detail page _(done)_ |
+| 2 — Sell + Verification      | Sell flow, media upload, admin review/approve/reject queue _(done)_                                                                           |
+| 3 — Enquiry & Agent Workflow | Enquiry creation, agent assignment, status state machine, basic chat, call logging                                                            |
+| 4 — Accounts & Engagement    | OTP auth polish, favorites, notifications, reviews                                                                                            |
+| 5 — Intelligent Chat Layer   | AI orchestration on top of Phase 3's deterministic data — never a source of truth                                                             |
+| 6 — Reel Studio              | Template-based FFmpeg video generation, only after 1–4 are stable                                                                             |
+| 7 — Mobile App               | React Native consuming the same API                                                                                                           |
+
+### Phase 2 notes
+
+- **Staff auth** landed here rather than waiting for Phase 4, since the admin review queue
+  genuinely needs it — exposing approve/reject without auth would be a real hole. It's
+  deliberately narrow: email + password for admin/agent only, JWT access token (15m) + rotating,
+  bcrypt-hashed refresh token (30d) stored on the `User` row. Customer OTP auth is still Phase 4.
+- **Admin token storage**: the admin web app keeps its access/refresh tokens in `localStorage`,
+  not an httpOnly cookie. That's a deliberate simplification for an internal-only tool — revisit
+  with cookies if this panel is ever exposed beyond trusted staff.
+- **One-click approve**: `VehiclesService.approveAndPublish()` walks a listing from wherever it
+  sits (`submitted` or `under_review`) all the way to `live` in a single admin action — under the
+  hood it still steps through every transition via `VehicleStatusService`, so an already-decided
+  listing (e.g. `rejected`) is refused with a clear error rather than silently skipped.
+- **Media storage**: `VehicleMedia.storageKey` holds a bucket-relative path, not a full URL —
+  `StorageService` (S3-compatible, MinIO locally) resolves it to a URL only when serving a
+  vehicle, so the bucket's public base URL can change without a data migration.
 
 ## MVP scope
 

@@ -34,11 +34,30 @@ docker compose up -d
 cp apps/api/.env.example apps/api/.env
 # defaults already match docker-compose.yml — edit only if you changed it
 
-# 4. Run every app in dev mode
+# 4. Apply migrations and seed sample data (categories, districts, sample
+#    vehicles, and one dev admin account — see "Seeded admin account" below)
+cd apps/api && pnpm prisma:migrate && pnpm db:seed && cd ../..
+
+# 5. Run every app in dev mode
 pnpm dev
 ```
 
 Or run a single app: `pnpm --filter web dev`, `pnpm --filter admin dev`, `pnpm --filter api dev`.
+
+## Key pages
+
+| Page               | URL                         |
+| ------------------ | --------------------------- |
+| Browse vehicles    | http://localhost:3000       |
+| Sell a vehicle     | http://localhost:3000/sell  |
+| Admin/agent login  | http://localhost:3001/login |
+| Admin review queue | http://localhost:3001/queue |
+
+### Seeded admin account
+
+The seed script creates one dev admin account from `apps/api/.env`'s `SEED_ADMIN_EMAIL` /
+`SEED_ADMIN_PASSWORD` (defaults: `admin@cgautomarket.local` / `ChangeMe123!`) — use it to sign
+in at `/login` on the admin app. Never reuse these defaults outside local development.
 
 ## Common commands
 
@@ -60,6 +79,7 @@ adapter (Prisma 7 has no bundled query engine). Common commands, run from `apps/
 
 ```bash
 pnpm prisma:migrate   # create and apply a migration in development
+pnpm db:seed          # seed categories, districts, sample vehicles, and a dev admin account
 pnpm prisma:studio    # browse the database
 ```
 

@@ -35,11 +35,15 @@ function buildService() {
   const vehicleTable = {
     create: jest.fn(record),
     findUnique: jest.fn(),
+    findMany: jest.fn().mockResolvedValue([]),
+    count: jest.fn().mockResolvedValue(0),
     update: jest.fn(record),
   };
   const vehicleVerificationTable = {
     upsert: jest.fn<undefined, [VerificationUpsertArgs]>(),
   };
+
+  const queryRaw = jest.fn().mockResolvedValue([{ nextval: BigInt(10000) }]);
 
   const prisma = {
     category: {
@@ -50,31 +54,37 @@ function buildService() {
     },
     vehicle: vehicleTable,
     vehicleVerification: vehicleVerificationTable,
-    $queryRaw: jest.fn().mockResolvedValue([{ nextval: BigInt(10000) }]),
+    $queryRaw: queryRaw,
     $transaction: jest.fn(
       (
         fn: (tx: {
           vehicle: typeof vehicleTable;
           vehicleVerification: typeof vehicleVerificationTable;
+          $queryRaw: typeof queryRaw;
         }) => unknown,
       ) =>
         fn({
           vehicle: vehicleTable,
           vehicleVerification: vehicleVerificationTable,
+          $queryRaw: queryRaw,
         }),
     ),
   };
   const usersService = {
     findOrCreateByPhone: jest.fn().mockResolvedValue({ id: 'user-1' }),
   };
+  const storage = {
+    getPublicUrl: jest.fn((key: string) => `https://storage.test/${key}`),
+  };
 
   const service = new VehiclesService(
     prisma as never,
     usersService as never,
     new VehicleStatusService(),
+    storage as never,
   );
 
-  return { service, prisma, usersService };
+  return { service, prisma, usersService, storage };
 }
 
 describe('VehiclesService', () => {
@@ -106,50 +116,68 @@ describe('VehiclesService', () => {
     expect(prisma.vehicle.create).not.toHaveBeenCalled();
   });
 
-  it('publish() assigns the next public id and moves status to live', async () => {
+  it('approveAndPublish() walks submitted all the way to live in one call', async () => {
     const { service, prisma } = buildService();
     prisma.vehicle.findUnique.mockResolvedValue({
       id: 'vehicle-1',
-      status: 'approved',
+      status: 'submitted',
     });
 
-    const result = await service.publish('vehicle-1');
-
-    expect(prisma.$queryRaw).toHaveBeenCalled();
-    expect(result).toMatchObject({ status: 'live', publicId: 10000 });
-  });
-
-  it('publish() refuses to skip the review pipeline', async () => {
-    const { service, prisma } = buildService();
-    prisma.vehicle.findUnique.mockResolvedValue({
-      id: 'vehicle-1',
-      status: 'draft',
-    });
-
-    await expect(service.publish('vehicle-1')).rejects.toBeInstanceOf(
-      BadRequestException,
-    );
-  });
-
-  it('approve() records a verification and moves status to approved', async () => {
-    const { service, prisma } = buildService();
-    prisma.vehicle.findUnique.mockResolvedValue({
-      id: 'vehicle-1',
-      status: 'under_review',
-    });
-
-    const result = await service.approve(
+    const result = await service.approveAndPublish(
       'vehicle-1',
       'admin-1',
-      'Documents checked',
+      'Looks good',
     );
 
     const [[verificationArgs]] = prisma.vehicleVerification.upsert.mock.calls;
     expect(verificationArgs.create).toEqual({
       vehicleId: 'vehicle-1',
       verifiedBy: 'admin-1',
-      notes: 'Documents checked',
+      notes: 'Looks good',
     });
-    expect(result).toMatchObject({ status: 'approved' });
+    expect(prisma.$queryRaw).toHaveBeenCalled();
+    expect(result).toMatchObject({ status: 'live', publicId: 10000 });
+  });
+
+  it('approveAndPublish() also works starting from under_review', async () => {
+    const { service, prisma } = buildService();
+    prisma.vehicle.findUnique.mockResolvedValue({
+      id: 'vehicle-1',
+      status: 'under_review',
+    });
+
+    const result = await service.approveAndPublish('vehicle-1', 'admin-1');
+
+    expect(result).toMatchObject({ status: 'live', publicId: 10000 });
+  });
+
+  it('approveAndPublish() refuses a vehicle that is not pending review', async () => {
+    const { service, prisma } = buildService();
+    prisma.vehicle.findUnique.mockResolvedValue({
+      id: 'vehicle-1',
+      status: 'draft',
+    });
+
+    await expect(
+      service.approveAndPublish('vehicle-1', 'admin-1'),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('reject() records the reason and moves status to rejected', async () => {
+    const { service, prisma } = buildService();
+    prisma.vehicle.findUnique.mockResolvedValue({
+      id: 'vehicle-1',
+      status: 'submitted',
+    });
+
+    const result = await service.reject(
+      'vehicle-1',
+      'Odometer photo unreadable',
+    );
+
+    expect(result).toMatchObject({
+      status: 'rejected',
+      rejectionReason: 'Odometer photo unreadable',
+    });
   });
 });

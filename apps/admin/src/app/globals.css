@@ -3,21 +3,26 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Brand palette — see packages/shared-config/src/brand.ts for the source values. */
+  --color-primary: #168a45;
+  --color-primary-light: #f2f8f4;
+  --color-muted: #6b7280;
+  --color-line: #e5e7eb;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--color-primary);
+  --color-primary-light: var(--color-primary-light);
+  --color-muted: var(--color-muted);
+  --color-line: var(--color-line);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* No automatic dark mode — see apps/web's globals.css for why. */
 
 body {
   background: var(--background);

@@ -1,12 +1,20 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../infra/prisma/prisma.service';
+import { StorageService } from '../../infra/storage/storage.service';
 import { UsersService } from '../users/users.service';
 import { VehicleStatusService } from './vehicle-status.service';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { VehicleQueryDto } from './dto/vehicle-query.dto';
+import { AdminVehicleQueryDto } from './dto/admin-vehicle-query.dto';
 import { PaginatedResult } from '../../common/types/paginated-result.type';
 import { slugify } from '../../common/utils/slug.util';
-import { Prisma, Vehicle, VehicleStatus } from '../../generated/prisma/client';
+import {
+  Prisma,
+  User,
+  Vehicle,
+  VehicleMedia,
+  VehicleStatus,
+} from '../../generated/prisma/client';
 
 const PUBLIC_VEHICLE_INCLUDE = {
   category: true,
@@ -15,9 +23,31 @@ const PUBLIC_VEHICLE_INCLUDE = {
   verification: true,
 } satisfies Prisma.VehicleInclude;
 
-export type PublicVehicle = Prisma.VehicleGetPayload<{
+const ADMIN_VEHICLE_INCLUDE = {
+  ...PUBLIC_VEHICLE_INCLUDE,
+  seller: true,
+} satisfies Prisma.VehicleInclude;
+
+type VehicleWithPublicInclude = Prisma.VehicleGetPayload<{
   include: typeof PUBLIC_VEHICLE_INCLUDE;
 }>;
+type VehicleWithAdminInclude = Prisma.VehicleGetPayload<{
+  include: typeof ADMIN_VEHICLE_INCLUDE;
+}>;
+
+export interface PublicVehicleMedia {
+  id: string;
+  url: string;
+  sortOrder: number;
+}
+
+export type PublicVehicle = Omit<VehicleWithPublicInclude, 'media'> & {
+  media: PublicVehicleMedia[];
+};
+export type AdminVehicle = Omit<VehicleWithAdminInclude, 'media'> & {
+  media: PublicVehicleMedia[];
+  seller: User;
+};
 
 @Injectable()
 export class VehiclesService {
@@ -25,6 +55,7 @@ export class VehiclesService {
     private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
     private readonly statusService: VehicleStatusService,
+    private readonly storage: StorageService,
   ) {}
 
   async create(dto: CreateVehicleDto): Promise<Vehicle> {
@@ -103,7 +134,7 @@ export class VehiclesService {
     ]);
 
     return {
-      data,
+      data: data.map((vehicle) => this.toPublicVehicle(vehicle)),
       meta: {
         total,
         page: query.page,
@@ -121,56 +152,104 @@ export class VehiclesService {
     if (!vehicle) {
       throw new NotFoundException(`No live vehicle with ID ${publicId}`);
     }
-    return vehicle;
+    return this.toPublicVehicle(vehicle);
   }
 
-  // --- Review pipeline: service-level only until admin auth (Phase 2) gates these as routes. ---
+  // --- Admin review pipeline: protected by JwtAuthGuard + RolesGuard at the controller. ---
 
-  async markUnderReview(id: string): Promise<Vehicle> {
-    const vehicle = await this.findByIdOrThrow(id);
-    this.statusService.assertTransition(
-      vehicle.status,
-      VehicleStatus.under_review,
-    );
-    return this.prisma.vehicle.update({
+  async findForAdmin(
+    query: AdminVehicleQueryDto,
+  ): Promise<PaginatedResult<AdminVehicle>> {
+    const where: Prisma.VehicleWhereInput = query.status
+      ? { status: query.status }
+      : {};
+
+    const [data, total] = await Promise.all([
+      this.prisma.vehicle.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        include: ADMIN_VEHICLE_INCLUDE,
+        skip: (query.page - 1) * query.pageSize,
+        take: query.pageSize,
+      }),
+      this.prisma.vehicle.count({ where }),
+    ]);
+
+    return {
+      data: data.map((vehicle) => this.toAdminVehicle(vehicle)),
+      meta: {
+        total,
+        page: query.page,
+        pageSize: query.pageSize,
+        totalPages: Math.ceil(total / query.pageSize),
+      },
+    };
+  }
+
+  async findByIdForAdmin(id: string): Promise<AdminVehicle> {
+    const vehicle = await this.prisma.vehicle.findUnique({
       where: { id },
-      data: { status: VehicleStatus.under_review },
+      include: ADMIN_VEHICLE_INCLUDE,
     });
+    if (!vehicle) {
+      throw new NotFoundException(`Vehicle ${id} not found`);
+    }
+    return this.toAdminVehicle(vehicle);
   }
 
-  async approve(
+  /**
+   * Walks the listing from wherever it currently sits (submitted or
+   * under_review) through to live in one admin action, recording the
+   * verification and assigning the public ID along the way. Each hop still
+   * goes through the state machine, so a listing in an invalid state (e.g.
+   * already live, or rejected) is refused with a clear error rather than
+   * silently no-op'd.
+   */
+  async approveAndPublish(
     id: string,
-    verifiedBy?: string,
+    verifiedBy: string,
     notes?: string,
   ): Promise<Vehicle> {
-    const vehicle = await this.findByIdOrThrow(id);
-    this.statusService.assertTransition(vehicle.status, VehicleStatus.approved);
-
     return this.prisma.$transaction(async (tx) => {
+      let vehicle = await tx.vehicle.findUnique({ where: { id } });
+      if (!vehicle) {
+        throw new NotFoundException(`Vehicle ${id} not found`);
+      }
+
+      if (vehicle.status === VehicleStatus.submitted) {
+        this.statusService.assertTransition(
+          vehicle.status,
+          VehicleStatus.under_review,
+        );
+        vehicle = await tx.vehicle.update({
+          where: { id },
+          data: { status: VehicleStatus.under_review },
+        });
+      }
+
+      this.statusService.assertTransition(
+        vehicle.status,
+        VehicleStatus.approved,
+      );
       await tx.vehicleVerification.upsert({
         where: { vehicleId: id },
         update: { verifiedBy, notes },
         create: { vehicleId: id, verifiedBy, notes },
       });
-
-      return tx.vehicle.update({
+      vehicle = await tx.vehicle.update({
         where: { id },
         data: { status: VehicleStatus.approved },
       });
-    });
-  }
 
-  async publish(id: string): Promise<Vehicle> {
-    const vehicle = await this.findByIdOrThrow(id);
-    this.statusService.assertTransition(vehicle.status, VehicleStatus.live);
+      this.statusService.assertTransition(vehicle.status, VehicleStatus.live);
+      const rows = await tx.$queryRaw<Array<{ nextval: bigint }>>`
+        SELECT nextval('vehicle_public_id_seq')
+      `;
 
-    const rows = await this.prisma.$queryRaw<Array<{ nextval: bigint }>>`
-      SELECT nextval('vehicle_public_id_seq')
-    `;
-
-    return this.prisma.vehicle.update({
-      where: { id },
-      data: { status: VehicleStatus.live, publicId: Number(rows[0].nextval) },
+      return tx.vehicle.update({
+        where: { id },
+        data: { status: VehicleStatus.live, publicId: Number(rows[0].nextval) },
+      });
     });
   }
 
@@ -181,6 +260,25 @@ export class VehiclesService {
       where: { id },
       data: { status: VehicleStatus.rejected, rejectionReason: reason },
     });
+  }
+
+  private toPublicVehicle(vehicle: VehicleWithPublicInclude): PublicVehicle {
+    return { ...vehicle, media: this.toPublicMedia(vehicle.media) };
+  }
+
+  private toAdminVehicle(vehicle: VehicleWithAdminInclude): AdminVehicle {
+    return { ...vehicle, media: this.toPublicMedia(vehicle.media) };
+  }
+
+  /** Media is stored as a bucket-relative key; resolve it to a URL only when serving. */
+  private toPublicMedia(media: VehicleMedia[]): PublicVehicleMedia[] {
+    return media
+      .map((item) => ({
+        id: item.id,
+        url: this.storage.getPublicUrl(item.storageKey),
+        sortOrder: item.sortOrder,
+      }))
+      .sort((a, b) => a.sortOrder - b.sortOrder);
   }
 
   private async findByIdOrThrow(id: string): Promise<Vehicle> {
