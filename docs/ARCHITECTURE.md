@@ -641,6 +641,14 @@ hero tagline — something that cycles on its own rather than a static line.
   since a moving shimmer is inherently hard to prove from a still screenshot — confirmed the
   shimmer's actual `transform: translateX(...)` computed value sweeping from -407px to +407px
   over its cycle by sampling it programmatically over time, not just eyeballing a screenshot.
+- **A second follow-up, same day** — PO clarified "background" meant the whole hero *card*
+  behind "Sahi Gaadi, Sahi Daam", not just the small badge. That card was a completely flat
+  `bg-primary-light` fill before this. Replaced with `.hero-background` (a diagonal gradient
+  using the same low-opacity `--color-primary` tinting trick as the badge) plus two large,
+  blurred, `aria-hidden` decorative "blob" accents (`.hero-blob-a`/`.hero-blob-b`) positioned
+  behind the actual heading/copy via `z-10`, with the card given `overflow-hidden` so the blobs
+  never spill past its rounded corners. Purely decorative and never interactive — verified the
+  heading/paragraph/CTA all render at full contrast on top of it, unaffected.
 
 ### Phase 2 notes
 

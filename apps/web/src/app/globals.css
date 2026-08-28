@@ -139,3 +139,19 @@ body {
     display: none;
   }
 }
+
+/* Home hero card background — a soft gradient plus two large, blurred,
+ * brand-green "blob" accents for depth, replacing the old flat
+ * bg-primary-light fill. Same "tint --color-primary at low opacity" trick
+ * as promo-badge, so it stays a family of one visual language rather than
+ * inventing new colors. Blobs are purely decorative (aria-hidden in markup)
+ * and sit behind the actual heading/copy via z-index. */
+.hero-background {
+  background: linear-gradient(135deg, rgb(22 138 69 / 0.16) 0%, var(--color-primary-light) 45%, rgb(22 138 69 / 0.1) 100%);
+}
+.hero-blob-a {
+  background: rgb(22 138 69 / 0.18);
+}
+.hero-blob-b {
+  background: rgb(22 138 69 / 0.1);
+}
