@@ -61,6 +61,45 @@ enum VehicleCondition {
   @@map("vehicle_condition")
 }
 
+enum EnquiryChannel {
+  chat
+  call
+
+  @@map("enquiry_channel")
+}
+
+/// open: just created. contacted: agent has reached the customer at least
+/// once. negotiating: active back-and-forth. closed_won/closed_lost: the
+/// enquiry is done, either as a sale or not.
+enum EnquiryStatus {
+  open
+  contacted
+  negotiating
+  closed_won
+  closed_lost
+
+  @@map("enquiry_status")
+}
+
+/// There's no in-app telephony integration — this just records the outcome
+/// of a call an agent made off-platform, for accountability.
+enum CallOutcome {
+  connected
+  no_answer
+  busy
+  wrong_number
+  scheduled_callback
+
+  @@map("call_outcome")
+}
+
+enum MessageSenderType {
+  customer
+  agent
+
+  @@map("message_sender_type")
+}
+
 /// `email`/`passwordHash` are only ever set for staff (agent/admin) —
 /// customers authenticate by phone/OTP (Phase 4), never a password.
 /// `refreshTokenHash` holds the hash of the current refresh token so a
@@ -79,6 +118,10 @@ model User {
 
   vehiclesSold        Vehicle[]             @relation("VehicleSeller")
   vehicleVerifications VehicleVerification[] @relation("VehicleVerifier")
+
+  enquiriesAsCustomer Enquiry[] @relation("EnquiryCustomer")
+  enquiriesAsAgent    Enquiry[] @relation("EnquiryAgent")
+  callLogs            CallLog[] @relation("CallLogAgent")
 
   @@map("users")
 }
@@ -151,6 +194,7 @@ model Vehicle {
 
   media        VehicleMedia[]
   verification VehicleVerification?
+  enquiries    Enquiry[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -192,4 +236,90 @@ model VehicleVerification {
   notes      String?
 
   @@map("vehicle_verifications")
+}
+
+/// A customer's interest in a vehicle. Customers never get the seller's
+/// contact directly (see docs/ARCHITECTURE.md) — every enquiry is
+/// auto-assigned to whichever active agent currently has the fewest open
+/// enquiries, and that agent mediates all further contact.
+model Enquiry {
+  id String @id @default(uuid())
+
+  vehicleId String  @map("vehicle_id")
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+
+  customerId String @map("customer_id")
+  customer   User   @relation("EnquiryCustomer", fields: [customerId], references: [id])
+
+  agentId String? @map("agent_id")
+  agent   User?   @relation("EnquiryAgent", fields: [agentId], references: [id])
+
+  channel EnquiryChannel
+  status  EnquiryStatus  @default(open)
+  message String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  conversation Conversation?
+  callLogs     CallLog[]
+
+  @@index([status, agentId])
+  @@index([customerId])
+  @@index([vehicleId])
+  @@map("enquiries")
+}
+
+/// One per enquiry — split out from Enquiry so the message list can be
+/// queried/paginated on its own.
+model Conversation {
+  id String @id @default(uuid())
+
+  enquiryId String  @unique @map("enquiry_id")
+  enquiry   Enquiry @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  messages Message[]
+
+  @@map("conversations")
+}
+
+model Message {
+  id String @id @default(uuid())
+
+  conversationId String       @map("conversation_id")
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  /// `senderId` is a `User.id` (customer or agent) — kept alongside
+  /// `senderType` rather than resolved through a single polymorphic
+  /// relation, since both sender kinds are already the same `User` model.
+  senderType MessageSenderType @map("sender_type")
+  senderId   String            @map("sender_id")
+
+  body String
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([conversationId, createdAt])
+  @@map("messages")
+}
+
+/// There's no in-app telephony integration yet — this just records the
+/// outcome of a call an agent made off-platform, for accountability.
+model CallLog {
+  id String @id @default(uuid())
+
+  enquiryId String  @map("enquiry_id")
+  enquiry   Enquiry @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+
+  loggedById String @map("logged_by_id")
+  loggedBy   User   @relation("CallLogAgent", fields: [loggedById], references: [id])
+
+  outcome CallOutcome
+  notes   String?
+
+  calledAt DateTime @default(now()) @map("called_at")
+
+  @@map("call_logs")
 }

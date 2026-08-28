@@ -20,6 +20,9 @@ import { RolesGuard } from './guards/roles.guard';
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, RolesGuard],
-  exports: [RolesGuard],
+  // JwtModule is re-exported so other modules can issue/verify their own
+  // token *kinds* (see enquiries' conversation-access tokens) off the same
+  // secret, without duplicating the JwtModule registration.
+  exports: [RolesGuard, JwtModule],
 })
 export class AuthModule {}

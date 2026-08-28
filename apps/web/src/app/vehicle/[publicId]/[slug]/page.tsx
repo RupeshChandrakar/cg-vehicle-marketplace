@@ -1,11 +1,12 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { ShieldCheck, MessageCircle, Phone, Gauge, Fuel, Settings2, User } from 'lucide-react';
+import { ShieldCheck, Gauge, Fuel, Settings2, User } from 'lucide-react';
 import { getVehicleByPublicId } from '@/lib/api';
 import { formatFuelType, formatKm, formatPrice, formatTransmission } from '@/lib/format';
 import { brand } from '@cg/shared-config';
 import type { Vehicle } from '@/types/vehicle';
 import { VehicleGallery } from '@/features/vehicles/vehicle-gallery';
+import { EnquiryActions } from '@/features/enquiries/enquiry-actions';
 
 async function loadVehicle(publicIdParam: string): Promise<Vehicle | null> {
   const publicId = Number(publicIdParam);
@@ -40,7 +41,7 @@ export default async function VehiclePage(props: PageProps<'/vehicle/[publicId]/
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:py-10">
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
         <div className="lg:col-span-3">
           <VehicleGallery media={vehicle.media} title={vehicle.title} />
@@ -49,15 +50,19 @@ export default async function VehiclePage(props: PageProps<'/vehicle/[publicId]/
         <div className="space-y-6 lg:col-span-2">
           <div className="space-y-2">
             <div className="flex items-start justify-between gap-2">
-              <h1 className="text-2xl font-semibold text-foreground">{vehicle.title}</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                {vehicle.title}
+              </h1>
               {vehicle.verification && (
-                <span className="flex shrink-0 items-center gap-1 border border-primary px-2 py-1 text-xs text-primary">
+                <span className="flex shrink-0 items-center gap-1 rounded-full bg-primary-light px-2.5 py-1 text-xs font-medium text-primary">
                   <ShieldCheck className="h-3.5 w-3.5" />
                   Verified
                 </span>
               )}
             </div>
-            <p className="text-2xl font-semibold text-foreground">{formatPrice(vehicle.price)}</p>
+            <p className="font-mono text-2xl font-semibold tabular-nums text-foreground">
+              {formatPrice(vehicle.price)}
+            </p>
             <p className="text-sm text-muted">
               {vehicle.location.district}
               {vehicle.specs.areaText ? `, ${vehicle.specs.areaText}` : ''},{' '}
@@ -69,7 +74,7 @@ export default async function VehiclePage(props: PageProps<'/vehicle/[publicId]/
 
           <Highlights vehicle={vehicle} />
 
-          <EnquiryActions />
+          <EnquiryActions vehiclePublicId={vehicle.publicId} />
 
           {vehicle.description && (
             <div className="space-y-1">
@@ -98,10 +103,10 @@ function SpecsGrid({ vehicle }: { vehicle: Vehicle }) {
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3 border border-line p-4 sm:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       {specs.map(({ icon: Icon, label, value }) => (
-        <div key={label} className="space-y-1 text-center">
-          <Icon className="mx-auto h-4 w-4 text-muted" />
+        <div key={label} className="space-y-1 rounded-xl bg-primary-light/60 p-3 text-center">
+          <Icon className="mx-auto h-4 w-4 text-muted" strokeWidth={1.75} />
           <p className="text-sm font-medium text-foreground">{value}</p>
           <p className="text-xs text-muted">{label}</p>
         </div>
@@ -128,9 +133,9 @@ function Highlights({ vehicle }: { vehicle: Vehicle }) {
       {highlights.map((label) => (
         <span
           key={label}
-          className="flex items-center gap-1 border border-line px-2 py-1 text-xs text-foreground"
+          className="flex items-center gap-1.5 rounded-full bg-primary-light px-3 py-1.5 text-xs font-medium text-foreground"
         >
-          <ShieldCheck className="h-3 w-3 text-primary" />
+          <ShieldCheck className="h-3.5 w-3.5 text-primary" />
           {label}
         </span>
       ))}
@@ -148,8 +153,8 @@ function Overview({ vehicle }: { vehicle: Vehicle }) {
   }
 
   return (
-    <div className="space-y-2 border-t border-line pt-4">
-      <h2 className="text-sm font-medium text-foreground">Overview</h2>
+    <div className="space-y-2 border-t border-line pt-5">
+      <h2 className="text-sm font-semibold text-foreground">Overview</h2>
       <dl className="space-y-1.5 text-sm">
         {rows.map(([label, value]) => (
           <div key={label} className="flex justify-between gap-4">
@@ -158,29 +163,6 @@ function Overview({ vehicle }: { vehicle: Vehicle }) {
           </div>
         ))}
       </dl>
-    </div>
-  );
-}
-
-function EnquiryActions() {
-  // Chat/Call go live with the agent workflow (Phase 3) — shown here as the
-  // intended layout, not wired to fake functionality in the meantime.
-  return (
-    <div className="flex gap-3">
-      <button
-        disabled
-        className="flex flex-1 items-center justify-center gap-2 border border-primary px-4 py-2.5 text-sm font-medium text-primary opacity-60"
-      >
-        <MessageCircle className="h-4 w-4" />
-        Chat Now
-      </button>
-      <button
-        disabled
-        className="flex flex-1 items-center justify-center gap-2 bg-primary px-4 py-2.5 text-sm font-medium text-white opacity-60"
-      >
-        <Phone className="h-4 w-4" />
-        Call Now
-      </button>
     </div>
   );
 }

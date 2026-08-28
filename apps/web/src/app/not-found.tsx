@@ -7,7 +7,10 @@ export default function NotFound() {
       <p className="text-sm text-muted">
         Yeh page maujood nahi hai, ya listing ab available nahi hai.
       </p>
-      <Link href="/" className="inline-block border border-primary px-4 py-2 text-sm text-primary">
+      <Link
+        href="/"
+        className="inline-block rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a]"
+      >
         Vehicles Dekhein
       </Link>
     </div>

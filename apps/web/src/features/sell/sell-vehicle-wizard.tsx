@@ -142,8 +142,8 @@ export function SellVehicleWizard({
 
   if (submitted) {
     return (
-      <div className="border border-line px-6 py-12 text-center">
-        <p className="text-lg font-medium text-foreground">
+      <div className="rounded-2xl bg-background px-6 py-12 text-center shadow-card">
+        <p className="text-lg font-semibold text-foreground">
           Dhanyavaad — aapki listing submit ho gayi!
         </p>
         <p className="mt-2 text-sm text-muted">
@@ -158,28 +158,30 @@ export function SellVehicleWizard({
     <div className="space-y-6">
       <ProgressHeader step={step} />
 
-      {step === 1 && (
-        <StepVehicleType
-          categories={categories}
-          value={data.categorySlug}
-          onChange={(slug) => update('categorySlug', slug)}
-        />
-      )}
-      {step === 2 && <StepVehicleDetails data={data} update={update} />}
-      {step === 3 && <StepPhotos photos={photos} setPhotos={setPhotos} />}
-      {step === 4 && <StepLocation locations={locations} data={data} update={update} />}
-      {step === 5 && <StepSellerDetails data={data} update={update} />}
-      {step === 6 && (
-        <StepReview
-          data={data}
-          categories={categories}
-          locations={locations}
-          photoCount={photos.length}
-        />
-      )}
+      <div className="rounded-2xl bg-background p-6 shadow-card sm:p-8">
+        {step === 1 && (
+          <StepVehicleType
+            categories={categories}
+            value={data.categorySlug}
+            onChange={(slug) => update('categorySlug', slug)}
+          />
+        )}
+        {step === 2 && <StepVehicleDetails data={data} update={update} />}
+        {step === 3 && <StepPhotos photos={photos} setPhotos={setPhotos} />}
+        {step === 4 && <StepLocation locations={locations} data={data} update={update} />}
+        {step === 5 && <StepSellerDetails data={data} update={update} />}
+        {step === 6 && (
+          <StepReview
+            data={data}
+            categories={categories}
+            locations={locations}
+            photoCount={photos.length}
+          />
+        )}
+      </div>
 
       {submitState.status === 'error' && (
-        <p className="border border-line bg-primary-light px-4 py-3 text-sm text-foreground">
+        <p className="rounded-xl bg-primary-light px-4 py-3 text-sm text-foreground">
           {submitState.message}
         </p>
       )}
@@ -189,7 +191,7 @@ export function SellVehicleWizard({
           <button
             type="button"
             onClick={() => setStep((s) => s - 1)}
-            className="border border-line px-4 py-2.5 text-sm text-foreground"
+            className="rounded-lg border border-line px-4 py-3 text-sm font-medium text-foreground transition hover:bg-primary-light"
           >
             Back
           </button>
@@ -199,7 +201,7 @@ export function SellVehicleWizard({
             type="button"
             disabled={!canContinue()}
             onClick={() => setStep((s) => s + 1)}
-            className="flex-1 bg-primary px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50"
+            className="flex-1 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] hover:shadow-btn-hover-primary active:scale-[0.98] disabled:opacity-50 disabled:shadow-none disabled:active:scale-100"
           >
             Continue
           </button>
@@ -208,7 +210,7 @@ export function SellVehicleWizard({
             type="button"
             disabled={submitState.status === 'submitting'}
             onClick={handleSubmit}
-            className="flex-1 bg-primary px-4 py-2.5 text-sm font-medium text-white disabled:opacity-60"
+            className="flex-1 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] hover:shadow-btn-hover-primary active:scale-[0.98] disabled:opacity-60 disabled:shadow-none disabled:active:scale-100"
           >
             {submitState.status === 'submitting' ? 'Submitting…' : 'Submit Listing'}
           </button>
@@ -221,13 +223,13 @@ export function SellVehicleWizard({
 function ProgressHeader({ step }: { step: number }) {
   return (
     <div className="space-y-2">
-      <p className="text-xs text-muted">
+      <p className="text-xs font-medium text-muted">
         Step {step} of {TOTAL_STEPS}
       </p>
-      <h2 className="text-lg font-medium text-foreground">{STEP_TITLES[step - 1]}</h2>
-      <div className="h-1 w-full bg-line">
+      <h2 className="text-lg font-semibold text-foreground">{STEP_TITLES[step - 1]}</h2>
+      <div className="h-1.5 w-full rounded-full bg-line">
         <div
-          className="h-1 bg-primary transition-all"
+          className="h-1.5 rounded-full bg-primary transition-all"
           style={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
         />
       </div>
@@ -256,14 +258,14 @@ function StepVehicleType({
               key={category.id}
               type="button"
               onClick={() => onChange(category.slug)}
-              className={`flex flex-col items-center gap-2 border p-4 ${
+              className={`flex flex-col items-center gap-2 rounded-xl p-4 transition ${
                 active
-                  ? 'border-primary bg-primary-light text-primary'
-                  : 'border-line text-foreground'
+                  ? 'bg-primary text-white shadow-btn'
+                  : 'bg-primary-light text-primary hover:shadow-card'
               }`}
             >
-              <Icon className="h-6 w-6" />
-              <span className="text-xs">{category.name}</span>
+              <Icon className="h-6 w-6" strokeWidth={1.75} />
+              <span className="text-xs font-medium">{category.name}</span>
             </button>
           );
         })}
@@ -280,7 +282,7 @@ function StepVehicleDetails({
   update: <K extends keyof WizardData>(key: K, value: WizardData[K]) => void;
 }) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
       <Field label="Brand *">
         <TextInput
           value={data.brand}
@@ -377,7 +379,7 @@ function StepPhotos({
       </p>
       <div className="grid grid-cols-3 gap-3">
         {photos.map((file, index) => (
-          <div key={`${file.name}-${index}`} className="relative aspect-square border border-line">
+          <div key={`${file.name}-${index}`} className="relative aspect-square overflow-hidden rounded-xl shadow-card">
             {/* eslint-disable-next-line @next/next/no-img-element -- transient local file preview, never persisted */}
             <img
               src={URL.createObjectURL(file)}
@@ -388,14 +390,14 @@ function StepPhotos({
               type="button"
               onClick={() => removeAt(index)}
               aria-label="Remove photo"
-              className="absolute top-1 right-1 bg-black/60 p-1"
+              className="absolute top-1.5 right-1.5 rounded-full bg-foreground/70 p-1.5"
             >
               <X className="h-3 w-3 text-white" />
             </button>
           </div>
         ))}
         {photos.length < MAX_PHOTOS && (
-          <label className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 border border-dashed border-line text-xs text-muted">
+          <label className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-line text-xs text-muted transition hover:border-primary hover:text-primary">
             + Add Photo
             <input
               type="file"
@@ -464,7 +466,7 @@ function StepLocation({
         type="button"
         onClick={useCurrentLocation}
         disabled={isDetecting}
-        className="flex items-center gap-2 border border-line px-3 py-2 text-sm text-foreground disabled:opacity-60"
+        className="flex items-center gap-2 rounded-lg border border-line px-3.5 py-2.5 text-sm font-medium text-foreground transition hover:bg-primary-light disabled:opacity-60"
       >
         <Navigation className="h-4 w-4 text-primary" />
         {isDetecting ? 'Detecting…' : 'Use My Current Location'}
@@ -486,14 +488,14 @@ function StepSellerDetails({
         <TextInput value={data.sellerName} onChange={(v) => update('sellerName', v)} />
       </Field>
       <Field label="Mobile Number *">
-        <div className="flex items-center border border-line">
+        <div className="flex items-center overflow-hidden rounded-lg border border-line focus-within:border-primary">
           <span className="px-3 text-sm text-muted">+91</span>
           <input
             type="tel"
             inputMode="numeric"
             value={data.phoneDigits}
             onChange={(e) => update('phoneDigits', e.target.value.replace(/\D/g, '').slice(0, 10))}
-            className="w-full border-l border-line px-3 py-2 text-sm text-foreground"
+            className="w-full border-l border-line px-3 py-2.5 text-sm text-foreground focus:outline-none"
             placeholder="98765 43210"
           />
         </div>
@@ -507,6 +509,7 @@ function StepSellerDetails({
                 name="preferredContact"
                 checked={data.preferredContact === option}
                 onChange={() => update('preferredContact', option)}
+                className="accent-primary"
               />
               {option[0].toUpperCase() + option.slice(1)}
             </label>
@@ -519,7 +522,7 @@ function StepSellerDetails({
           onChange={(e) => update('message', e.target.value)}
           rows={3}
           placeholder="Agar aapke liye koi specific baat hai to hume bataayein…"
-          className="w-full border border-line px-3 py-2 text-sm text-foreground"
+          className="w-full rounded-lg border border-line px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
         />
       </Field>
     </div>
@@ -551,13 +554,13 @@ function StepReview({
   ];
 
   return (
-    <div className="space-y-3 border border-line p-4">
-      <h3 className="text-sm font-medium text-foreground">Review Your Details</h3>
-      <dl className="space-y-2 text-sm">
+    <div className="space-y-3">
+      <h3 className="text-sm font-semibold text-foreground">Review Your Details</h3>
+      <dl className="space-y-2.5 text-sm">
         {rows.map(([label, value]) => (
-          <div key={label} className="flex justify-between gap-4">
+          <div key={label} className="flex justify-between gap-4 border-b border-line pb-2.5 last:border-0 last:pb-0">
             <dt className="text-muted">{label}</dt>
-            <dd className="text-right text-foreground">{value}</dd>
+            <dd className="text-right font-medium text-foreground">{value}</dd>
           </div>
         ))}
       </dl>
@@ -567,7 +570,7 @@ function StepReview({
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="block space-y-1">
+    <label className="block space-y-1.5">
       <span className="text-sm text-muted">{label}</span>
       {children}
     </label>
@@ -588,7 +591,7 @@ function TextInput({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       type={props.type ?? 'text'}
-      className="w-full border border-line px-3 py-2 text-sm text-foreground"
+      className="w-full rounded-lg border border-line px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
     />
   );
 }
@@ -606,7 +609,7 @@ function Select({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full border border-line px-3 py-2 text-sm text-foreground"
+      className="w-full rounded-lg border border-line px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
     >
       {children}
     </select>

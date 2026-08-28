@@ -15,6 +15,12 @@ export function SiteHeader() {
         </Link>
         {user && (
           <div className="flex items-center gap-4 text-sm">
+            <Link href="/queue" className="text-foreground">
+              Vehicle Queue
+            </Link>
+            <Link href="/enquiries" className="text-foreground">
+              Enquiries
+            </Link>
             <span className="text-muted">{user.name ?? user.email}</span>
             <button onClick={logout} className="border border-line px-3 py-1.5 text-foreground">
               Log out

@@ -33,18 +33,18 @@ export function CategoryFilter({
           <Link
             key={category.id}
             href={hrefFor(active ? undefined : category.slug, activeDistrictSlug)}
-            className="flex flex-col items-center gap-1.5 text-center"
+            className="group flex flex-col items-center gap-2 text-center"
           >
             <span
-              className={`flex h-12 w-12 items-center justify-center border ${
+              className={`flex h-14 w-14 items-center justify-center rounded-2xl transition ${
                 active
-                  ? 'border-primary bg-primary-light text-primary'
-                  : 'border-line text-foreground'
+                  ? 'bg-primary text-white shadow-btn'
+                  : 'bg-primary-light text-primary shadow-card group-hover:shadow-card-hover'
               }`}
             >
-              <Icon className="h-5 w-5" />
+              <Icon className="h-6 w-6" strokeWidth={1.75} />
             </span>
-            <span className="text-xs text-muted">{category.name}</span>
+            <span className="text-xs font-medium text-foreground">{category.name}</span>
           </Link>
         );
       })}

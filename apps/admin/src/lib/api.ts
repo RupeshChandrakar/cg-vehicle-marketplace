@@ -1,5 +1,12 @@
 import { API_BASE_URL } from '@/config/api';
 import type { AdminVehicle, PaginatedResult, VehicleStatus } from '@/types/vehicle';
+import type {
+  AdminCallLog,
+  AdminEnquiry,
+  CallOutcome,
+  EnquiryMessage,
+  EnquiryStatus,
+} from '@/types/enquiry';
 
 export class ApiError extends Error {
   constructor(
@@ -96,5 +103,61 @@ export function rejectVehicle(
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ reason }),
+  });
+}
+
+export function getAdminEnquiries(
+  accessToken: string,
+  status?: EnquiryStatus,
+): Promise<PaginatedResult<AdminEnquiry>> {
+  const query = status ? `?status=${status}` : '';
+  return request(`/admin/enquiries${query}`, accessToken);
+}
+
+export function getAdminEnquiry(accessToken: string, id: string): Promise<AdminEnquiry> {
+  return request(`/admin/enquiries/${id}`, accessToken);
+}
+
+export function getAdminEnquiryMessages(
+  accessToken: string,
+  id: string,
+): Promise<EnquiryMessage[]> {
+  return request(`/admin/enquiries/${id}/messages`, accessToken);
+}
+
+export function sendAdminEnquiryMessage(
+  accessToken: string,
+  id: string,
+  body: string,
+): Promise<EnquiryMessage> {
+  return request(`/admin/enquiries/${id}/messages`, accessToken, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ body }),
+  });
+}
+
+export function updateEnquiryStatus(
+  accessToken: string,
+  id: string,
+  status: EnquiryStatus,
+): Promise<AdminEnquiry> {
+  return request(`/admin/enquiries/${id}/status`, accessToken, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  });
+}
+
+export function logEnquiryCall(
+  accessToken: string,
+  id: string,
+  outcome: CallOutcome,
+  notes?: string,
+): Promise<AdminCallLog> {
+  return request(`/admin/enquiries/${id}/call-logs`, accessToken, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ outcome, notes }),
   });
 }

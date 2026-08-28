@@ -4,11 +4,29 @@
   --background: #ffffff;
   --foreground: #171717;
 
-  /* Brand palette — see packages/shared-config/src/brand.ts for the source values. */
+  /* Brand palette — see packages/shared-config/src/brand.ts for the source values.
+     These five hex values are fixed by the product brief and never change. */
   --color-primary: #168a45;
   --color-primary-light: #f2f8f4;
   --color-muted: #6b7280;
   --color-line: #e5e7eb;
+
+  /* Derived, non-brief tones — additive, never a replacement for the fixed
+     palette above. Warm off-white alternates section backgrounds so the page
+     isn't a stack of identical white blocks; muted gold is reserved strictly
+     for ratings/"Featured" callouts so it never competes with green's
+     "action/trust" meaning. See docs/ARCHITECTURE.md "Design language". */
+  --color-warm: #fbfaf8;
+  --color-gold: #c4881a;
+
+  /* Ambient, dark-tinted shadows (never plain gray/black) — these replace
+     `border` as the primary way cards separate from the page. Two layers:
+     a tight contact shadow plus a soft wide ambient one. */
+  --shadow-card: 0 1px 2px 0 rgb(23 23 23 / 0.04), 0 8px 20px -10px rgb(23 23 23 / 0.14);
+  --shadow-card-hover: 0 2px 4px 0 rgb(23 23 23 / 0.06), 0 20px 32px -14px rgb(23 23 23 / 0.2);
+  --shadow-btn: 0 1px 2px 0 rgb(23 23 23 / 0.06);
+  --shadow-btn-hover-primary: 0 10px 24px -8px rgb(22 138 69 / 0.38);
+  --shadow-float: 0 12px 32px -8px rgb(23 23 23 / 0.18);
 }
 
 @theme inline {
@@ -18,7 +36,9 @@
   --color-primary-light: var(--color-primary-light);
   --color-muted: var(--color-muted);
   --color-line: var(--color-line);
-  --font-sans: var(--font-geist-sans);
+  --color-warm: var(--color-warm);
+  --color-gold: var(--color-gold);
+  --font-sans: var(--font-display-sans);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -32,5 +52,26 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-display-sans), Arial, Helvetica, sans-serif;
+}
+
+/*
+ * Shared depth utilities. Kept as plain CSS classes (not Tailwind arbitrary
+ * values sprinkled everywhere) so every card/button in the app pulls from the
+ * exact same shadow tokens instead of subtly-different one-off values.
+ */
+.shadow-card {
+  box-shadow: var(--shadow-card);
+}
+.shadow-card-hover {
+  box-shadow: var(--shadow-card-hover);
+}
+.shadow-btn {
+  box-shadow: var(--shadow-btn);
+}
+.shadow-btn-hover-primary:hover {
+  box-shadow: var(--shadow-btn-hover-primary);
+}
+.shadow-float {
+  box-shadow: var(--shadow-float);
 }

@@ -10,6 +10,7 @@ import { UsersModule } from './modules/users/users.module';
 import { VehiclesModule } from './modules/vehicles/vehicles.module';
 import { VehicleMediaModule } from './modules/vehicle-media/vehicle-media.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { EnquiriesModule } from './modules/enquiries/enquiries.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { AuthModule } from './modules/auth/auth.module';
     UsersModule,
     VehiclesModule,
     VehicleMediaModule,
+    EnquiriesModule,
   ],
 })
 export class AppModule {}

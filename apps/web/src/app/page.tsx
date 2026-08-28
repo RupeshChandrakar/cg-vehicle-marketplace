@@ -1,10 +1,10 @@
 import Link from 'next/link';
+import { ShieldCheck } from 'lucide-react';
 import { getCategories, getLocations, getVehicles } from '@/lib/api';
 import { VehicleCard } from '@/features/vehicles/vehicle-card';
 import { CategoryFilter } from '@/features/search/category-filter';
-import { LocationSelector } from '@/features/search/location-selector';
-import { SearchBar } from '@/features/search/search-bar';
-import type { Category, PaginatedResult, Vehicle } from '@/types/vehicle';
+import { SearchLocationBar } from '@/features/search/search-location-bar';
+import type { Category, Location, PaginatedResult, Vehicle } from '@/types/vehicle';
 
 function firstValue(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -33,15 +33,16 @@ export default async function Home(props: PageProps<'/'>) {
   const activeCategory = categories.find((category) => category.slug === categorySlug);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8 px-4 py-6">
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <LocationSelector locations={locations} activeDistrictSlug={districtSlug} />
-        <div className="flex-1">
-          <SearchBar initialQuery={query} />
-        </div>
-      </div>
-
-      {!hasActiveFilters && <HeroBanner />}
+    <div className="mx-auto max-w-6xl space-y-10 px-4 py-6 sm:py-10">
+      {hasActiveFilters ? (
+        <SearchLocationBar
+          locations={locations}
+          activeDistrictSlug={districtSlug}
+          initialQuery={query}
+        />
+      ) : (
+        <HeroBanner locations={locations} activeDistrictSlug={districtSlug} initialQuery={query} />
+      )}
 
       <CategoryFilter
         categories={categories}
@@ -49,7 +50,7 @@ export default async function Home(props: PageProps<'/'>) {
         activeDistrictSlug={districtSlug}
       />
 
-      <div className="space-y-4">
+      <div className="space-y-5">
         <ResultsHeading
           query={query}
           activeCategory={activeCategory}
@@ -58,7 +59,7 @@ export default async function Home(props: PageProps<'/'>) {
         />
 
         {fellBackToAllDistricts && (
-          <p className="border border-line bg-primary-light px-4 py-3 text-sm text-foreground">
+          <p className="rounded-xl bg-primary-light px-4 py-3 text-sm text-foreground">
             Is district mein abhi listings nahi hain — Chhattisgarh ki saari listings dikha rahe
             hain.
           </p>
@@ -67,7 +68,7 @@ export default async function Home(props: PageProps<'/'>) {
         {result.data.length === 0 ? (
           <EmptyState />
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
             {result.data.map((vehicle) => (
               <VehicleCard key={vehicle.id} vehicle={vehicle} />
             ))}
@@ -85,21 +86,47 @@ export default async function Home(props: PageProps<'/'>) {
   );
 }
 
-function HeroBanner() {
+function HeroBanner({
+  locations,
+  activeDistrictSlug,
+  initialQuery,
+}: {
+  locations: Location[];
+  activeDistrictSlug?: string;
+  initialQuery?: string;
+}) {
   return (
-    <div className="border border-line bg-primary-light p-6 sm:p-8">
-      <h1 className="text-2xl font-semibold text-foreground sm:text-3xl">
-        Sahi Gaadi, <span className="text-primary">Sahi Daam</span>
-      </h1>
-      <p className="mt-2 max-w-md text-sm text-muted">
-        Verified vehicles, best condition, best deals — Chhattisgarh ke local experts ke saath.
-      </p>
-      <Link
-        href="/sell"
-        className="mt-4 inline-block bg-primary px-4 py-2 text-sm font-medium text-white"
-      >
-        Apni Gaadi Bechein
-      </Link>
+    <div className="relative">
+      <div className="rounded-2xl bg-primary-light px-6 py-10 shadow-card sm:px-10 sm:py-14">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-background px-3 py-1 text-xs font-medium text-primary shadow-card">
+          <ShieldCheck className="h-3.5 w-3.5" />
+          500+ Verified Sellers Chhattisgarh Mein
+        </span>
+        <h1 className="mt-4 max-w-lg text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+          Sahi Gaadi, <span className="text-primary">Sahi Daam</span>
+        </h1>
+        <p className="mt-3 max-w-md text-sm text-muted sm:text-base">
+          Verified vehicles, best condition, best deals — Chhattisgarh ke local experts ke saath.
+        </p>
+        <Link
+          href="/sell"
+          className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] hover:shadow-btn-hover-primary active:scale-[0.97]"
+        >
+          Apni Gaadi Bechein
+        </Link>
+      </div>
+
+      {/* The signature "floating pill" — the search bar sits as its own
+          elevated white surface overlapping the panel's bottom edge, rather
+          than living inside it as a plain form field. */}
+      <div className="relative z-10 -mt-7 px-4 sm:px-8">
+        <SearchLocationBar
+          locations={locations}
+          activeDistrictSlug={activeDistrictSlug}
+          initialQuery={initialQuery}
+          variant="floating"
+        />
+      </div>
     </div>
   );
 }
@@ -118,7 +145,7 @@ function ResultsHeading({
   if (query) {
     return (
       <h2 className="text-sm text-muted">
-        &quot;{query}&quot; ke liye <span className="font-medium text-foreground">{total}</span>{' '}
+        &quot;{query}&quot; ke liye <span className="font-semibold text-foreground">{total}</span>{' '}
         vehicles mile
       </h2>
     );
@@ -126,12 +153,12 @@ function ResultsHeading({
   if (activeCategory) {
     return (
       <h2 className="text-sm text-muted">
-        <span className="font-medium text-foreground">{total}</span> {activeCategory.name} mile
+        <span className="font-semibold text-foreground">{total}</span> {activeCategory.name} mile
       </h2>
     );
   }
   return (
-    <h2 className="text-base font-medium text-foreground">
+    <h2 className="text-lg font-semibold text-foreground">
       {hasActiveFilters ? `${total} vehicles mile` : 'Aapke aas-paas ki gaadiyan'}
     </h2>
   );
@@ -139,7 +166,7 @@ function ResultsHeading({
 
 function EmptyState() {
   return (
-    <div className="border border-line px-4 py-16 text-center text-muted">
+    <div className="rounded-2xl bg-primary-light px-4 py-16 text-center text-muted shadow-card">
       Koi vehicle nahi mila. Category ya location badal ke dekhein.
     </div>
   );
@@ -171,7 +198,10 @@ function Pagination({
   return (
     <nav className="flex items-center justify-center gap-4 pt-4 text-sm" aria-label="Pagination">
       {page > 1 && (
-        <Link href={hrefFor(page - 1)} className="text-primary">
+        <Link
+          href={hrefFor(page - 1)}
+          className="rounded-full px-4 py-2 font-medium text-primary transition hover:bg-primary-light"
+        >
           Previous
         </Link>
       )}
@@ -179,7 +209,10 @@ function Pagination({
         Page {page} of {totalPages}
       </span>
       {page < totalPages && (
-        <Link href={hrefFor(page + 1)} className="text-primary">
+        <Link
+          href={hrefFor(page + 1)}
+          className="rounded-full px-4 py-2 font-medium text-primary transition hover:bg-primary-light"
+        >
           Next
         </Link>
       )}

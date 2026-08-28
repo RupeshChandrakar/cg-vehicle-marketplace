@@ -27,6 +27,48 @@ translate literally to web):
   response ever reaches a public endpoint; `toAdminVehicle()` keeps it. If you add another
   sensitive field to specs, it needs the same treatment — specs isn't public-safe by default.
 
+### Visual design system (2026-08-28 refresh)
+
+The first pass at applying the mockup (icons + Hinglish copy + specs fields, above) still read as
+"flat/generic" once live — no depth, borders instead of shadows, sharp corners everywhere, a
+single flat green. Fixed via a "Soft Ignition" design system (chosen by a 4-proposal / 3-judge
+exploration, cross-checked against real computed styles pulled from Spinny/Ola/Uber) applied
+across `apps/web`:
+
+- **Font**: `Plus Jakarta Sans` (via `next/font/google`) replaced Geist Sans as the UI typeface —
+  a free, geometric-warm font in the same spirit as Spinny's Jost-based identity, without reusing
+  anyone's actual asset. `Geist Mono` stays, now used specifically for prices/tabular numbers
+  (`font-mono tabular-nums`) — every design proposal explored converged on mono-for-price.
+- **Radius hierarchy** (never mixed across tiers): badges/pills = full (`rounded-full`); buttons
+  and form inputs = `rounded-lg` (8px); cards (vehicle card, spec tiles, wizard step container) =
+  `rounded-xl`/`rounded-2xl`; `rounded-2xl` reserved for hero-scale surfaces only (hero panel,
+  detail-page gallery). Primary CTAs (Chat, Post Ad, wizard Continue/Submit, header "Sell Your
+  Vehicle") are the one exception at full pill — the most rounded, most confident shape, reserved
+  for the single most important action per screen.
+- **Shadows over borders**: `--shadow-card` / `--shadow-card-hover` / `--shadow-btn` /
+  `--shadow-btn-hover-primary` / `--shadow-float` are dark-tinted (`rgb(23 23 23 / …)`) CSS custom
+  properties defined in `globals.css`, exposed as `.shadow-card` etc. utility classes. Cards no
+  longer carry a `border` — the shadow alone separates them from the page background, which was
+  the single biggest lever for fixing the "flat" complaint.
+- **Call vs. Chat color split**: the vehicle detail page's "Call" button is filled Dark (`bg-foreground`)
+  while "Chat"/"Post Ad"/wizard actions stay Primary Green — every judge in the design review
+  called this out as the real mechanism for "don't overuse green" (two distinct actions get two
+  distinct colors, instead of one green button doing every job on the screen).
+- **Derived tokens** (additive, the five brief-mandated hex values never changed): `--color-warm`
+  (`#fbfaf8`, alternating section backgrounds) and `--color-gold` (`#c4881a`, reserved strictly
+  for ratings/"Featured" — not yet used anywhere, held in reserve for Phase 4+).
+  `--color-primary-light` remains reserved for small active/selected surfaces, never a full-bleed
+  background.
+  - **Hero's floating search pill**: `SearchLocationBar` (in `features/search/`, replacing the old
+  separate `LocationSelector`/`SearchBar`) merges district selection and search into one pill-
+  shaped control. On the home page (no active filters) it renders as `variant="floating"`,
+  overlapping the hero panel's bottom edge via a negative top margin on its wrapper — the one
+  deliberate "this feels crafted, not templated" moment. With filters active there's no hero
+  panel to float over, so it renders as `variant="inline"` (same component, `shadow-card` instead
+  of `shadow-float`).
+- The **admin app** (`apps/admin`) was deliberately left untouched by this refresh — it's
+  internal-only tooling with no mockup coverage. Revisit only if explicitly asked to align it.
+
 ## Brand configuration
 
 The brand name is not finalized. Every app reads it from `packages/shared-config/src/brand.ts` —
@@ -182,11 +224,47 @@ the same reason.
 | 0 — Foundation               | Repo scaffold, both Next.js apps, NestJS boot, Prisma+Postgres, health check, lint/format/CI _(done)_                                         |
 | 1 — Core Marketplace         | Categories, locations + district fallback, vehicle CRUD + status workflow, public ID, browse/search/filter/sort, vehicle detail page _(done)_ |
 | 2 — Sell + Verification      | Sell flow, media upload, admin review/approve/reject queue _(done)_                                                                           |
-| 3 — Enquiry & Agent Workflow | Enquiry creation, agent assignment, status state machine, basic chat, call logging                                                            |
+| 3 — Enquiry & Agent Workflow | Enquiry creation, agent assignment, status state machine, basic chat, call logging _(done)_                                                    |
 | 4 — Accounts & Engagement    | OTP auth polish, favorites, notifications, reviews                                                                                            |
 | 5 — Intelligent Chat Layer   | AI orchestration on top of Phase 3's deterministic data — never a source of truth                                                             |
 | 6 — Reel Studio              | Template-based FFmpeg video generation, only after 1–4 are stable                                                                             |
 | 7 — Mobile App               | React Native consuming the same API                                                                                                           |
+
+### Phase 3 notes
+
+- **Agent assignment**: no district/territory setup exists yet, so a new enquiry is auto-assigned
+  to whichever active agent currently carries the fewest open enquiries (`open`/`contacted`/
+  `negotiating`) — simple, fair, and needs no configuration. An admin can always reassign via
+  `POST /admin/enquiries/:id/assign` (built, not yet wired to an admin UI control — add one if
+  agents outgrow this default).
+- **Customers stay unauthenticated** in Phase 3, matching the sell flow's precedent: an enquiry
+  is created with just name+phone (`UsersService.findOrCreateByPhone`), no OTP session. Real
+  customer accounts land in Phase 4.
+- **Conversation-access tokens**: because customers aren't authenticated, `EnquiriesService`
+  issues a second, narrower *kind* of JWT for chat — `{ type: 'conversation', conversationId,
+  customerId }`, 24h TTL — verified manually (`resolveRequesterFromToken`), never through
+  `JwtStrategy`/`JwtAuthGuard` (which only ever accepts `type: 'access'`). The public
+  `EnquiriesController`'s message endpoints and the `EnquiriesGateway` both accept either this
+  token or a normal staff access token, resolving to the same `Requester` union type in
+  `enquiries.service.ts`. `AuthModule` re-exports `JwtModule` specifically so `EnquiriesModule`
+  can sign/verify off the same `JWT_SECRET` without a second registration.
+- **Realtime**: `EnquiriesGateway` (`@nestjs/websockets` + `@nestjs/platform-socket.io`, wired via
+  `app.useWebSocketAdapter(new IoAdapter(app))` in `main.ts`) runs one Socket.IO room per enquiry
+  (`enquiry:{id}`) at namespace `/enquiries`. `join` resolves the token and authorizes exactly
+  like the REST path (`assertCanAccessConversation`) before joining the room; `message` persists
+  via the same `EnquiriesService.sendMessage()` REST uses, then broadcasts to the room. The
+  customer chat page (`apps/web/src/app/enquiry/[id]/page.tsx`) also does a REST
+  `getEnquiryMessages` fetch on mount so history renders immediately, without waiting on the
+  socket handshake.
+- **State machine**: `EnquiryStatusService` mirrors `VehicleStatusService`'s
+  transition-table-service pattern exactly (`open → contacted → negotiating → closed_won` /
+  `closed_lost` from any non-terminal state). The admin UI mirrors the same table client-side
+  purely to only *offer* valid buttons — the API is the actual authority.
+- **Call logging** has no telephony integration — `CreateCallLogDto`/`CallLog` just record an
+  outcome + notes for a call an agent made off-platform, for accountability.
+- **Admin app was not visually refreshed** in this phase — it keeps the plain
+  border/no-shadow style from Phase 2, consistent with the earlier decision to leave the internal
+  tool unstyled unless asked.
 
 ### Phase 2 notes
 

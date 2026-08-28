@@ -126,6 +126,61 @@ export function createVehicle(payload: CreateVehiclePayload): Promise<{ id: stri
   });
 }
 
+export type EnquiryChannel = 'chat' | 'call';
+
+export interface CreateEnquiryPayload {
+  vehiclePublicId: number;
+  channel: EnquiryChannel;
+  customerName: string;
+  customerPhone: string;
+  message?: string;
+}
+
+export interface CreateEnquiryResult {
+  enquiry: { id: string; status: string; channel: EnquiryChannel };
+  conversationId?: string;
+  /** Only present for channel: 'chat' — bearer token for the message/socket endpoints. */
+  accessToken?: string;
+}
+
+export function createEnquiry(payload: CreateEnquiryPayload): Promise<CreateEnquiryResult> {
+  return request<CreateEnquiryResult>('/enquiries', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export interface EnquiryMessage {
+  id: string;
+  conversationId: string;
+  senderType: 'customer' | 'agent';
+  senderId: string;
+  body: string;
+  createdAt: string;
+}
+
+export function getEnquiryMessages(
+  enquiryId: string,
+  accessToken: string,
+): Promise<EnquiryMessage[]> {
+  return request<EnquiryMessage[]>(`/enquiries/${enquiryId}/messages`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+}
+
+export function sendEnquiryMessage(
+  enquiryId: string,
+  accessToken: string,
+  body: string,
+): Promise<EnquiryMessage> {
+  return request<EnquiryMessage>(`/enquiries/${enquiryId}/messages`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify({ body }),
+  });
+}
+
 export function uploadVehicleMedia(
   vehicleId: string,
   files: File[],

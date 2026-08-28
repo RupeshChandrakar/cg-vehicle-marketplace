@@ -212,8 +212,32 @@ async function seedAdmin(): Promise<{ id: string }> {
   });
 }
 
+// Dev agent accounts (Phase 3) — same password as the admin for local
+// convenience only; never reuse this pattern outside a throwaway dev seed.
+const SAMPLE_AGENTS = [
+  { email: 'agent1@cgautomarket.local', name: 'Agent Ramesh', phone: '+910000000001' },
+  { email: 'agent2@cgautomarket.local', name: 'Agent Sunita', phone: '+910000000002' },
+];
+
+async function seedAgents(): Promise<void> {
+  const password = process.env.SEED_ADMIN_PASSWORD;
+  if (!password) return;
+  const passwordHash = await bcrypt.hash(password, PASSWORD_HASH_ROUNDS);
+
+  await Promise.all(
+    SAMPLE_AGENTS.map((agent) =>
+      prisma.user.upsert({
+        where: { email: agent.email },
+        update: { passwordHash, role: UserRole.agent },
+        create: { ...agent, passwordHash, role: UserRole.agent },
+      }),
+    ),
+  );
+}
+
 async function main(): Promise<void> {
   const admin = await seedAdmin();
+  await seedAgents();
 
   const categories = await Promise.all(
     CATEGORIES.map((name, index) =>
@@ -298,8 +322,9 @@ async function main(): Promise<void> {
   }
 
   console.log(
-    `Seeded 1 admin (${process.env.SEED_ADMIN_EMAIL}), ${categories.length} categories, ` +
-      `${locations.length} locations, ${SAMPLE_VEHICLES.length} vehicles.`,
+    `Seeded 1 admin (${process.env.SEED_ADMIN_EMAIL}), ${SAMPLE_AGENTS.length} agents, ` +
+      `${categories.length} categories, ${locations.length} locations, ` +
+      `${SAMPLE_VEHICLES.length} vehicles.`,
   );
 }
 
