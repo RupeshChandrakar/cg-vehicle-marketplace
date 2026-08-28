@@ -666,6 +666,28 @@ hero tagline — something that cycles on its own rather than a static line.
   visibly advanced through 3 distinct variants, and the promo text advanced through all 5
   messages, on their own independent schedules with neither disrupting the other.
 
+### Category tile design matched to the mobile mockup (2026-08-28)
+
+PO re-shared the original mobile-app mockup (the same one behind the 2026-08-28 web design
+refresh — see "Design direction" earlier) and asked to match the home screen's "Categories"
+section specifically, which the earlier refresh hadn't precisely carried over.
+
+- **Neutral at rest, green only when selected**: the mockup's category tiles are white cards with
+  simple dark-outline icons — not the bold green-filled squares this app had. Changed
+  `CategoryFilter`'s inactive state to `bg-background text-foreground` (matching the mockup);
+  kept the active/currently-filtered state as `bg-primary text-white` — the mockup's static
+  screenshot has no filter applied, so there was nothing to copy for that state, but keeping a
+  clear "this is selected" signal is a real interaction need the mockup didn't have to solve.
+  This also fits the standing design rule from the earlier refresh: green is reserved for actions/
+  active state, not default browsing chrome.
+- Added a plain "Categories" section heading above the tile row, matching the mockup — a
+  **"View All" link was deliberately not added** even though the mockup has one: on mobile it
+  expands a truncated category list, but the web version already shows every category inline, so
+  a "View All" link here would have nowhere real to go.
+- Verified live: the new white/dark-icon tiles render correctly, the "Categories" heading is
+  present, and clicking a tile still correctly applies the green active state and filters results
+  (confirmed against a real category with real listings).
+
 ### Phase 2 notes
 
 - **Staff auth** landed here rather than waiting for Phase 4, since the admin review queue
