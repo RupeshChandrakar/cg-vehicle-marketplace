@@ -4,6 +4,7 @@ import { VehicleCard } from '@/features/vehicles/vehicle-card';
 import { CategoryFilter } from '@/features/search/category-filter';
 import { SearchLocationBar } from '@/features/search/search-location-bar';
 import { PromoTicker } from '@/features/home/promo-ticker';
+import { RotatingHeroCard } from '@/features/home/rotating-hero-card';
 import type { Category, Location, PaginatedResult, Vehicle } from '@/types/vehicle';
 
 function firstValue(value: string | string[] | undefined): string | undefined {
@@ -97,31 +98,21 @@ function HeroBanner({
 }) {
   return (
     <div className="relative">
-      <div className="hero-background relative overflow-hidden rounded-2xl px-6 py-10 shadow-card sm:px-10 sm:py-14">
-        {/* Purely decorative depth — never behind interactive content, and
-            never so bold it competes with the heading/CTA above it. */}
-        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="hero-blob-a absolute -top-20 -right-10 h-64 w-64 rounded-full blur-3xl sm:h-80 sm:w-80" />
-          <div className="hero-blob-b absolute -bottom-24 -left-16 h-72 w-72 rounded-full blur-3xl sm:h-96 sm:w-96" />
-        </div>
-
-        <div className="relative z-10">
-          <PromoTicker />
-          <h1 className="mt-4 max-w-lg text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            Sahi Gaadi, <span className="text-primary">Sahi Daam</span>
-          </h1>
-          <p className="mt-3 max-w-md text-sm text-muted sm:text-base">
-            Verified vehicles, best condition, best deals — Chhattisgarh ke local experts ke
-            saath.
-          </p>
-          <Link
-            href="/sell"
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] hover:shadow-btn-hover-primary active:scale-[0.97]"
-          >
-            Apni Gaadi Bechein
-          </Link>
-        </div>
-      </div>
+      <RotatingHeroCard>
+        <PromoTicker />
+        <h1 className="mt-4 max-w-lg text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+          Sahi Gaadi, <span className="text-primary">Sahi Daam</span>
+        </h1>
+        <p className="mt-3 max-w-md text-sm text-muted sm:text-base">
+          Verified vehicles, best condition, best deals — Chhattisgarh ke local experts ke saath.
+        </p>
+        <Link
+          href="/sell"
+          className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] hover:shadow-btn-hover-primary active:scale-[0.97]"
+        >
+          Apni Gaadi Bechein
+        </Link>
+      </RotatingHeroCard>
 
       {/* The signature "floating pill" — the search bar sits as its own
           elevated white surface overlapping the panel's bottom edge, rather

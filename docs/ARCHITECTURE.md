@@ -649,6 +649,22 @@ hero tagline — something that cycles on its own rather than a static line.
   behind the actual heading/copy via `z-10`, with the card given `overflow-hidden` so the blobs
   never spill past its rounded corners. Purely decorative and never interactive — verified the
   heading/paragraph/CTA all render at full contrast on top of it, unaffected.
+- **A third follow-up** — PO asked to see several full-card background directions before
+  deciding. Built 5 as a temporary `/hero-preview` comparison route (not linked anywhere, deleted
+  once the decision was made): the soft-blobs one above, a dot grid, diagonal hairline stripes, a
+  radial spotlight, and a "road motif" (a dark diagonal strip with dashed lane markings). The road
+  motif was **rejected on review** — the dark strip crossed the paragraph text and visibly hurt
+  its legibility, a real problem, not a style preference.
+- **`RotatingHeroCard`** — PO's final call: keep all 4 approved looks live, cycling automatically
+  rather than picking one. Rotates every 8s (deliberately slower than `PromoTicker`'s own 4s text
+  rotation, so the card doesn't read as everything changing on the same beat). The background is
+  a separate, absolutely-positioned layer that remounts via a React `key` each rotation (to
+  replay `animate-hero-bg-fade-in`); the heading/`PromoTicker`/CTA live in a sibling div that
+  never remounts — this matters because remounting `PromoTicker` itself would reset its own
+  independent rotation timer every time the background changed. Verified live by sampling both
+  the background's class and the promo badge's text every ~4.2s over a 21s window: the background
+  visibly advanced through 3 distinct variants, and the promo text advanced through all 5
+  messages, on their own independent schedules with neither disrupting the other.
 
 ### Phase 2 notes
 

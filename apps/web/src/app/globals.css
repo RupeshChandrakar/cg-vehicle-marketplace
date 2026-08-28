@@ -155,3 +155,57 @@ body {
 .hero-blob-b {
   background: rgb(22 138 69 / 0.1);
 }
+
+/* --- The 4 approved hero background looks (a 5th, a "road motif," was
+ * rejected during review — a dark strip crossed the paragraph text and
+ * hurt legibility). RotatingHeroCard cycles through these live. All built
+ * from the same fixed palette (--color-primary tinted, plus
+ * --color-primary-light) — no new colors, no gold. --- */
+
+/* B: dot grid — small dots fading toward the content, a common
+ * modern-SaaS decorative texture. */
+.hero-variant-dots {
+  background-color: var(--color-primary-light);
+  background-image: radial-gradient(rgb(22 138 69 / 0.35) 1.5px, transparent 1.5px);
+  background-size: 22px 22px;
+}
+
+/* C: fine diagonal hairline stripes — a subtler, more "technical/premium"
+ * texture than dots. */
+.hero-variant-stripes {
+  background-color: var(--color-primary-light);
+  background-image: repeating-linear-gradient(
+    115deg,
+    rgb(22 138 69 / 0.1) 0px,
+    rgb(22 138 69 / 0.1) 1px,
+    transparent 1px,
+    transparent 14px
+  );
+}
+
+/* D: a single soft radial "spotlight" glow — the most minimal option, one
+ * glow instead of scattered blobs/texture. */
+.hero-variant-spotlight {
+  background: radial-gradient(circle at 88% 12%, rgb(22 138 69 / 0.28), transparent 55%), var(--color-primary-light);
+}
+
+/* RotatingHeroCard's background layer remounts (via a React `key` change)
+ * on every rotation, replaying this fade — kept separate from
+ * promo-fade-in since it covers a much larger area and reads better a
+ * touch slower. */
+@keyframes hero-bg-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.animate-hero-bg-fade-in {
+  animation: hero-bg-fade-in 700ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-hero-bg-fade-in {
+    animation: none;
+  }
+}
