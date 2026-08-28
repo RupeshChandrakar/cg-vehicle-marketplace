@@ -116,7 +116,10 @@ export class AuthService {
     );
     await this.prisma.user.update({
       where: { id: userId },
-      data: { refreshTokenHash },
+      // lastLoginAt updates on every token issuance (login *and* refresh),
+      // not just the initial sign-in — a session being refreshed is itself
+      // evidence of genuine recent activity.
+      data: { refreshTokenHash, lastLoginAt: new Date() },
     });
 
     return { accessToken, refreshToken };

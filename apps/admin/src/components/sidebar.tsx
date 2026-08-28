@@ -12,6 +12,7 @@ import {
   Clapperboard,
   BarChart3,
   Wallet,
+  Users,
 } from 'lucide-react';
 import { brand } from '@cg/shared-config';
 import { useAuth } from '@/lib/auth-context';
@@ -28,6 +29,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/queue', label: 'Vehicle Queue', icon: Car },
+  { href: '/sellers', label: 'Sellers', icon: Users },
   { href: '/enquiries', label: 'Enquiries', icon: MessageCircle, badge: 'enquiries' },
   { href: '/finance-leads', label: 'Finance Leads', icon: Wallet },
   { href: '/analytics', label: 'Analytics', icon: BarChart3 },

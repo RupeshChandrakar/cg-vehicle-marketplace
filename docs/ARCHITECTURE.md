@@ -758,6 +758,43 @@ dealer subscription/multi-listing tier would sit on top of this later.
   full browser pass confirmed the same flow through the actual UI, including that a price edit
   survives a page reload.
 
+### Admin Sellers/Dealers directory + Last Active tracking (2026-08-28)
+
+PO asked for a way to manage/view dealer activity from the admin panel — how many
+sellers/dealers exist, what they've been doing. Proposed a core Sellers page plus four optional
+extras (Trusted Seller badge, CSV export, Last Active tracking, Block/Suspend); PO picked only
+**Last Active tracking** alongside the core page — the other three are deliberately not built.
+
+- **`User.lastLoginAt`** (new nullable column) — stamped inside `AuthService.issueTokens()`,
+  the one method both staff login and customer OTP verification already funnel through, so every
+  login path (existing and future) gets tracked for free with a one-line change in a single
+  place rather than being wired into each auth flow separately.
+- **`GET /admin/sellers`** (admin+agent) — `UsersService.findSellersForAdmin()` scopes to
+  customers with `vehiclesSold: { some: {} }`, i.e. actual sellers/dealers, not every browsing
+  customer who never listed anything. Each row carries `totalListings` and a `statusBreakdown`
+  (`{ live: 2, rejected: 1, ... }`) computed by reducing an included `vehiclesSold: {status}[]`
+  client-side — Prisma has no native "count grouped by status within an include" for this shape,
+  so this follows the same sample-and-compute pragmatism already used by the Dashboard and
+  Analytics pages, not a new pattern.
+- **`sellerId` filter on `GET /admin/vehicles`** — lets the Sellers page drill into one seller's
+  listings by reusing the *existing*, already feature-rich Vehicle Queue UI (status tabs, edit
+  links, WhatsApp digest tool) instead of building a second, thinner listing view from scratch.
+  The Queue page reads `sellerId` from the URL (`useSearchParams`, wrapped in `<Suspense>` per
+  Next.js's requirement for that hook), shows a dismissible "Showing listings from one seller
+  only" banner, and passes it straight through to `getAdminVehicles()`.
+- **New `/sellers` admin page** — total dealer count and a rough "active in last 30 days" count
+  (derived from `lastLoginAt` client-side, not a separate endpoint) up top, then one card per
+  seller: name, phone, member-since, last-active (or "Never logged in" — most seed/test sellers
+  predate this column and have never OTP-logged back in, which is correct, not a bug), total
+  listings, and a per-status pill breakdown, with a "View listings" link into the filtered Queue.
+- Explicitly **not** built this round (proposed, declined for now): Trusted Seller badge, CSV
+  export, Seller Block/Suspend, bulk approve/reject.
+- Verified end-to-end live: hit `/admin/sellers` and the `sellerId`-filtered `/admin/vehicles`
+  directly, OTP-logged in as a real seller to confirm `lastLoginAt` actually updates, then a full
+  browser pass — real admin login through the actual form, the Sellers page showing the correct
+  total and per-seller counts, clicking "View listings" landing on a correctly filtered Queue
+  with the active-filter banner, and "Clear filter" removing it again.
+
 ### Phase 2 notes
 
 - **Staff auth** landed here rather than waiting for Phase 4, since the admin review queue

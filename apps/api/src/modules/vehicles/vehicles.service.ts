@@ -242,9 +242,10 @@ export class VehiclesService {
   async findForAdmin(
     query: AdminVehicleQueryDto,
   ): Promise<PaginatedResult<AdminVehicle>> {
-    const where: Prisma.VehicleWhereInput = query.status
-      ? { status: query.status }
-      : {};
+    const where: Prisma.VehicleWhereInput = {
+      status: query.status,
+      sellerId: query.sellerId,
+    };
 
     const [data, total] = await Promise.all([
       this.prisma.vehicle.findMany({

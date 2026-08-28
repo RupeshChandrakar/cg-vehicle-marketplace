@@ -11,6 +11,7 @@ function buildService() {
     upsert: jest.fn<undefined, [UpsertArgs]>(),
     findUnique: jest.fn(),
     findUniqueOrThrow: jest.fn(),
+    findMany: jest.fn().mockResolvedValue([]),
     update: jest.fn(),
     count: jest.fn().mockResolvedValue(0),
   };
@@ -101,6 +102,51 @@ describe('UsersService', () => {
       expect(prisma.user.update).toHaveBeenCalledTimes(1);
       expect(info.referralCode).toHaveLength(8);
       expect(info.totalReferred).toBe(0);
+    });
+  });
+
+  describe('findSellersForAdmin', () => {
+    it('only queries customers who have at least one vehicle listed', async () => {
+      const { service, prisma } = buildService();
+
+      await service.findSellersForAdmin({ page: 1, pageSize: 20 });
+
+      expect(prisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { role: 'customer', vehiclesSold: { some: {} } },
+        }),
+      );
+    });
+
+    it('computes a per-status listing breakdown from the included vehicles', async () => {
+      const { service, prisma } = buildService();
+      prisma.user.findMany.mockResolvedValue([
+        {
+          id: 'seller-1',
+          name: 'Rahul',
+          phone: '+919876543210',
+          createdAt: new Date('2026-01-01'),
+          lastLoginAt: new Date('2026-08-01'),
+          vehiclesSold: [
+            { status: 'live' },
+            { status: 'live' },
+            { status: 'rejected' },
+          ],
+        },
+      ]);
+      prisma.user.count.mockResolvedValue(1);
+
+      const result = await service.findSellersForAdmin({
+        page: 1,
+        pageSize: 20,
+      });
+
+      expect(result.meta.total).toBe(1);
+      expect(result.data[0]).toMatchObject({
+        id: 'seller-1',
+        totalListings: 3,
+        statusBreakdown: { live: 2, rejected: 1 },
+      });
     });
   });
 });

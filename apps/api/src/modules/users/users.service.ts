@@ -1,10 +1,16 @@
 import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../infra/prisma/prisma.service';
-import { Prisma, User } from '../../generated/prisma/client';
+import { PaginatedResult } from '../../common/types/paginated-result.type';
+import { AdminSellerQueryDto } from './dto/admin-seller-query.dto';
+import {
+  Prisma,
+  User,
+  UserRole,
+  VehicleStatus,
+} from '../../generated/prisma/client';
 
 const UNIQUE_CONSTRAINT_VIOLATION = 'P2002';
-
 const REFERRAL_CODE_LENGTH = 8;
 const REFERRAL_CODE_MAX_ATTEMPTS = 5;
 
@@ -12,6 +18,20 @@ export interface ReferralInfo {
   referralCode: string;
   totalReferred: number;
 }
+
+export interface AdminSeller {
+  id: string;
+  name: string | null;
+  phone: string;
+  createdAt: Date;
+  lastLoginAt: Date | null;
+  totalListings: number;
+  statusBreakdown: Partial<Record<VehicleStatus, number>>;
+}
+
+type SellerWithVehicleStatuses = User & {
+  vehiclesSold: Array<{ status: VehicleStatus }>;
+};
 
 @Injectable()
 export class UsersService {
@@ -64,6 +84,61 @@ export class UsersService {
     });
 
     return { referralCode, totalReferred };
+  }
+
+  // --- Admin: sellers/dealers directory. ---
+
+  /** Customers with at least one vehicle they've ever listed — i.e. actual
+   *  sellers/dealers, not every browsing customer. `meta.total` is the
+   *  genuine "how many sellers/dealers are there" count, independent of
+   *  the page being viewed. */
+  async findSellersForAdmin(
+    query: AdminSellerQueryDto,
+  ): Promise<PaginatedResult<AdminSeller>> {
+    const where: Prisma.UserWhereInput = {
+      role: UserRole.customer,
+      vehiclesSold: { some: {} },
+    };
+
+    const [users, total] = await Promise.all([
+      this.prisma.user.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        include: { vehiclesSold: { select: { status: true } } },
+        skip: (query.page - 1) * query.pageSize,
+        take: query.pageSize,
+      }),
+      this.prisma.user.count({ where }),
+    ]);
+
+    return {
+      data: users.map((user) => this.toAdminSeller(user)),
+      meta: {
+        total,
+        page: query.page,
+        pageSize: query.pageSize,
+        totalPages: Math.ceil(total / query.pageSize),
+      },
+    };
+  }
+
+  private toAdminSeller(user: SellerWithVehicleStatuses): AdminSeller {
+    const statusBreakdown = user.vehiclesSold.reduce<
+      Partial<Record<VehicleStatus, number>>
+    >((breakdown, vehicle) => {
+      breakdown[vehicle.status] = (breakdown[vehicle.status] ?? 0) + 1;
+      return breakdown;
+    }, {});
+
+    return {
+      id: user.id,
+      name: user.name,
+      phone: user.phone,
+      createdAt: user.createdAt,
+      lastLoginAt: user.lastLoginAt,
+      totalListings: user.vehiclesSold.length,
+      statusBreakdown,
+    };
   }
 
   private async assignReferralCode(userId: string): Promise<string> {

@@ -19,6 +19,7 @@ import type { AppNotification } from '@/types/notification';
 import type { Reel, ReelTemplate, ReelPublishStatus } from '@/types/reel';
 import type { AnalyticsSummary } from '@/types/analytics';
 import type { AdminFinanceEnquiry, FinanceEnquiryStatus } from '@/types/finance-enquiry';
+import type { AdminSeller } from '@/types/seller';
 
 export class ApiError extends Error {
   constructor(
@@ -90,12 +91,24 @@ export function getAdminVehicles(
   accessToken: string,
   status?: VehicleStatus,
   pageSize?: number,
+  sellerId?: string,
 ): Promise<PaginatedResult<AdminVehicle>> {
   const params = new URLSearchParams();
   if (status) params.set('status', status);
   if (pageSize) params.set('pageSize', String(pageSize));
+  if (sellerId) params.set('sellerId', sellerId);
   const query = params.toString();
   return request(`/admin/vehicles${query ? `?${query}` : ''}`, accessToken);
+}
+
+export function getAdminSellers(
+  accessToken: string,
+  pageSize?: number,
+): Promise<PaginatedResult<AdminSeller>> {
+  const params = new URLSearchParams();
+  if (pageSize) params.set('pageSize', String(pageSize));
+  const query = params.toString();
+  return request(`/admin/sellers${query ? `?${query}` : ''}`, accessToken);
 }
 
 export function approveVehicle(

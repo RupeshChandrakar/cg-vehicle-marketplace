@@ -5,10 +5,15 @@ import { AuthService } from './auth.service';
 jest.mock('bcrypt');
 const mockedBcrypt = bcrypt as jest.Mocked<typeof bcrypt>;
 
+interface UpdateArgs {
+  where: { id: string };
+  data: { refreshTokenHash?: string | null; lastLoginAt?: Date };
+}
+
 function buildService() {
   const userTable = {
     findUnique: jest.fn(),
-    update: jest.fn(),
+    update: jest.fn<undefined, [UpdateArgs]>(),
   };
   const prisma = { user: userTable };
   const jwtService = {
@@ -91,10 +96,10 @@ describe('AuthService', () => {
       expect(result.user).toMatchObject({ id: 'admin-1', role: 'admin' });
       expect(result.tokens.accessToken).toBe('signed.jwt.token');
       expect(jwtService.signAsync).toHaveBeenCalledTimes(2);
-      expect(prisma.user.update).toHaveBeenCalledWith({
-        where: { id: 'admin-1' },
-        data: { refreshTokenHash: 'hashed-refresh-token' },
-      });
+      const [[updateArgs]] = prisma.user.update.mock.calls;
+      expect(updateArgs.where).toEqual({ id: 'admin-1' });
+      expect(updateArgs.data.refreshTokenHash).toBe('hashed-refresh-token');
+      expect(updateArgs.data.lastLoginAt).toBeInstanceOf(Date);
     });
   });
 
@@ -156,10 +161,10 @@ describe('AuthService', () => {
       const tokens = await service.refresh('current.refresh.token');
 
       expect(tokens.accessToken).toBe('signed.jwt.token');
-      expect(prisma.user.update).toHaveBeenCalledWith({
-        where: { id: 'admin-1' },
-        data: { refreshTokenHash: 'new-hashed-refresh-token' },
-      });
+      const [[updateArgs]] = prisma.user.update.mock.calls;
+      expect(updateArgs.where).toEqual({ id: 'admin-1' });
+      expect(updateArgs.data.refreshTokenHash).toBe('new-hashed-refresh-token');
+      expect(updateArgs.data.lastLoginAt).toBeInstanceOf(Date);
     });
   });
 

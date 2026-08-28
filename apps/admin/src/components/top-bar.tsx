@@ -8,6 +8,7 @@ import { useUnreadNotifications } from '@/lib/use-unread-notifications';
 const PAGE_TITLES: Record<string, string> = {
   '/': 'Dashboard',
   '/queue': 'Vehicle Queue',
+  '/sellers': 'Sellers',
   '/enquiries': 'Enquiries',
   '/finance-leads': 'Finance Leads',
   '/analytics': 'Analytics',

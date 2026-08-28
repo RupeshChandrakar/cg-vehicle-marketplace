@@ -1,9 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Share2 } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Share2, X } from 'lucide-react';
 import { brand } from '@cg/shared-config';
 import { useAuth } from '@/lib/auth-context';
 import { approveVehicle, getAdminVehicles, rejectVehicle, ApiError } from '@/lib/api';
@@ -20,8 +20,21 @@ const STATUS_PILL: Record<string, string> = {
 };
 
 export default function QueuePage() {
+  return (
+    <Suspense fallback={null}>
+      <QueueContent />
+    </Suspense>
+  );
+}
+
+function QueueContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, accessToken, isLoading: isAuthLoading } = useAuth();
+
+  // Drill-down from the Sellers page — filters the queue to one seller's
+  // listings regardless of which status tab is selected.
+  const sellerId = searchParams.get('sellerId') ?? undefined;
 
   const [status, setStatus] = useState<VehicleStatus>('submitted');
   const [vehicles, setVehicles] = useState<AdminVehicle[]>([]);
@@ -34,14 +47,14 @@ export default function QueuePage() {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await getAdminVehicles(accessToken, status);
+      const result = await getAdminVehicles(accessToken, status, undefined, sellerId);
       setVehicles(result.data);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Failed to load the queue.');
     } finally {
       setIsLoading(false);
     }
-  }, [accessToken, status]);
+  }, [accessToken, status, sellerId]);
 
   useEffect(() => {
     if (!isAuthLoading && !user) {
@@ -92,6 +105,19 @@ export default function QueuePage() {
 
   return (
     <div className="space-y-6 pb-20">
+      {sellerId && (
+        <div className="flex items-center justify-between gap-2 rounded-xl bg-primary-light px-4 py-2.5 text-sm text-foreground">
+          <span>Showing listings from one seller only.</span>
+          <button
+            onClick={() => router.push('/queue')}
+            className="flex items-center gap-1 rounded-full border border-line bg-background px-2.5 py-1 text-xs font-medium text-foreground transition hover:bg-line/40"
+          >
+            <X className="h-3.5 w-3.5" strokeWidth={1.75} />
+            Clear filter
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-2">
         {STATUS_FILTERS.map((filter) => (
           <button
