@@ -626,8 +626,21 @@ hero tagline — something that cycles on its own rather than a static line.
 - **Transition is a small fade+slide (`animate-promo-fade-in` in globals.css), not a marquee
   scroll** — replaying via a React `key` remount on each rotation. Deliberately restrained to
   match this app's existing motion language, rather than a dated blinking-ticker look.
+- **Background got a follow-up pass** (same day, PO feedback: "message thik hai, background bhi
+  attractive karo") — a soft diagonal gradient plus a periodic light-sweep shimmer on the badge
+  itself, built entirely from the fixed brand palette: the gradient blends in `--color-primary`
+  at low opacity (`rgb(22 138 69 / 0.12)`) rather than pure `--color-primary-light`, specifically
+  because `--color-primary-light` alone is nearly white — too close to the white shimmer sweep's
+  own color to read as visible motion against. Deliberately did not reach for `--color-gold` here
+  even though a warm accent might have looked "extra attractive" — the design-language rule
+  reserves gold strictly for ratings/"Featured" callouts so it never dilutes green's action/trust
+  meaning, and a rotating hero badge isn't that. A `prefers-reduced-motion` guard turns the
+  shimmer off entirely for users who've asked for less motion.
 - Verified live: confirmed the badge text actually changes across three consecutive rotation
-  intervals, and that hovering over the badge holds the current message rather than rotating.
+  intervals, that hovering over the badge holds the current message rather than rotating, and —
+  since a moving shimmer is inherently hard to prove from a still screenshot — confirmed the
+  shimmer's actual `transform: translateX(...)` computed value sweeping from -407px to +407px
+  over its cycle by sampling it programmatically over time, not just eyeballing a screenshot.
 
 ### Phase 2 notes
 

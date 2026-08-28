@@ -47,9 +47,11 @@ export function PromoTicker() {
     <span
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
-      className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-background px-3 py-1 text-xs font-medium text-primary shadow-card"
+      className="promo-badge shadow-glow-primary inline-flex max-w-full items-center gap-2 rounded-full py-1 pr-3.5 pl-1 text-xs font-medium text-primary"
     >
-      <Icon className="h-3.5 w-3.5 shrink-0" />
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-white">
+        <Icon className="h-3 w-3" strokeWidth={2} />
+      </span>
       <span key={index} className="animate-promo-fade-in truncate">
         {text}
       </span>
