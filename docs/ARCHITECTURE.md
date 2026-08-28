@@ -610,6 +610,25 @@ agreed to build the honest version instead.
   a live browser pass (banner → form → real submission → confirmation copy, then the same lead
   visible on the real admin Finance Leads page reached via actual sidebar navigation).
 
+### Home hero promo ticker (2026-08-28)
+
+PO asked for a lightweight, auto-rotating promotional banner near the "Sahi Gaadi, Sahi Daam"
+hero tagline — something that cycles on its own rather than a static line.
+
+- **`PromoTicker`** (`apps/web/src/features/home/promo-ticker.tsx`) replaces the old static "500+
+  Verified Sellers" badge in that exact spot on the home hero, cycling through 5 short messages
+  every 4 seconds via a plain `setInterval` — no carousel library. Pauses on hover so a message
+  doesn't swap out from under someone mid-read.
+- **Every message maps to a real, already-shipped feature** — verified sellers, financing
+  enquiry, listing verification badges, referral/invite, agent chat/call — never a placeholder or
+  aspirational claim. The component's own comment states this as a rule: add a message only once
+  its feature is live, remove it the moment the feature is retired.
+- **Transition is a small fade+slide (`animate-promo-fade-in` in globals.css), not a marquee
+  scroll** — replaying via a React `key` remount on each rotation. Deliberately restrained to
+  match this app's existing motion language, rather than a dated blinking-ticker look.
+- Verified live: confirmed the badge text actually changes across three consecutive rotation
+  intervals, and that hovering over the badge holds the current message rather than rotating.
+
 ### Phase 2 notes
 
 - **Staff auth** landed here rather than waiting for Phase 4, since the admin review queue

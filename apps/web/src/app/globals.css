@@ -75,3 +75,21 @@ body {
 .shadow-float {
   box-shadow: var(--shadow-float);
 }
+
+/* Used by PromoTicker (home page hero) — each rotating message remounts via
+ * a React `key` change, replaying this animation. Deliberately a small,
+ * subtle slide+fade, not a marquee-style scroll — matches this app's
+ * otherwise restrained motion language. */
+@keyframes promo-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-promo-fade-in {
+  animation: promo-fade-in 400ms ease-out;
+}

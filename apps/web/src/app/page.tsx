@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { ShieldCheck } from 'lucide-react';
 import { getCategories, getLocations, getVehicles } from '@/lib/api';
 import { VehicleCard } from '@/features/vehicles/vehicle-card';
 import { CategoryFilter } from '@/features/search/category-filter';
 import { SearchLocationBar } from '@/features/search/search-location-bar';
+import { PromoTicker } from '@/features/home/promo-ticker';
 import type { Category, Location, PaginatedResult, Vehicle } from '@/types/vehicle';
 
 function firstValue(value: string | string[] | undefined): string | undefined {
@@ -98,10 +98,7 @@ function HeroBanner({
   return (
     <div className="relative">
       <div className="rounded-2xl bg-primary-light px-6 py-10 shadow-card sm:px-10 sm:py-14">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-background px-3 py-1 text-xs font-medium text-primary shadow-card">
-          <ShieldCheck className="h-3.5 w-3.5" />
-          500+ Verified Sellers Chhattisgarh Mein
-        </span>
+        <PromoTicker />
         <h1 className="mt-4 max-w-lg text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
           Sahi Gaadi, <span className="text-primary">Sahi Daam</span>
         </h1>
