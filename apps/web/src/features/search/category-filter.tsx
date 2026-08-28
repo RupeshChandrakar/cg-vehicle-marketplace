@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Category } from '@/types/vehicle';
-import { getCategoryIcon } from '@/features/vehicles/category-icons';
+import { getCategoryEmoji } from '@/features/vehicles/category-icons';
 
 interface CategoryFilterProps {
   categories: Category[];
@@ -29,7 +29,7 @@ export function CategoryFilter({
         aria-label="Vehicle categories"
       >
         {categories.map((category) => {
-          const Icon = getCategoryIcon(category.slug);
+          const emoji = getCategoryEmoji(category.slug);
           const active = activeCategorySlug === category.slug;
           return (
             <Link
@@ -37,17 +37,17 @@ export function CategoryFilter({
               href={hrefFor(active ? undefined : category.slug, activeDistrictSlug)}
               className="group flex flex-col items-center gap-2 text-center"
             >
-              {/* Mockup reference: neutral white/dark-icon cards at rest —
-                  green is reserved for the active filter, so it stays a
-                  clear "this is selected" signal rather than default noise. */}
+              {/* A flat light-gray chip at rest, no card shadow — green is
+                  reserved for the active filter, so it stays a clear "this
+                  is selected" signal rather than default noise. The emoji
+                  itself is already colorful, so the chip doesn't need to
+                  add its own icon color on top. */}
               <span
-                className={`flex h-14 w-14 items-center justify-center rounded-2xl transition ${
-                  active
-                    ? 'bg-primary text-white shadow-btn'
-                    : 'bg-background text-foreground shadow-card group-hover:shadow-card-hover'
+                className={`flex h-14 w-14 items-center justify-center rounded-2xl text-3xl transition ${
+                  active ? 'bg-primary shadow-btn' : 'category-chip group-hover:bg-line/60'
                 }`}
               >
-                <Icon className="h-6 w-6" strokeWidth={1.75} />
+                {emoji}
               </span>
               <span className="text-xs font-medium text-foreground">{category.name}</span>
             </Link>

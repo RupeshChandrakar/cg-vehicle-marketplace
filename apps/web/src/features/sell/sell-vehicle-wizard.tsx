@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Navigation, X } from 'lucide-react';
 import type { Category, Location, FuelType, Transmission } from '@/types/vehicle';
 import { createVehicle, uploadVehicleMedia, detectLocation, ApiError } from '@/lib/api';
-import { getCategoryIcon } from '@/features/vehicles/category-icons';
+import { getCategoryEmoji } from '@/features/vehicles/category-icons';
 
 const FUEL_TYPES: FuelType[] = ['petrol', 'diesel', 'electric', 'cng', 'lpg', 'other'];
 const TRANSMISSIONS: Transmission[] = ['manual', 'automatic'];
@@ -251,7 +251,7 @@ function StepVehicleType({
       <p className="mb-4 text-sm text-muted">Sabse pehle vehicle type select karein</p>
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
         {categories.map((category) => {
-          const Icon = getCategoryIcon(category.slug);
+          const emoji = getCategoryEmoji(category.slug);
           const active = value === category.slug;
           return (
             <button
@@ -264,7 +264,7 @@ function StepVehicleType({
                   : 'bg-primary-light text-primary hover:shadow-card'
               }`}
             >
-              <Icon className="h-6 w-6" strokeWidth={1.75} />
+              <span className="text-2xl">{emoji}</span>
               <span className="text-xs font-medium">{category.name}</span>
             </button>
           );

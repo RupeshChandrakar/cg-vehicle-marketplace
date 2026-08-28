@@ -81,6 +81,14 @@ body {
   box-shadow: var(--shadow-float);
 }
 
+/* CategoryFilter's inactive tiles (mobile mockup reference) — a flat light
+ * gray chip, not a white card with a shadow. Foreground tinted at very low
+ * opacity rather than a new hardcoded gray, same convention as the hero/
+ * promo treatments' primary-tinting. */
+.category-chip {
+  background: rgb(23 23 23 / 0.05);
+}
+
 /* Used by PromoTicker (home page hero) — each rotating message remounts via
  * a React `key` change, replaying this animation. Deliberately a small,
  * subtle slide+fade, not a marquee-style scroll — matches this app's
