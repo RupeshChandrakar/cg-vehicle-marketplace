@@ -8,7 +8,7 @@
  */
 export const brand = {
   /** TEMPORARY placeholder name — not final. */
-  name: 'CG AutoMarket',
+  name: 'CG Auto Mart',
   shortName: 'CGAM',
   tagline: 'Buy and sell vehicles in Chhattisgarh, the trusted way',
   supportPhone: '+91XXXXXXXXXX',
