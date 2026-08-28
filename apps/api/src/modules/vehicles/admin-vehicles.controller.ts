@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -18,6 +19,7 @@ import { VehiclesService, AdminVehicle } from './vehicles.service';
 import { AdminVehicleQueryDto } from './dto/admin-vehicle-query.dto';
 import { ApproveVehicleDto } from './dto/approve-vehicle.dto';
 import { RejectVehicleDto } from './dto/reject-vehicle.dto';
+import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { PaginatedResult } from '../../common/types/paginated-result.type';
 import { Vehicle, UserRole } from '../../generated/prisma/client';
 
@@ -37,6 +39,14 @@ export class AdminVehiclesController {
   @Get(':id')
   findOne(@Param('id') id: string): Promise<AdminVehicle> {
     return this.vehiclesService.findByIdForAdmin(id);
+  }
+
+  @Patch(':id')
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateVehicleDto,
+  ): Promise<AdminVehicle> {
+    return this.vehiclesService.update(id, dto);
   }
 
   @Post(':id/approve')

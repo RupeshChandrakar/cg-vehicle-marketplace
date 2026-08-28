@@ -161,6 +161,7 @@ exposed in a customer-facing URL or API response.
 | Update enquiry status/notes        |    —     |      ✅ (own)      |    ✅    |
 | View customer contact info         |    —     | ✅ (assigned only) |    ✅    |
 | Manage categories/locations/agents |    —     |         —          |    ✅    |
+| Edit listing fields/photos         |    —     |         ✅         |    ✅    |
 | Generate/publish reels             |    —     |     draft only     |    ✅    |
 | Platform settings                  |    —     |         —          |    ✅    |
 
@@ -413,6 +414,43 @@ genuine Dashboard home page — no fabricated sections, no invented numbers.
   Total-Users, Reel Studio, Top-Vehicles-by-Enquiries, and the time-series Listings-Overview
   chart from the mockup were all left out — no backend support (Users listing, enquiry-by-vehicle
   aggregation, day-bucketed listing history) exists for any of them yet.
+
+### Admin listing edit (2026-08-28)
+
+A direct product gap, not a planned phase: there was no way for admin/agent to correct a listing
+after submission (price typo, missing photo, wrong spec) short of rejecting it outright. Approve/
+reject were the only admin actions on a `Vehicle` until now.
+
+- **`PATCH /admin/vehicles/:id`** (`VehiclesService.update()`) — every field optional, seller
+  identity (`sellerName`/`sellerPhone`) deliberately excluded (reassigning a listing to a different
+  seller is a different, unsupported operation). Same admin+agent role guard as approve/reject.
+  **Not** part of the status state machine — editing a `live` listing applies immediately, no
+  forced re-review, since admin/agent are already the trusted verifying party.
+- **`specs` is merged, not replaced** — a partial update (e.g. just `{ rcAvailable: true }`)
+  leaves other trust fields (`registrationNumber`, `insuranceValidUntil`, etc.) untouched. Caught a
+  real bug here during verification: `UpdateVehicleDto`'s nested `VehicleSpecsDto` is a class
+  instance, and under this project's `ES2023` target (`useDefineForClassFields`), every declared
+  field exists as an own property even when the caller didn't send it — explicitly set to
+  `undefined`. A naive `{...existingSpecs, ...dto.specs}` spread let those explicit `undefined`s
+  clobber previously-set fields (unlike `JSON.stringify`, plain object spread does not drop
+  `undefined` values). Fixed by filtering `dto.specs`'s entries to defined values before merging.
+- **Admin-only photo curation**, separate from the customer-facing upload path: new
+  `AdminVehicleMediaController` at `/admin/vehicles/:id/media` (`POST` add, `POST .../reorder`,
+  `DELETE .../:mediaId`) works regardless of listing status, including `live`. The existing
+  customer-facing `POST /vehicles/:id/media` is unchanged — still restricted to
+  draft/submitted/under_review. `VehicleMediaService` now has a shared private `uploadFiles()`
+  helper so the two paths (status-checked vs staff-bypassed) don't duplicate the upload logic.
+  Photo delete now genuinely removes the S3 object (`StorageService.delete()`, new this feature) —
+  not just the DB row, avoiding orphaned storage objects.
+- **Admin UI**: `/queue/[id]/edit` (new page) — full field-edit form plus a photo grid with
+  add/remove/reorder (simple up/down buttons rather than drag-and-drop, given the low photo count
+  ceiling of 10). Reachable via an "Edit" link on every Vehicle Queue card, including `live` ones
+  under that filter tab, not just pending ones.
+- Verified end-to-end against the real dev stack (real Postgres, real MinIO, real running admin
+  app under Puppeteer): price/description/specs edit persists across a page reload; staff photo
+  upload/reorder/delete all work on a `live` vehicle; the public vehicle-detail endpoint reflects
+  the edit immediately with `registrationNumber` still stripped; the customer-facing upload
+  restriction on a `live` vehicle is unregressed (still 400s).
 
 ### Phase 2 notes
 

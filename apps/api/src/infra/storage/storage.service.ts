@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   CreateBucketCommand,
+  DeleteObjectCommand,
   GetObjectCommand,
   HeadBucketCommand,
   PutBucketPolicyCommand,
@@ -70,6 +71,14 @@ export class StorageService implements OnModuleInit {
       throw new Error(`Storage object "${key}" has no body`);
     }
     return Buffer.from(bytes);
+  }
+
+  /** Used by admin photo management to actually remove a storage object when
+   *  a photo is deleted from a listing, rather than leaving it orphaned. */
+  async delete(key: string): Promise<void> {
+    await this.client.send(
+      new DeleteObjectCommand({ Bucket: this.bucket, Key: key }),
+    );
   }
 
   private async ensureBucketExists(): Promise<void> {

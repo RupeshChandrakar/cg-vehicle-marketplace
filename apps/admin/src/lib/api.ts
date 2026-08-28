@@ -1,5 +1,13 @@
 import { API_BASE_URL } from '@/config/api';
-import type { AdminVehicle, PaginatedResult, VehicleStatus } from '@/types/vehicle';
+import type {
+  AdminVehicle,
+  AdminVehicleMedia,
+  Category,
+  Location,
+  PaginatedResult,
+  UpdateVehiclePayload,
+  VehicleStatus,
+} from '@/types/vehicle';
 import type {
   AdminCallLog,
   AdminEnquiry,
@@ -97,6 +105,69 @@ export function approveVehicle(
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ notes }),
+  });
+}
+
+export function getAdminVehicle(accessToken: string, id: string): Promise<AdminVehicle> {
+  return request(`/admin/vehicles/${id}`, accessToken);
+}
+
+export function updateVehicle(
+  accessToken: string,
+  id: string,
+  payload: UpdateVehiclePayload,
+): Promise<AdminVehicle> {
+  return request(`/admin/vehicles/${id}`, accessToken, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+// Public reference data (same endpoints the customer app uses) — no
+// admin-specific wrapper needed since these aren't role-gated.
+export function getCategories(): Promise<Category[]> {
+  return request('/categories', null);
+}
+
+export function getLocations(): Promise<Location[]> {
+  return request('/locations', null);
+}
+
+export function addVehiclePhotosAsStaff(
+  accessToken: string,
+  vehicleId: string,
+  files: File[],
+): Promise<AdminVehicleMedia[]> {
+  const formData = new FormData();
+  files.forEach((file) => formData.append('files', file));
+  // No Content-Type header: fetch sets the multipart boundary itself when
+  // given a FormData body, and overriding it manually breaks the upload.
+  return request(`/admin/vehicles/${vehicleId}/media`, accessToken, {
+    method: 'POST',
+    body: formData,
+  });
+}
+
+export function removeVehiclePhoto(
+  accessToken: string,
+  vehicleId: string,
+  mediaId: string,
+): Promise<void> {
+  return request(`/admin/vehicles/${vehicleId}/media/${mediaId}`, accessToken, {
+    method: 'DELETE',
+  });
+}
+
+export function reorderVehiclePhotos(
+  accessToken: string,
+  vehicleId: string,
+  mediaIds: string[],
+): Promise<void> {
+  return request(`/admin/vehicles/${vehicleId}/media/reorder`, accessToken, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mediaIds }),
   });
 }
 

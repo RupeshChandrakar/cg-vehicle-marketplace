@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { approveVehicle, getAdminVehicles, rejectVehicle, ApiError } from '@/lib/api';
@@ -155,13 +156,21 @@ function VehicleReviewCard({
             {vehicle.fuelType} &middot; {vehicle.transmission}
           </p>
         </div>
-        <span
-          className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
-            STATUS_PILL[vehicle.status] ?? 'bg-line/60 text-muted'
-          }`}
-        >
-          {vehicle.status.replace('_', ' ')}
-        </span>
+        <div className="flex shrink-0 items-center gap-2">
+          <span
+            className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
+              STATUS_PILL[vehicle.status] ?? 'bg-line/60 text-muted'
+            }`}
+          >
+            {vehicle.status.replace('_', ' ')}
+          </span>
+          <Link
+            href={`/queue/${vehicle.id}/edit`}
+            className="rounded-full border border-line px-3 py-1 text-xs font-medium text-foreground transition hover:bg-primary-light"
+          >
+            Edit
+          </Link>
+        </div>
       </div>
 
       <div className="mt-3 border-t border-line pt-3 text-sm text-muted">

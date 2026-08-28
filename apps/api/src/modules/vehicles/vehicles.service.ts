@@ -5,6 +5,7 @@ import { UsersService } from '../users/users.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { VehicleStatusService } from './vehicle-status.service';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
+import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { VehicleQueryDto } from './dto/vehicle-query.dto';
 import { AdminVehicleQueryDto } from './dto/admin-vehicle-query.dto';
 import { PaginatedResult } from '../../common/types/paginated-result.type';
@@ -218,6 +219,80 @@ export class VehiclesService {
       throw new NotFoundException(`Vehicle ${id} not found`);
     }
     return this.toAdminVehicle(vehicle);
+  }
+
+  /**
+   * Direct field edit by admin/agent — price, specs, description, etc.
+   * Deliberately NOT part of the review state machine: staff are already the
+   * trusted verifying party, so an edit to a live listing applies
+   * immediately rather than kicking off a re-review cycle. Only fields
+   * present on the DTO are touched; `specs` is merged onto the existing JSON
+   * blob rather than replacing it, so a partial specs update (e.g. just
+   * `rcAvailable`) doesn't erase other trust fields the caller didn't send.
+   */
+  async update(id: string, dto: UpdateVehicleDto): Promise<AdminVehicle> {
+    const vehicle = await this.findByIdOrThrow(id);
+
+    let categoryId: string | undefined;
+    if (dto.categorySlug) {
+      const category = await this.prisma.category.findUnique({
+        where: { slug: dto.categorySlug },
+      });
+      if (!category) {
+        throw new NotFoundException(`Unknown category "${dto.categorySlug}"`);
+      }
+      categoryId = category.id;
+    }
+
+    let locationId: string | undefined;
+    if (dto.locationSlug) {
+      const location = await this.prisma.location.findUnique({
+        where: { slug: dto.locationSlug },
+      });
+      if (!location) {
+        throw new NotFoundException(`Unknown location "${dto.locationSlug}"`);
+      }
+      locationId = location.id;
+    }
+
+    // dto.specs is a VehicleSpecsDto *instance* — under this project's
+    // ES2023 target (useDefineForClassFields), every declared field exists
+    // as an own property even when the caller didn't send it, explicitly
+    // set to undefined. Spreading it directly would overwrite untouched
+    // existing spec fields with undefined, so only genuinely-provided keys
+    // are merged in.
+    const specs = dto.specs
+      ? ({
+          ...(vehicle.specs as Record<string, unknown>),
+          ...Object.fromEntries(
+            Object.entries(dto.specs as Record<string, unknown>).filter(
+              ([, value]) => value !== undefined,
+            ),
+          ),
+        } as Prisma.InputJsonValue)
+      : undefined;
+
+    const updated = await this.prisma.vehicle.update({
+      where: { id },
+      data: {
+        categoryId,
+        locationId,
+        title: dto.title,
+        brand: dto.brand,
+        model: dto.model,
+        year: dto.year,
+        price: dto.price,
+        kmDriven: dto.kmDriven,
+        fuelType: dto.fuelType,
+        transmission: dto.transmission,
+        condition: dto.condition,
+        description: dto.description,
+        specs,
+      },
+      include: ADMIN_VEHICLE_INCLUDE,
+    });
+
+    return this.toAdminVehicle(updated);
   }
 
   /**
