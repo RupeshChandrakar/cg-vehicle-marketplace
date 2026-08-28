@@ -10,15 +10,12 @@ import {
   MessageCircle,
   ShieldAlert,
   Bell,
-  Users,
-  Eye,
   type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
-import { getAdminVehicles, getAdminEnquiries, getAnalyticsSummary, ApiError } from '@/lib/api';
+import { getAdminVehicles, getAdminEnquiries, ApiError } from '@/lib/api';
 import type { AdminVehicle, VehicleStatus } from '@/types/vehicle';
 import type { AdminEnquiry, EnquiryStatus } from '@/types/enquiry';
-import type { AnalyticsSummary, MostViewedVehicle } from '@/types/analytics';
 
 // No dedicated stats/aggregation endpoint exists yet — this pulls one page
 // of everything and counts client-side, which is accurate as long as total
@@ -52,21 +49,18 @@ export default function DashboardPage() {
 
   const [vehicles, setVehicles] = useState<AdminVehicle[]>([]);
   const [enquiries, setEnquiries] = useState<AdminEnquiry[]>([]);
-  const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!accessToken) return;
     try {
-      const [vehicleResult, enquiryResult, analyticsResult] = await Promise.all([
+      const [vehicleResult, enquiryResult] = await Promise.all([
         getAdminVehicles(accessToken, undefined, SAMPLE_SIZE),
         getAdminEnquiries(accessToken, undefined, SAMPLE_SIZE),
-        getAnalyticsSummary(accessToken),
       ]);
       setVehicles(vehicleResult.data);
       setEnquiries(enquiryResult.data);
-      setAnalytics(analyticsResult);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Failed to load dashboard data.');
     } finally {
@@ -134,12 +128,9 @@ export default function DashboardPage() {
             ))}
           </div>
 
-          <VisitorStats analytics={analytics} />
-
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <div className="space-y-6 lg:col-span-2">
               <RecentVehiclesTable vehicles={vehicles.slice(0, 5)} />
-              <MostViewedVehiclesTable vehicles={analytics?.mostViewedVehicles ?? []} />
               <RecentEnquiriesTable enquiries={enquiries.slice(0, 5)} />
             </div>
             <div className="space-y-6">
@@ -184,32 +175,6 @@ function StatCard({
   );
 }
 
-function VisitorStats({ analytics }: { analytics: AnalyticsSummary | null }) {
-  const cards = [
-    { label: 'Visitors Today', value: analytics?.uniqueVisitorsToday ?? 0 },
-    { label: 'Visitors This Week', value: analytics?.uniqueVisitorsThisWeek ?? 0 },
-    { label: 'Visitors All-Time', value: analytics?.uniqueVisitorsAllTime ?? 0 },
-  ];
-
-  return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-      {cards.map((card) => (
-        <div key={card.label} className="rounded-2xl bg-background p-4 shadow-card">
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <p className="text-xs text-muted">{card.label}</p>
-              <p className="mt-1 text-2xl font-bold text-foreground">{card.value}</p>
-            </div>
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-light text-primary">
-              <Users className="h-5 w-5" strokeWidth={1.75} />
-            </span>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function RecentVehiclesTable({ vehicles }: { vehicles: AdminVehicle[] }) {
   return (
     <div className="rounded-2xl bg-background p-5 shadow-card">
@@ -249,50 +214,6 @@ function RecentVehiclesTable({ vehicles }: { vehicles: AdminVehicle[] }) {
                   <td className="py-2.5">
                     <StatusPill status={vehicle.status} />
                   </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function MostViewedVehiclesTable({ vehicles }: { vehicles: MostViewedVehicle[] }) {
-  return (
-    <div className="rounded-2xl bg-background p-5 shadow-card">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-foreground">Most Viewed Vehicles</h2>
-        <Eye className="h-4 w-4 text-muted" strokeWidth={1.75} />
-      </div>
-      {vehicles.length === 0 ? (
-        <p className="text-sm text-muted">
-          No vehicle views recorded yet — this fills in as customers browse listings.
-        </p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="text-xs text-muted">
-                <th className="pb-2 font-medium">Vehicle</th>
-                <th className="pb-2 font-medium">Status</th>
-                <th className="pb-2 font-medium">Unique Viewers</th>
-              </tr>
-            </thead>
-            <tbody>
-              {vehicles.map((vehicle) => (
-                <tr key={vehicle.vehicleId} className="border-t border-line">
-                  <td className="py-2.5 pr-2">
-                    <p className="font-medium text-foreground">{vehicle.title}</p>
-                    <p className="text-xs text-muted">
-                      {vehicle.publicId ? `ID: ${vehicle.publicId}` : 'Draft'}
-                    </p>
-                  </td>
-                  <td className="py-2.5 pr-2">
-                    <StatusPill status={vehicle.status} />
-                  </td>
-                  <td className="py-2.5 font-semibold text-foreground">{vehicle.uniqueViewers}</td>
                 </tr>
               ))}
             </tbody>

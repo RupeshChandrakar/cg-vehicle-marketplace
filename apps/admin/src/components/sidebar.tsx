@@ -3,7 +3,15 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Car, LayoutDashboard, MessageCircle, Bell, LogOut, Clapperboard } from 'lucide-react';
+import {
+  Car,
+  LayoutDashboard,
+  MessageCircle,
+  Bell,
+  LogOut,
+  Clapperboard,
+  BarChart3,
+} from 'lucide-react';
 import { brand } from '@cg/shared-config';
 import { useAuth } from '@/lib/auth-context';
 import { getAdminEnquiries } from '@/lib/api';
@@ -20,6 +28,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/queue', label: 'Vehicle Queue', icon: Car },
   { href: '/enquiries', label: 'Enquiries', icon: MessageCircle, badge: 'enquiries' },
+  { href: '/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/reels', label: 'Reel Studio', icon: Clapperboard },
   { href: '/notifications', label: 'Notifications', icon: Bell, badge: 'notifications' },
 ];

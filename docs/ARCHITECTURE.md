@@ -487,9 +487,11 @@ offered.
   an anonymous write endpoint is a more obvious abuse target than a read endpoint. Add
   `@nestjs/throttler` (or equivalent) globally if this becomes a real concern, rather than
   bolting a one-off limiter onto just this route.
-- **Admin Dashboard**: new "Visitors Today/This Week/All-Time" stat row plus a "Most Viewed
-  Vehicles" table (top 10 by unique viewers), both fed by `GET /admin/analytics/summary`
-  (admin+agent, matching every other Dashboard data source).
+- **Own sidebar page, not folded into the Dashboard**: `/analytics` (nav item right after
+  Enquiries) — a "Visitors Today/This Week/All-Time" stat row plus a "Most Viewed Vehicles" table
+  (top 10 by unique viewers), both fed by `GET /admin/analytics/summary` (admin+agent). Initially
+  built inline on the Dashboard, then moved out to its own page per PO feedback — kept as a
+  distinct concern from the vehicle/enquiry operational stats the Dashboard is otherwise about.
 - Verified end-to-end against the real dev stack: a REST script covering session-dedup
   correctness (repeat views from one session count once), tampered/unknown vehicle ID handling,
   and DTO validation; five separate live-browser runs (fresh browser context each time, so a
