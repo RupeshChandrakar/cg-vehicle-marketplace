@@ -20,11 +20,14 @@ function buildService() {
           ...data,
         }),
       ),
+      findUnique: jest.fn(),
+      delete: jest.fn(),
     },
   };
   const storage = {
     upload: jest.fn().mockResolvedValue(undefined),
     getPublicUrl: jest.fn((key: string) => `https://storage.test/${key}`),
+    delete: jest.fn().mockResolvedValue(undefined),
   };
 
   const service = new VehicleMediaService(prisma as never, storage as never);
@@ -80,5 +83,54 @@ describe('VehicleMediaService', () => {
     expect(results).toHaveLength(1);
     expect(results[0].id).toBe('media-1');
     expect(results[0].url).toContain('vehicles/v1/');
+  });
+
+  describe('removeMediaAsSeller', () => {
+    it('refuses a vehicle owned by someone else, as a 404', async () => {
+      const { service, prisma } = buildService();
+      prisma.vehicle.findUnique.mockResolvedValue({
+        id: 'v1',
+        sellerId: 'someone-else',
+        status: 'submitted',
+      });
+
+      await expect(
+        service.removeMediaAsSeller('v1', 'seller-1', 'media-1'),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('refuses to remove a photo from a listing that is already live', async () => {
+      const { service, prisma } = buildService();
+      prisma.vehicle.findUnique.mockResolvedValue({
+        id: 'v1',
+        sellerId: 'seller-1',
+        status: 'live',
+      });
+
+      await expect(
+        service.removeMediaAsSeller('v1', 'seller-1', 'media-1'),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('lets the real owner remove a photo while still pending review', async () => {
+      const { service, prisma, storage } = buildService();
+      prisma.vehicle.findUnique.mockResolvedValue({
+        id: 'v1',
+        sellerId: 'seller-1',
+        status: 'submitted',
+      });
+      prisma.vehicleMedia.findUnique.mockResolvedValue({
+        id: 'media-1',
+        vehicleId: 'v1',
+        storageKey: 'vehicles/v1/photo.jpg',
+      });
+
+      await service.removeMediaAsSeller('v1', 'seller-1', 'media-1');
+
+      expect(storage.delete).toHaveBeenCalledWith('vehicles/v1/photo.jpg');
+      expect(prisma.vehicleMedia.delete).toHaveBeenCalledWith({
+        where: { id: 'media-1' },
+      });
+    });
   });
 });

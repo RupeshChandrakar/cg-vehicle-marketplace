@@ -702,6 +702,62 @@ section specifically, which the earlier refresh hadn't precisely carried over.
   both `CategoryFilter` (home page) and the sell wizard's vehicle-type picker, for a consistent
   look everywhere a category is chosen, not just the one place that prompted it.
 
+### Seller self-service — "My Listings" (2026-08-28)
+
+PO asked whether to build a "Dealer Panel." Honest framing before scoping it: today **no
+seller, individual or dealer, can log in and see anything about their own listing** — not its
+status, not why it was rejected, nothing. Admin can already edit any listing (the earlier
+"Admin listing edit" feature); the seller side had zero self-service. PO's call: build the
+general "My Listings" foundation first (any seller, not a dealer-specific tier), since a real
+dealer subscription/multi-listing tier would sit on top of this later.
+
+- **The auth already existed** — a seller's `User` row is the exact same row created by
+  `findOrCreateByPhone()` during `POST /vehicles` (the sell flow), so the existing customer OTP
+  login (Phase 4) works unmodified for sellers logging back in later. No new auth mechanism
+  needed, only a new self-service surface on top of it.
+- **`GET /vehicles/me`** (customer-authenticated) — every vehicle the caller has ever submitted,
+  any status, via a new `SellerVehicle` type: same shape as `PublicVehicle` (no nested `seller`
+  object — the seller already *is* the viewer) but with raw specs (their own registrationNumber
+  included — only the buyer-facing view strips it) plus `status`/`rejectionReason`.
+- **`PATCH /vehicles/me/:id`** (customer-authenticated) — a seller can edit their own listing
+  **only** while it's in `SELLER_EDITABLE_STATUSES` (draft/submitted/under_review, a new shared
+  constant in `vehicle-lifecycle.constants.ts` — extracted specifically so `VehiclesService` and
+  `VehicleMediaService` can't drift out of sync on this boundary). Once live/approved, only
+  admin/agent can edit it (the existing admin-edit feature) — letting a seller silently change
+  price/specs after staff verification would undermine the verification itself. A mismatched
+  `sellerId` throws `NotFoundException`, not `Forbidden` — a seller probing listing IDs shouldn't
+  be able to tell someone else's listing exists at all (same reasoning as the admin listing-edit
+  feature's ownership checks).
+- **Refactored, not duplicated**: `AdminVehiclesController`'s `update()` and the new
+  `updateAsSeller()` now share one `applyVehicleUpdate()` private helper (generic over the
+  Prisma `include` shape each caller needs back) for the actual category/location resolution +
+  specs-merge logic — each caller does its own authorization/status-gating *before* calling it,
+  so the specs-merge-bug fix from the admin-edit feature automatically applies to seller edits
+  too, with no risk of the two implementations drifting apart.
+- **Photo management**: adding a photo reuses the *existing* public `POST /vehicles/:id/media`
+  endpoint unchanged (it already works during the anonymous sell-wizard flow with no login, and
+  still correctly enforces the same status gate). Removing one needed a **new** authenticated,
+  ownership-checked endpoint (`DELETE /vehicles/:id/media/:mediaId`, customer role) — deleting
+  happens from a *later, separate* "My Listings" session, unlike the original upload which
+  happens inline during the same uninterrupted guest submission flow, so it genuinely needs real
+  proof of ownership rather than just "knows the vehicle id." Reordering was left out of this
+  pass (admin already has it; a seller self-service version is a reasonable future add, not
+  requested here).
+- **New customer-web pages**: `/my-listings` (status pills, thumbnail, rejection reason if
+  rejected, an Edit link when editable or a link to the live listing once it isn't) and
+  `/my-listings/[id]/edit` (full field form + photo add/remove, styled like the admin edit page
+  but in the customer app's own tokens/Hinglish copy). No dedicated "fetch one listing" endpoint
+  was added — the edit page fetches the whole list and finds the one it needs client-side, an
+  acceptable shortcut at the realistic number of listings one seller has; revisit only if that
+  stops being true.
+- Verified end-to-end with a real seller: submitted a vehicle publicly, OTP-logged in as that
+  same phone, confirmed `/vehicles/me` scoping, edited price/description while pending, confirmed
+  a *different* seller gets a 404 (not 403) trying to edit it, uploaded and then removed a photo,
+  had admin approve the listing to live, and confirmed the now-live listing can no longer be
+  self-edited (400) while still showing correctly (with its real publicId) in `/vehicles/me`. A
+  full browser pass confirmed the same flow through the actual UI, including that a price edit
+  survives a page reload.
+
 ### Phase 2 notes
 
 - **Staff auth** landed here rather than waiting for Phase 4, since the admin review queue

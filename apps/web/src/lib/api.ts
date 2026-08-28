@@ -7,6 +7,8 @@ import type {
   Vehicle,
   FuelType,
   Transmission,
+  MyVehicle,
+  UpdateMyVehiclePayload,
 } from '@/types/vehicle';
 
 export interface VehicleFilters {
@@ -213,6 +215,35 @@ export function uploadVehicleMedia(
   return request<Array<{ id: string; url: string }>>(`/vehicles/${vehicleId}/media`, {
     method: 'POST',
     body: formData,
+  });
+}
+
+// --- Seller self-service ("My Listings") ---
+
+export function getMyVehicles(accessToken: string): Promise<MyVehicle[]> {
+  return request('/vehicles/me', { headers: authHeader(accessToken) });
+}
+
+export function updateMyVehicle(
+  accessToken: string,
+  id: string,
+  payload: UpdateMyVehiclePayload,
+): Promise<MyVehicle> {
+  return request(`/vehicles/me/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...authHeader(accessToken) },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function removeMyVehicleMedia(
+  accessToken: string,
+  vehicleId: string,
+  mediaId: string,
+): Promise<void> {
+  return request(`/vehicles/${vehicleId}/media/${mediaId}`, {
+    method: 'DELETE',
+    headers: authHeader(accessToken),
   });
 }
 

@@ -6,22 +6,11 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../infra/prisma/prisma.service';
 import { StorageService } from '../../infra/storage/storage.service';
-import { VehicleStatus } from '../../generated/prisma/client';
+import { SELLER_EDITABLE_STATUSES } from '../vehicles/vehicle-lifecycle.constants';
 import {
   MAX_FILES_PER_VEHICLE,
   MIME_EXTENSIONS,
 } from './vehicle-media.constants';
-
-// A listing's gallery should only change while it's still being assembled or
-// under review — a live listing's photos shouldn't shift without re-review.
-// This restriction applies to the customer-facing upload path only; staff
-// curation (addMediaAsStaff/removeMedia/reorderMedia below) intentionally
-// bypasses it — see the admin listing-edit feature.
-const EDITABLE_STATUSES: VehicleStatus[] = [
-  VehicleStatus.draft,
-  VehicleStatus.submitted,
-  VehicleStatus.under_review,
-];
 
 export interface UploadableFile {
   buffer: Buffer;
@@ -50,7 +39,7 @@ export class VehicleMediaService {
     if (!vehicle) {
       throw new NotFoundException(`Vehicle ${vehicleId} not found`);
     }
-    if (!EDITABLE_STATUSES.includes(vehicle.status)) {
+    if (!SELLER_EDITABLE_STATUSES.includes(vehicle.status)) {
       throw new BadRequestException(
         `Cannot add photos to a vehicle with status "${vehicle.status}"`,
       );
@@ -84,6 +73,33 @@ export class VehicleMediaService {
     // still-valid public URL) is left intact rather than pointing at nothing.
     await this.storage.delete(media.storageKey);
     await this.prisma.vehicleMedia.delete({ where: { id: mediaId } });
+  }
+
+  /**
+   * A seller removing a photo from their own listing, from the "My
+   * Listings" self-service page — unlike admin's removeMedia() (any
+   * status), this only works pre-verification, matching
+   * addMedia()/updateAsSeller()'s status gate. A mismatched sellerId throws
+   * NotFoundException rather than Forbidden, same reasoning as
+   * VehiclesService.updateAsSeller().
+   */
+  async removeMediaAsSeller(
+    vehicleId: string,
+    sellerId: string,
+    mediaId: string,
+  ): Promise<void> {
+    const vehicle = await this.prisma.vehicle.findUnique({
+      where: { id: vehicleId },
+    });
+    if (!vehicle || vehicle.sellerId !== sellerId) {
+      throw new NotFoundException(`Vehicle ${vehicleId} not found`);
+    }
+    if (!SELLER_EDITABLE_STATUSES.includes(vehicle.status)) {
+      throw new BadRequestException(
+        `Cannot remove photos from a listing with status "${vehicle.status}"`,
+      );
+    }
+    return this.removeMedia(vehicleId, mediaId);
   }
 
   async reorderMedia(

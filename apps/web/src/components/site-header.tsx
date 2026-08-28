@@ -48,6 +48,12 @@ export function SiteHeader() {
                 )}
               </Link>
               <Link
+                href="/my-listings"
+                className="hidden text-sm font-medium text-foreground sm:inline"
+              >
+                My Listings
+              </Link>
+              <Link
                 href="/my-enquiries"
                 className="hidden text-sm font-medium text-foreground sm:inline"
               >

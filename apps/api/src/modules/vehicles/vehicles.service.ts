@@ -1,9 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../infra/prisma/prisma.service';
 import { StorageService } from '../../infra/storage/storage.service';
 import { UsersService } from '../users/users.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { VehicleStatusService } from './vehicle-status.service';
+import { SELLER_EDITABLE_STATUSES } from './vehicle-lifecycle.constants';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { VehicleQueryDto } from './dto/vehicle-query.dto';
@@ -51,6 +56,11 @@ export type AdminVehicle = Omit<VehicleWithAdminInclude, 'media'> & {
   media: PublicVehicleMedia[];
   seller: User;
 };
+/** A seller's view of their own listing — same fields as PublicVehicle
+ *  (no nested `seller` object, since the seller already *is* the viewer)
+ *  but with raw specs (registrationNumber included, since it's their own
+ *  data) and status/rejectionReason so they can see where it stands. */
+export type SellerVehicle = PublicVehicle;
 
 @Injectable()
 export class VehiclesService {
@@ -179,6 +189,54 @@ export class VehiclesService {
     return vehicles.map((vehicle) => this.toPublicVehicle(vehicle));
   }
 
+  // --- Seller self-service: protected by JwtAuthGuard + RolesGuard(customer)
+  //     at the controller, scoped to the caller's own vehicles only. ---
+
+  /** Every listing the caller has ever submitted, any status — this is the
+   *  one place a seller can see where their listing stands (including
+   *  rejectionReason) without needing to ask an agent. */
+  async findMineForSeller(sellerId: string): Promise<SellerVehicle[]> {
+    const vehicles = await this.prisma.vehicle.findMany({
+      where: { sellerId },
+      orderBy: { createdAt: 'desc' },
+      include: PUBLIC_VEHICLE_INCLUDE,
+    });
+    return vehicles.map((vehicle) => this.toSellerVehicle(vehicle));
+  }
+
+  /**
+   * A seller editing their own listing — unlike admin/agent's `update()`,
+   * this is only allowed while the listing is still in a pre-verification
+   * status (see SELLER_EDITABLE_STATUSES). Once live/approved, only staff
+   * can edit it (they've already verified it; letting the seller silently
+   * change price/specs after that would undermine the verification itself).
+   * A mismatched sellerId throws NotFoundException, not Forbidden — a
+   * seller probing listing IDs shouldn't be able to tell someone else's
+   * listing exists at all.
+   */
+  async updateAsSeller(
+    id: string,
+    sellerId: string,
+    dto: UpdateVehicleDto,
+  ): Promise<SellerVehicle> {
+    const vehicle = await this.findByIdOrThrow(id);
+    if (vehicle.sellerId !== sellerId) {
+      throw new NotFoundException(`Vehicle ${id} not found`);
+    }
+    if (!SELLER_EDITABLE_STATUSES.includes(vehicle.status)) {
+      throw new BadRequestException(
+        `This listing can no longer be edited directly (status: "${vehicle.status}"). Contact support for changes to a live listing.`,
+      );
+    }
+
+    const updated = await this.applyVehicleUpdate(
+      vehicle,
+      dto,
+      PUBLIC_VEHICLE_INCLUDE,
+    );
+    return this.toSellerVehicle(updated);
+  }
+
   // --- Admin review pipeline: protected by JwtAuthGuard + RolesGuard at the controller. ---
 
   async findForAdmin(
@@ -232,7 +290,25 @@ export class VehiclesService {
    */
   async update(id: string, dto: UpdateVehicleDto): Promise<AdminVehicle> {
     const vehicle = await this.findByIdOrThrow(id);
+    const updated = await this.applyVehicleUpdate(
+      vehicle,
+      dto,
+      ADMIN_VEHICLE_INCLUDE,
+    );
+    return this.toAdminVehicle(updated);
+  }
 
+  /**
+   * The actual field-update logic shared by admin's `update()` and the
+   * seller's `updateAsSeller()` — each caller does its own authorization
+   * (role vs. ownership) and status-gating *before* calling this, then asks
+   * for whichever include shape it needs back.
+   */
+  private async applyVehicleUpdate<T extends Prisma.VehicleInclude>(
+    vehicle: Vehicle,
+    dto: UpdateVehicleDto,
+    include: T,
+  ): Promise<Prisma.VehicleGetPayload<{ include: T }>> {
     let categoryId: string | undefined;
     if (dto.categorySlug) {
       const category = await this.prisma.category.findUnique({
@@ -272,8 +348,8 @@ export class VehiclesService {
         } as Prisma.InputJsonValue)
       : undefined;
 
-    const updated = await this.prisma.vehicle.update({
-      where: { id },
+    return this.prisma.vehicle.update({
+      where: { id: vehicle.id },
       data: {
         categoryId,
         locationId,
@@ -289,10 +365,8 @@ export class VehiclesService {
         description: dto.description,
         specs,
       },
-      include: ADMIN_VEHICLE_INCLUDE,
+      include,
     });
-
-    return this.toAdminVehicle(updated);
   }
 
   /**
@@ -400,6 +474,13 @@ export class VehiclesService {
 
   private toAdminVehicle(vehicle: VehicleWithAdminInclude): AdminVehicle {
     // Admins see the raw specs, registration number included.
+    return { ...vehicle, media: this.toPublicMedia(vehicle.media) };
+  }
+
+  private toSellerVehicle(vehicle: VehicleWithPublicInclude): SellerVehicle {
+    // Sellers see the raw specs too — registrationNumber is their own car's
+    // number that they entered; only the *public* (buyer-facing) view
+    // strips it.
     return { ...vehicle, media: this.toPublicMedia(vehicle.media) };
   }
 

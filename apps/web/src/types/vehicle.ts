@@ -82,3 +82,49 @@ export interface LocationDetectionResult {
   matched: Location;
   nearby: Location[];
 }
+
+// --- Seller self-service ("My Listings") ---
+
+export type VehicleStatus =
+  | 'draft'
+  | 'submitted'
+  | 'under_review'
+  | 'approved'
+  | 'live'
+  | 'rejected'
+  | 'reserved'
+  | 'sold'
+  | 'expired';
+
+/** Unlike the public VehicleSpecs (registrationNumber stripped for buyers),
+ *  a seller sees their own registrationNumber — it's the number they
+ *  entered for their own vehicle. */
+export interface MyVehicleSpecs extends VehicleSpecs {
+  registrationNumber?: string;
+}
+
+/** A seller's own view of a listing they submitted — includes status/
+ *  rejectionReason (never shown to buyers) and can be pre-live (no
+ *  publicId assigned yet). */
+export interface MyVehicle extends Omit<Vehicle, 'specs' | 'publicId'> {
+  publicId: number | null;
+  status: VehicleStatus;
+  rejectionReason: string | null;
+  specs: MyVehicleSpecs;
+}
+
+export interface UpdateMyVehiclePayload {
+  categorySlug?: string;
+  locationSlug?: string;
+  title?: string;
+  brand?: string;
+  model?: string;
+  year?: number;
+  price?: number;
+  kmDriven?: number;
+  fuelType?: FuelType;
+  transmission?: Transmission;
+  condition?: VehicleCondition;
+  description?: string;
+  specs?: MyVehicleSpecs;
+}

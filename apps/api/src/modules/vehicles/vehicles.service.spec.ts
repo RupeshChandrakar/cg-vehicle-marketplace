@@ -231,6 +231,84 @@ describe('VehiclesService', () => {
     });
   });
 
+  it("findMineForSeller() scopes to the caller's own vehicles only", async () => {
+    const { service, prisma } = buildService();
+    prisma.vehicle.findMany.mockResolvedValue([
+      {
+        id: 'vehicle-1',
+        specs: { registrationNumber: 'CG 08 AB 1234' },
+        media: [],
+        category: {},
+        location: {},
+        verification: null,
+      },
+    ]);
+
+    const result = await service.findMineForSeller('seller-1');
+
+    expect(prisma.vehicle.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { sellerId: 'seller-1' } }),
+    );
+    // Unlike the public/buyer-facing shape, a seller sees their own
+    // registrationNumber — only the public view strips it.
+    expect(result[0].specs).toEqual({ registrationNumber: 'CG 08 AB 1234' });
+  });
+
+  describe('updateAsSeller()', () => {
+    it('refuses to edit a vehicle owned by someone else, as a 404', async () => {
+      const { service, prisma } = buildService();
+      prisma.vehicle.findUnique.mockResolvedValue({
+        id: 'vehicle-1',
+        sellerId: 'someone-else',
+        status: 'submitted',
+      });
+
+      await expect(
+        service.updateAsSeller('vehicle-1', 'seller-1', { price: 500000 }),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('refuses to edit a listing that is already live', async () => {
+      const { service, prisma } = buildService();
+      prisma.vehicle.findUnique.mockResolvedValue({
+        id: 'vehicle-1',
+        sellerId: 'seller-1',
+        status: 'live',
+      });
+
+      await expect(
+        service.updateAsSeller('vehicle-1', 'seller-1', { price: 500000 }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('allows the real owner to edit while still pending review', async () => {
+      const { service, prisma } = buildService();
+      const baseVehicle = {
+        id: 'vehicle-1',
+        sellerId: 'seller-1',
+        status: 'submitted',
+        specs: {},
+      };
+      prisma.vehicle.findUnique.mockResolvedValue(baseVehicle);
+      prisma.vehicle.update.mockImplementation(
+        (args: { data: Record<string, unknown> }) => ({
+          ...baseVehicle,
+          ...args.data,
+          media: [],
+          category: {},
+          location: {},
+          verification: null,
+        }),
+      );
+
+      const result = await service.updateAsSeller('vehicle-1', 'seller-1', {
+        price: 650000,
+      });
+
+      expect(result.price).toBe(650000);
+    });
+  });
+
   it('reject() records the reason and moves status to rejected', async () => {
     const { service, prisma, notifications } = buildService();
     const baseVehicle = {
