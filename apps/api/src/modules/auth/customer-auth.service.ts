@@ -17,6 +17,15 @@ const MIN_RESEND_INTERVAL_SECONDS = 30;
 const MAX_OTP_ATTEMPTS = 5;
 const OTP_HASH_ROUNDS = 10;
 
+/** Dev-only convenience so testing doesn't require digging the real OTP out
+ *  of the API's console log every time — this fixed code is accepted in
+ *  place of the real one. Gated as an allow-list (`=== 'development'`), not
+ *  a deny-list (`!== 'production'`): a missing/misconfigured NODE_ENV in any
+ *  non-dev environment then fails safe (bypass disabled) instead of
+ *  accidentally enabling it. Still requires a real requestOtp() call first —
+ *  this only replaces the bcrypt.compare() check, nothing else. */
+const DEV_BYPASS_OTP = '000000';
+
 export interface AuthenticatedCustomer {
   id: string;
   name: string | null;
@@ -93,7 +102,9 @@ export class CustomerAuthService {
       );
     }
 
-    const matches = await bcrypt.compare(otp, user.otpHash);
+    const isDevBypass =
+      process.env.NODE_ENV === 'development' && otp === DEV_BYPASS_OTP;
+    const matches = isDevBypass || (await bcrypt.compare(otp, user.otpHash));
     if (!matches) {
       await this.prisma.user.update({
         where: { id: user.id },
