@@ -132,6 +132,7 @@ model User {
   notifications   Notification[]
   reviewsWritten  Review[]       @relation("ReviewAuthor")
   reviewsReceived Review[]       @relation("ReviewAgent")
+  reelsCreated    Reel[]         @relation("ReelCreator")
 
   @@map("users")
 }
@@ -207,6 +208,7 @@ model Vehicle {
   enquiries    Enquiry[]
   favorites    Favorite[]
   reviews      Review[]
+  reels        Reel[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -413,4 +415,65 @@ model Review {
   @@unique([authorId, vehicleId])
   @@unique([authorId, agentId])
   @@map("reviews")
+}
+
+enum ReelTemplate {
+  classic
+  ken_burns
+
+  @@map("reel_template")
+}
+
+enum ReelStatus {
+  processing
+  completed
+  failed
+
+  @@map("reel_status")
+}
+
+/// There's no real social-platform integration (no Instagram/Facebook/
+/// YouTube API calls) — this is a manual status an agent/admin sets after
+/// posting the downloaded video themselves. See docs/ARCHITECTURE.md
+/// "Phase 6 notes" for why that's a deliberate scope boundary, not an
+/// oversight.
+enum ReelPublishStatus {
+  draft
+  published
+  scheduled
+
+  @@map("reel_publish_status")
+}
+
+model Reel {
+  id String @id @default(uuid())
+
+  vehicleId String  @map("vehicle_id")
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  createdById String @map("created_by_id")
+  createdBy   User   @relation("ReelCreator", fields: [createdById], references: [id])
+
+  template ReelTemplate
+  status   ReelStatus @default(processing)
+
+  /// Bucket-relative keys, resolved to a URL only when serving — same
+  /// pattern as VehicleMedia.storageKey. Both null while status is
+  /// "processing"; both set once "completed".
+  storageKey          String? @map("storage_key")
+  thumbnailStorageKey String? @map("thumbnail_storage_key")
+  durationSeconds     Float?  @map("duration_seconds")
+  errorMessage        String? @map("error_message")
+
+  publishStatus ReelPublishStatus @default(draft) @map("publish_status")
+  /// Free text (e.g. "instagram") — not an enum, since this never drives
+  /// real API behavior, only a label the agent chose.
+  platform      String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([vehicleId])
+  @@index([status])
+  @@map("reels")
 }

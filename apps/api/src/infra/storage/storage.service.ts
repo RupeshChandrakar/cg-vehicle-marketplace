@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   CreateBucketCommand,
+  GetObjectCommand,
   HeadBucketCommand,
   PutBucketPolicyCommand,
   PutObjectCommand,
@@ -55,6 +56,20 @@ export class StorageService implements OnModuleInit {
   /** Vehicle photos are public once a listing is live — no signed URLs needed. */
   getPublicUrl(key: string): string {
     return `${this.publicUrl}/${key}`;
+  }
+
+  /** Used by ReelsService to pull vehicle photos onto local disk as real
+   *  FFmpeg input files — nothing else in the app needs to read storage
+   *  objects back out, only ever serve their public URL. */
+  async download(key: string): Promise<Buffer> {
+    const response = await this.client.send(
+      new GetObjectCommand({ Bucket: this.bucket, Key: key }),
+    );
+    const bytes = await response.Body?.transformToByteArray();
+    if (!bytes) {
+      throw new Error(`Storage object "${key}" has no body`);
+    }
+    return Buffer.from(bytes);
   }
 
   private async ensureBucketExists(): Promise<void> {

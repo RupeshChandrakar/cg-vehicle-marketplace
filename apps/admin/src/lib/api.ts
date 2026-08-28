@@ -8,6 +8,7 @@ import type {
   EnquiryStatus,
 } from '@/types/enquiry';
 import type { AppNotification } from '@/types/notification';
+import type { Reel, ReelTemplate, ReelPublishStatus } from '@/types/reel';
 
 export class ApiError extends Error {
   constructor(
@@ -188,4 +189,37 @@ export function markNotificationRead(accessToken: string, id: string): Promise<A
 
 export function markAllNotificationsRead(accessToken: string): Promise<void> {
   return request('/notifications/read-all', accessToken, { method: 'POST' });
+}
+
+export function createReel(
+  accessToken: string,
+  vehicleId: string,
+  template: ReelTemplate,
+): Promise<Reel> {
+  return request('/admin/reels', accessToken, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ vehicleId, template }),
+  });
+}
+
+export function getAdminReels(accessToken: string): Promise<PaginatedResult<Reel>> {
+  return request('/admin/reels?pageSize=50', accessToken);
+}
+
+export function getAdminReel(accessToken: string, id: string): Promise<Reel> {
+  return request(`/admin/reels/${id}`, accessToken);
+}
+
+export function updateReelPublishStatus(
+  accessToken: string,
+  id: string,
+  publishStatus: ReelPublishStatus,
+  platform?: string,
+): Promise<Reel> {
+  return request(`/admin/reels/${id}/publish-status`, accessToken, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ publishStatus, platform }),
+  });
 }

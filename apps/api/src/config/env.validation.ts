@@ -34,4 +34,10 @@ export const envValidationSchema = Joi.object({
   // Optional: AiModule falls back to StubAiProvider (no real model calls)
   // when this isn't set — see docs/ARCHITECTURE.md "Phase 5 notes".
   ANTHROPIC_API_KEY: Joi.string().optional(),
+
+  // A real .ttf font file FFmpeg's drawtext filter burns reel text with.
+  // Required (not defaulted) so a missing font fails fast at boot instead
+  // of failing confusingly mid-video-generation — see docs/ARCHITECTURE.md
+  // "Phase 6 notes" for the Windows-dev-machine vs. deployment note.
+  REEL_FONT_PATH: Joi.string().required(),
 });

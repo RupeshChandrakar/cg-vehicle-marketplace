@@ -227,7 +227,7 @@ the same reason.
 | 3 — Enquiry & Agent Workflow | Enquiry creation, agent assignment, status state machine, basic chat, call logging _(done)_                                                    |
 | 4 — Accounts & Engagement    | OTP auth polish, favorites, notifications, reviews _(done)_                                                                                   |
 | 5 — Intelligent Chat Layer   | AI orchestration on top of Phase 3's deterministic data — never a source of truth _(done)_     |
-| 6 — Reel Studio              | Template-based FFmpeg video generation, only after 1–4 are stable                                                                             |
+| 6 — Reel Studio              | Template-based FFmpeg video generation, only after 1–4 are stable _(done)_                                                                    |
 | 7 — Mobile App               | React Native consuming the same API                                                                                                           |
 
 ### Phase 4 notes
@@ -331,6 +331,58 @@ that's a separate, larger decision left for later.
   (`ChatPanel`'s "Suggest Reply" button in `apps/admin`). The agent still reviews, can edit
   freely, and sends it themselves through the existing socket `sendMessage` path — a suggestion
   that's never reviewed is never persisted anywhere.
+
+### Phase 6 notes
+
+Confirmed as a "key feature" by the product owner — built as a real pipeline throughout, with
+exactly one deliberate exception (actually posting to social platforms), matching the same
+stub-the-external-integration pattern as Phase 4's SMS and Phase 5's AI provider.
+
+- **Pipeline** (`ReelsService.generate()`, private, fire-and-forget from `create()`): downloads
+  each of the vehicle's real `VehicleMedia` photos from storage
+  (`StorageService.download()`, new this phase) → one FFmpeg pass per photo produces a 3-second
+  1080×1920 segment (Instagram Reels/YouTube Shorts vertical format) with a burned-in title/price
+  overlay → FFmpeg's `concat` demuxer joins the segments (far more robust than one giant
+  `filter_complex` graph for a variable photo count) → a real thumbnail frame is extracted via
+  `-ss 1 -frames:v 1` → both video and thumbnail upload to the same S3 bucket vehicle photos use,
+  under a `reels/` key prefix.
+- **Two real templates**, not cosmetic labels — `buildSegmentFilter()` in
+  `infra/video/reel-templates.ts`: `classic` (static frame, fade in/out) vs `ken_burns`
+  (`zoompan` slow zoom/pan). Both share the same crop-to-vertical and text-overlay treatment.
+- **`ffmpeg-static`/`ffprobe-static`** (approved in `pnpm-workspace.yaml`'s `allowBuilds` — they
+  need an install-time binary download, same category as `bcrypt`/`prisma`) bundle real prebuilt
+  binaries — no system-level FFmpeg install needed, portable across dev machines.
+- **Critical Windows gotcha** (see `FfmpegService.toFilterPath()`): FFmpeg's own filtergraph
+  syntax uses `:` to separate a filter's options, so a bare Windows drive letter (`C:\...`) used
+  as a filter option value (a `fontfile`/`textfile` path) breaks parsing — independent of any
+  shell-quoting concern, since `execFile` never goes through a shell. Fix: escape the drive
+  letter's colon (`C:` → `C\:`) and use forward slashes throughout. Proven first via raw
+  scratchpad `ffmpeg.exe` calls before being wired into the service — worth doing for any future
+  filter-graph change, since the failure mode ("Both text and text file provided") is misleading.
+- **Text overlays use `textfile=`, not `text=`** — writes the vehicle title/price to small temp
+  `.txt` files and references them by path, sidestepping FFmpeg's own quoting rules for
+  apostrophes/colons/etc. that a real vehicle title or price string could otherwise contain.
+- **`REEL_FONT_PATH`** (required env var, fails fast at boot if missing) points at a real `.ttf`
+  file for `drawtext`. Currently a Windows font path in this dev environment
+  (`C:\Windows\Fonts\arialbd.ttf`) — deployment (likely Linux) needs a real bundled font file
+  instead (e.g. an openly-licensed Google Font shipped under `apps/api/assets/fonts/`).
+- **No job queue yet**: generation runs fire-and-forget in the same Node process that handled the
+  `POST /admin/reels` request — fine at today's volume (one instance, low concurrent generation),
+  but a real BullMQ+Redis queue (Redis is already in the architecture's stack for Socket.IO) is
+  the natural next step if concurrent reel generation ever becomes common. The admin UI polls
+  `GET /admin/reels/:id` every 3s while any reel shows `status: processing`.
+  `POST /admin/reels/:id/publish-status` — `publishStatus` (draft/scheduled/published) and
+  `platform` (free-text label, e.g. "instagram") are exactly that: a manual record of what an
+  agent/admin says they did after downloading and posting the video themselves. No Instagram/
+  Facebook/YouTube API calls exist anywhere in this codebase. Per the original role matrix,
+  agents can create reels (always as `draft`) but only admins can move `publishStatus` off draft
+  — enforced via a method-level `@Roles(UserRole.admin)` override on that one endpoint.
+- **Storage backend note**: this phase is what revealed the local MinIO instance referenced in
+  earlier phases had silently died at some point (port 9000 had been reoccupied by an unrelated
+  process) — every prior "photo upload" this session had likely never actually been exercised for
+  real. Fixed by downloading and running a real MinIO Windows binary on port 9002; see the
+  persistent project memory for the full diagnosis and exact commands, since this is a
+  local-dev-environment detail rather than an architectural decision.
 
 ### Admin visual refresh (2026-08-28)
 
