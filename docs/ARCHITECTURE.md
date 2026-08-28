@@ -226,7 +226,7 @@ the same reason.
 | 2 — Sell + Verification      | Sell flow, media upload, admin review/approve/reject queue _(done)_                                                                           |
 | 3 — Enquiry & Agent Workflow | Enquiry creation, agent assignment, status state machine, basic chat, call logging _(done)_                                                    |
 | 4 — Accounts & Engagement    | OTP auth polish, favorites, notifications, reviews _(done)_                                                                                   |
-| 5 — Intelligent Chat Layer   | AI orchestration on top of Phase 3's deterministic data — never a source of truth                                                             |
+| 5 — Intelligent Chat Layer   | AI orchestration on top of Phase 3's deterministic data — never a source of truth _(done)_     |
 | 6 — Reel Studio              | Template-based FFmpeg video generation, only after 1–4 are stable                                                                             |
 | 7 — Mobile App               | React Native consuming the same API                                                                                                           |
 
@@ -298,6 +298,39 @@ the same reason.
 - **Admin app was not visually refreshed** in this phase — it keeps the plain
   border/no-shadow style from Phase 2, consistent with the earlier decision to leave the internal
   tool unstyled unless asked. (Refreshed afterward — see "Admin visual refresh" below.)
+
+### Phase 5 notes
+
+Scope was narrowed to one concrete feature (confirmed with the product owner): **agent
+reply-assist** inside Phase 3's real enquiry chat. No customer-facing AI search assistant yet —
+that's a separate, larger decision left for later.
+
+- **`AiProvider`** (`infra/ai/`) is a provider-agnostic interface — `suggestReply(vehicle,
+  messages) => Promise<string>` — mirroring Phase 4's `SmsProvider` pattern exactly.
+  `AiModule` is `@Global()` (like `NotificationsModule`) so `EnquiriesService` can inject
+  `AI_PROVIDER` without a module-import cycle. Which implementation gets bound is decided once,
+  in `AiModule`'s factory: `ClaudeAiProvider` if `ANTHROPIC_API_KEY` is set, otherwise
+  `StubAiProvider` — no other code needs to know which one is active.
+- **`StubAiProvider`** is the default in this environment (no key configured yet). It's not a
+  fake — it builds its templated draft from the *real* vehicle facts and the real last customer
+  message (same "never fabricate data" discipline as everywhere else in this codebase), but the
+  output always ends with a bracketed `[Draft by stub AI provider — set ANTHROPIC_API_KEY…]`
+  label, so it can never be mistaken for genuine model output if it somehow reached a real
+  conversation. Has its own spec file (`stub-ai.provider.spec.ts`) — same "small pure logic unit
+  gets a dedicated test" pattern as `VehicleStatusService`/`EnquiryStatusService`.
+  `ANTHROPIC_API_KEY` is optional in `env.validation.ts`.
+- **`ClaudeAiProvider`** is real, complete integration code (`@anthropic-ai/sdk`,
+  `claude-sonnet-5`) — just dormant until a key is provided. Its system prompt explicitly
+  forbids inventing vehicle facts and forbids ever surfacing the seller's contact details or
+  `registrationNumber` (stripped from the prompt before it's built).
+- **Never a source of truth, enforced structurally, not just by convention**: `suggestReply()`
+  only *returns* a string — it never calls `sendMessage()` or touches the `Message` table itself.
+  `POST /admin/enquiries/:id/suggest-reply` (guarded exactly like the other staff enquiry
+  endpoints — assigned agent or admin only, via the same `assertStaffCanManage`) returns the
+  draft to the browser, which drops it straight into the agent's own message input
+  (`ChatPanel`'s "Suggest Reply" button in `apps/admin`). The agent still reviews, can edit
+  freely, and sends it themselves through the existing socket `sendMessage` path — a suggestion
+  that's never reviewed is never persisted anywhere.
 
 ### Admin visual refresh (2026-08-28)
 

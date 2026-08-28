@@ -4,6 +4,7 @@ import { envValidationSchema } from './config/env.validation';
 import { PrismaModule } from './infra/prisma/prisma.module';
 import { StorageModule } from './infra/storage/storage.module';
 import { SmsModule } from './infra/sms/sms.module';
+import { AiModule } from './infra/ai/ai.module';
 import { HealthModule } from './modules/health/health.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { LocationsModule } from './modules/locations/locations.module';
@@ -25,6 +26,7 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
     PrismaModule,
     StorageModule,
     SmsModule,
+    AiModule,
     NotificationsModule,
     HealthModule,
     AuthModule,

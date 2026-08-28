@@ -134,6 +134,13 @@ export function getAdminEnquiryMessages(
   return request(`/admin/enquiries/${id}/messages`, accessToken);
 }
 
+export function suggestEnquiryReply(
+  accessToken: string,
+  id: string,
+): Promise<{ suggestion: string }> {
+  return request(`/admin/enquiries/${id}/suggest-reply`, accessToken, { method: 'POST' });
+}
+
 export function sendAdminEnquiryMessage(
   accessToken: string,
   id: string,

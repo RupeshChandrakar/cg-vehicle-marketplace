@@ -29,6 +29,7 @@
     "db:seed": "node dist-seed/prisma/seed.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.70.1",
     "@aws-sdk/client-s3": "^3.1118.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",

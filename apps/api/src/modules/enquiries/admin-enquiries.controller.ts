@@ -71,6 +71,14 @@ export class AdminEnquiriesController {
     });
   }
 
+  @Post(':id/suggest-reply')
+  async suggestReply(
+    @Param('id') id: string,
+    @CurrentUser() staff: AuthenticatedUser,
+  ): Promise<{ suggestion: string }> {
+    return { suggestion: await this.enquiriesService.suggestReply(id, staff) };
+  }
+
   @Post(':id/status')
   updateStatus(
     @Param('id') id: string,

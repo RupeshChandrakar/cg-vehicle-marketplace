@@ -44,6 +44,11 @@ export class FavoritesController {
     @Param('vehiclePublicId', ParseIntPipe) vehiclePublicId: number,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<{ favorited: boolean }> {
-    return { favorited: await this.favoritesService.isFavorited(user.id, vehiclePublicId) };
+    return {
+      favorited: await this.favoritesService.isFavorited(
+        user.id,
+        vehiclePublicId,
+      ),
+    };
   }
 }

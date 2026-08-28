@@ -3,12 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { io, type Socket } from 'socket.io-client';
+import { Sparkles } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import {
   ApiError,
   getAdminEnquiry,
   getAdminEnquiryMessages,
   logEnquiryCall,
+  suggestEnquiryReply,
   updateEnquiryStatus,
 } from '@/lib/api';
 import { API_BASE_URL } from '@/config/api';
@@ -176,6 +178,8 @@ function ChatPanel({ accessToken, enquiryId }: { accessToken: string; enquiryId:
   const [messages, setMessages] = useState<EnquiryMessage[]>([]);
   const [ready, setReady] = useState(false);
   const [draft, setDraft] = useState('');
+  const [isSuggesting, setIsSuggesting] = useState(false);
+  const [suggestError, setSuggestError] = useState<string | null>(null);
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
@@ -213,9 +217,38 @@ function ChatPanel({ accessToken, enquiryId }: { accessToken: string; enquiryId:
     setDraft('');
   }
 
+  async function handleSuggest(): Promise<void> {
+    setIsSuggesting(true);
+    setSuggestError(null);
+    try {
+      const { suggestion } = await suggestEnquiryReply(accessToken, enquiryId);
+      // Populates the input only — the agent still reviews/edits and sends
+      // it themselves. AI never sends a message on its own.
+      setDraft(suggestion);
+    } catch (err) {
+      setSuggestError(err instanceof ApiError ? err.message : 'Failed to get a suggestion.');
+    } finally {
+      setIsSuggesting(false);
+    }
+  }
+
   return (
     <div className="space-y-3 rounded-2xl bg-background p-5 shadow-card">
-      <h2 className="text-sm font-semibold text-foreground">Chat</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-foreground">Chat</h2>
+        <button
+          type="button"
+          onClick={() => void handleSuggest()}
+          disabled={isSuggesting}
+          className="flex items-center gap-1.5 rounded-full bg-primary-light px-3 py-1.5 text-xs font-medium text-primary transition hover:shadow-card disabled:opacity-60"
+        >
+          <Sparkles className="h-3.5 w-3.5" strokeWidth={1.75} />
+          {isSuggesting ? 'Drafting…' : 'Suggest Reply'}
+        </button>
+      </div>
+
+      {suggestError && <p className="text-sm text-foreground">{suggestError}</p>}
+
       <div className="max-h-72 space-y-2 overflow-y-auto">
         {messages.length === 0 && <p className="text-sm text-muted">No messages yet.</p>}
         {messages.map((message) => (

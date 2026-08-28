@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -10,6 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../infra/prisma/prisma.service';
 import { UsersService } from '../users/users.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { AI_PROVIDER, type AiProvider } from '../../infra/ai/ai-provider';
 import { EnquiryStatusService } from './enquiry-status.service';
 import { CreateEnquiryDto } from './dto/create-enquiry.dto';
 import { AdminEnquiryQueryDto } from './dto/admin-enquiry-query.dto';
@@ -96,6 +98,7 @@ export class EnquiriesService {
     private readonly notifications: NotificationsService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    @Inject(AI_PROVIDER) private readonly aiProvider: AiProvider,
   ) {}
 
   async create(dto: CreateEnquiryDto): Promise<CreateEnquiryResult> {
@@ -366,6 +369,47 @@ export class EnquiriesService {
     }
 
     return message;
+  }
+
+  /** Drafts a reply suggestion for the assigned agent (or an admin) — never
+   *  persisted, never sent automatically. The agent reviews/edits it in
+   *  their own message input and sends it themselves via the normal
+   *  sendMessage path, same as anything else they type. */
+  async suggestReply(id: string, staff: AuthenticatedUser): Promise<string> {
+    const enquiry = await this.prisma.enquiry.findUnique({
+      where: { id },
+      include: {
+        vehicle: true,
+        conversation: {
+          include: { messages: { orderBy: { createdAt: 'asc' } } },
+        },
+      },
+    });
+    if (!enquiry) {
+      throw new NotFoundException('Enquiry not found');
+    }
+    this.assertStaffCanManage(enquiry, staff);
+    if (!enquiry.conversation) {
+      throw new BadRequestException('This enquiry has no chat conversation');
+    }
+
+    return this.aiProvider.suggestReply({
+      vehicle: {
+        title: enquiry.vehicle.title,
+        brand: enquiry.vehicle.brand,
+        model: enquiry.vehicle.model,
+        year: enquiry.vehicle.year,
+        price: Number(enquiry.vehicle.price),
+        kmDriven: enquiry.vehicle.kmDriven,
+        fuelType: enquiry.vehicle.fuelType,
+        transmission: enquiry.vehicle.transmission,
+        specs: enquiry.vehicle.specs as Record<string, unknown>,
+      },
+      messages: enquiry.conversation.messages.map((message) => ({
+        senderType: message.senderType,
+        body: message.body,
+      })),
+    });
   }
 
   async findForStaff(

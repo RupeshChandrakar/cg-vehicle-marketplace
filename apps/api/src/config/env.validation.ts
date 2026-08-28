@@ -30,4 +30,8 @@ export const envValidationSchema = Joi.object({
   STORAGE_SECRET_ACCESS_KEY: Joi.string().required(),
   STORAGE_BUCKET: Joi.string().required(),
   STORAGE_PUBLIC_URL: Joi.string().uri().required(),
+
+  // Optional: AiModule falls back to StubAiProvider (no real model calls)
+  // when this isn't set — see docs/ARCHITECTURE.md "Phase 5 notes".
+  ANTHROPIC_API_KEY: Joi.string().optional(),
 });
