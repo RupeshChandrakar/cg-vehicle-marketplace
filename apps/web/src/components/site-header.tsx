@@ -53,6 +53,12 @@ export function SiteHeader() {
               >
                 My Enquiries
               </Link>
+              <Link
+                href="/refer"
+                className="hidden text-sm font-medium text-foreground sm:inline"
+              >
+                Invite Friends
+              </Link>
             </>
           )}
 

@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, Geist_Mono } from 'next/font/google';
 import { brand } from '@cg/shared-config';
 import { SiteHeader } from '@/components/site-header';
 import { AnalyticsTracker } from '@/components/analytics-tracker';
+import { ReferralCapture } from '@/components/referral-capture';
 import { CustomerAuthProvider } from '@/lib/customer-auth-context';
 import './globals.css';
 
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
       <body className="min-h-full flex flex-col bg-warm">
         <CustomerAuthProvider>
           <AnalyticsTracker />
+          <ReferralCapture />
           <SiteHeader />
           {children}
         </CustomerAuthProvider>

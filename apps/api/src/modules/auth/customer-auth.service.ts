@@ -36,8 +36,15 @@ export class CustomerAuthService {
     @Inject(SMS_PROVIDER) private readonly smsProvider: SmsProvider,
   ) {}
 
-  async requestOtp(phone: string): Promise<{ message: string }> {
-    const user = await this.usersService.findOrCreateByPhone(phone);
+  async requestOtp(
+    phone: string,
+    referralCode?: string,
+  ): Promise<{ message: string }> {
+    const user = await this.usersService.findOrCreateByPhone(
+      phone,
+      undefined,
+      referralCode,
+    );
 
     if (user.otpExpiresAt) {
       const secondsUntilExpiry =

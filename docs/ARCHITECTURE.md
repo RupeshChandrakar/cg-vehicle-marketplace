@@ -498,6 +498,44 @@ offered.
   genuinely new "visitor") each showed the Dashboard's visitor counts increment by exactly one
   per real customer-app page visit.
 
+### Growth: WhatsApp share & referral tracking (2026-08-28)
+
+PO asked how to bring more users in and eventually monetize. Two separate concerns — traffic
+(growth) and revenue (monetization) — and PO explicitly chose growth first: premature paywalls
+before any real traffic/trust exist tend to suppress the adoption they're meant to fund.
+Deliberately scoped to genuinely free, low-effort growth mechanics; no monetization work landed
+here.
+
+- **WhatsApp share** (`WhatsAppShareButton`, vehicle detail page): builds the `wa.me` link and
+  share message **on click**, reading `window.location.href` — always the exact correct absolute
+  URL for that visit, in dev or prod, with no `metadataBase`/site-URL env var needed.
+- **Referral tracking, not a "refer & earn" reward system**: `User` gained `referralCode`
+  (nullable, unique, generated lazily on first `GET /users/me/referral` rather than backfilled —
+  avoids a unique-column backfill migration for a field most existing rows will never touch) and
+  `referredById` (set once, at account creation, never overwritten). No payment/wallet
+  infrastructure exists anywhere in this codebase, so this deliberately does **not** promise a
+  cashback/credit reward to referrers — building that UI without a real ledger behind it would be
+  exactly the kind of fabrication this project avoids. The customer-web `/refer` ("Invite
+  Friends") page frames it as inviting friends, not earning a reward.
+- **Attribution point matters**: `UsersService.findOrCreateByPhone()` is the one place a referral
+  code is ever consulted — specifically its `create` branch of the upsert, so a *returning* user
+  can never be re-attributed, and a code can't attribute a user to themselves (checked by phone).
+  `requestOtp()` is the natural place for this (not `verifyOtp()`) since `findOrCreateByPhone`
+  already runs there, creating the row before the OTP is even confirmed.
+- **Capture is deliberately not next/navigation's `useSearchParams()`**: that hook forces
+  whatever imports it out of static rendering, and `ReferralCapture` is mounted in the root layout
+  — every page. It reads `window.location.search` directly instead (matching
+  `AnalyticsTracker`'s existing `usePathname()`-triggered pattern), stores the code in
+  `localStorage`, and the login page reads it back when calling `requestOtp()` — a visitor can
+  land on a shared link, browse a while, and sign up later, not just immediately.
+- Verified end-to-end for real: a REST script drove the actual `/auth/customer/otp/*` endpoints
+  with a real bcrypt-hashed OTP override (direct DB write, matching the app's own hashing) to
+  complete two real signups without touching the shared dev server's console — confirmed
+  attribution, the referrer's count incrementing, and the self-referral guard holding. A
+  browser-level pass confirmed the `?ref=` capture, that `requestOtp()`'s network payload actually
+  carries the stored code, the WhatsApp share button's exact message content, and the `/refer`
+  page rendering a real referrer's real link and count.
+
 ### Phase 2 notes
 
 - **Staff auth** landed here rather than waiting for Phase 4, since the admin review queue

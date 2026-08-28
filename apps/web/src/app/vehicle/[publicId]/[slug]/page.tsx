@@ -7,6 +7,7 @@ import { brand } from '@cg/shared-config';
 import type { Vehicle } from '@/types/vehicle';
 import { VehicleGallery } from '@/features/vehicles/vehicle-gallery';
 import { VehicleViewTracker } from '@/features/vehicles/vehicle-view-tracker';
+import { WhatsAppShareButton } from '@/features/vehicles/whatsapp-share-button';
 import { EnquiryActions } from '@/features/enquiries/enquiry-actions';
 import { FavoriteButton } from '@/features/favorites/favorite-button';
 
@@ -67,6 +68,7 @@ export default async function VehiclePage(props: PageProps<'/vehicle/[publicId]/
                     Verified
                   </span>
                 )}
+                <WhatsAppShareButton title={vehicle.title} price={formatPrice(vehicle.price)} />
                 <FavoriteButton vehiclePublicId={vehicle.publicId} checkInitialState />
               </div>
             </div>

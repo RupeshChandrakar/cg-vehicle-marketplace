@@ -210,11 +210,14 @@ export interface TokenPair {
   refreshToken: string;
 }
 
-export function requestOtp(phone: string): Promise<{ message: string }> {
+export function requestOtp(
+  phone: string,
+  referralCode?: string,
+): Promise<{ message: string }> {
   return request('/auth/customer/otp/request', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ phone }),
+    body: JSON.stringify({ phone, referralCode }),
   });
 }
 
@@ -289,6 +292,15 @@ export interface AppNotification {
 
 export function getNotifications(accessToken: string): Promise<AppNotification[]> {
   return request('/notifications', { headers: authHeader(accessToken) });
+}
+
+export interface ReferralInfo {
+  referralCode: string;
+  totalReferred: number;
+}
+
+export function getReferralInfo(accessToken: string): Promise<ReferralInfo> {
+  return request('/users/me/referral', { headers: authHeader(accessToken) });
 }
 
 export function markNotificationRead(

@@ -37,7 +37,7 @@ export class AuthController {
 
   @Post('customer/otp/request')
   requestOtp(@Body() dto: RequestOtpDto): Promise<{ message: string }> {
-    return this.customerAuthService.requestOtp(dto.phone);
+    return this.customerAuthService.requestOtp(dto.phone, dto.referralCode);
   }
 
   @Post('customer/otp/verify')
