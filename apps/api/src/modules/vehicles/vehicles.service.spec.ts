@@ -31,6 +31,14 @@ interface VerificationUpsertArgs {
   create: { vehicleId: string; verifiedBy?: string; notes?: string };
 }
 
+interface NotifyArgs {
+  userId: string;
+  type: string;
+  title: string;
+  body: string;
+  relatedId?: string;
+}
+
 function buildService() {
   const vehicleTable = {
     create: jest.fn(record),
@@ -77,15 +85,19 @@ function buildService() {
   const storage = {
     getPublicUrl: jest.fn((key: string) => `https://storage.test/${key}`),
   };
+  const notifications = {
+    create: jest.fn<undefined, [NotifyArgs]>(),
+  };
 
   const service = new VehiclesService(
     prisma as never,
     usersService as never,
     new VehicleStatusService(),
     storage as never,
+    notifications as never,
   );
 
-  return { service, prisma, usersService, storage };
+  return { service, prisma, usersService, storage, notifications };
 }
 
 describe('VehiclesService', () => {
@@ -118,11 +130,24 @@ describe('VehiclesService', () => {
   });
 
   it('approveAndPublish() walks submitted all the way to live in one call', async () => {
-    const { service, prisma } = buildService();
-    prisma.vehicle.findUnique.mockResolvedValue({
+    const { service, prisma, notifications } = buildService();
+    const baseVehicle = {
       id: 'vehicle-1',
       status: 'submitted',
-    });
+      title: 'Mahindra Bolero B4',
+      sellerId: 'seller-1',
+    };
+    prisma.vehicle.findUnique.mockResolvedValue(baseVehicle);
+    // The real Prisma client always returns the full row from update(), not
+    // just the fields in `data` — this mock's default `record()` helper
+    // doesn't, so this test overrides it to keep sellerId/title threaded
+    // through the transaction's chained status updates.
+    prisma.vehicle.update.mockImplementation(
+      (args: { data: Record<string, unknown> }) => ({
+        ...baseVehicle,
+        ...args.data,
+      }),
+    );
 
     const result = await service.approveAndPublish(
       'vehicle-1',
@@ -138,6 +163,11 @@ describe('VehiclesService', () => {
     });
     expect(prisma.$queryRaw).toHaveBeenCalled();
     expect(result).toMatchObject({ status: 'live', publicId: 10000 });
+    const [[notifyArgs]] = notifications.create.mock.calls;
+    expect(notifyArgs).toMatchObject({
+      userId: 'seller-1',
+      type: 'vehicle_approved',
+    });
   });
 
   it('approveAndPublish() also works starting from under_review', async () => {
@@ -202,11 +232,20 @@ describe('VehiclesService', () => {
   });
 
   it('reject() records the reason and moves status to rejected', async () => {
-    const { service, prisma } = buildService();
-    prisma.vehicle.findUnique.mockResolvedValue({
+    const { service, prisma, notifications } = buildService();
+    const baseVehicle = {
       id: 'vehicle-1',
       status: 'submitted',
-    });
+      title: 'Mahindra Bolero B4',
+      sellerId: 'seller-1',
+    };
+    prisma.vehicle.findUnique.mockResolvedValue(baseVehicle);
+    prisma.vehicle.update.mockImplementation(
+      (args: { data: Record<string, unknown> }) => ({
+        ...baseVehicle,
+        ...args.data,
+      }),
+    );
 
     const result = await service.reject(
       'vehicle-1',
@@ -216,6 +255,11 @@ describe('VehiclesService', () => {
     expect(result).toMatchObject({
       status: 'rejected',
       rejectionReason: 'Odometer photo unreadable',
+    });
+    const [[notifyArgs]] = notifications.create.mock.calls;
+    expect(notifyArgs).toMatchObject({
+      userId: 'seller-1',
+      type: 'vehicle_rejected',
     });
   });
 });

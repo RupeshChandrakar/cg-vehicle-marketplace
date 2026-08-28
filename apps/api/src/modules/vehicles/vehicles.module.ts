@@ -10,5 +10,9 @@ import { AuthModule } from '../auth/auth.module';
   imports: [UsersModule, AuthModule],
   controllers: [VehiclesController, AdminVehiclesController],
   providers: [VehiclesService, VehicleStatusService],
+  // Favorites/Reviews reuse VehiclesService's public-shaping logic
+  // (toPublicVehicle, media URL resolution, specs stripping) rather than
+  // duplicating it.
+  exports: [VehiclesService],
 })
 export class VehiclesModule {}

@@ -1,11 +1,21 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { brand } from '@cg/shared-config';
 import { useAuth } from '@/lib/auth-context';
+import { getNotifications } from '@/lib/api';
 
 export function SiteHeader() {
-  const { user, logout } = useAuth();
+  const { user, accessToken, logout } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    getNotifications(accessToken)
+      .then((notifications) => setUnreadCount(notifications.filter((n) => !n.isRead).length))
+      .catch(() => undefined);
+  }, [accessToken]);
 
   return (
     <header className="border-b border-line">
@@ -20,6 +30,9 @@ export function SiteHeader() {
             </Link>
             <Link href="/enquiries" className="text-foreground">
               Enquiries
+            </Link>
+            <Link href="/notifications" className="text-foreground">
+              Notifications{unreadCount > 0 ? ` (${unreadCount})` : ''}
             </Link>
             <span className="text-muted">{user.name ?? user.email}</span>
             <button onClick={logout} className="border border-line px-3 py-1.5 text-foreground">

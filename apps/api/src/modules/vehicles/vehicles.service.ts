@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../infra/prisma/prisma.service';
 import { StorageService } from '../../infra/storage/storage.service';
 import { UsersService } from '../users/users.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { VehicleStatusService } from './vehicle-status.service';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { VehicleQueryDto } from './dto/vehicle-query.dto';
@@ -9,6 +10,7 @@ import { AdminVehicleQueryDto } from './dto/admin-vehicle-query.dto';
 import { PaginatedResult } from '../../common/types/paginated-result.type';
 import { slugify } from '../../common/utils/slug.util';
 import {
+  NotificationType,
   Prisma,
   User,
   Vehicle,
@@ -56,6 +58,7 @@ export class VehiclesService {
     private readonly usersService: UsersService,
     private readonly statusService: VehicleStatusService,
     private readonly storage: StorageService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async create(dto: CreateVehicleDto): Promise<Vehicle> {
@@ -162,6 +165,19 @@ export class VehiclesService {
     return this.toPublicVehicle(vehicle);
   }
 
+  /** Used by FavoritesService/ReviewsService to render vehicle summaries
+   *  without duplicating the public-shaping logic below. Order is not
+   *  guaranteed — callers that care (e.g. "most recently favorited first")
+   *  re-sort by their own ordering afterward. */
+  async findManyByIds(ids: string[]): Promise<PublicVehicle[]> {
+    if (ids.length === 0) return [];
+    const vehicles = await this.prisma.vehicle.findMany({
+      where: { id: { in: ids } },
+      include: PUBLIC_VEHICLE_INCLUDE,
+    });
+    return vehicles.map((vehicle) => this.toPublicVehicle(vehicle));
+  }
+
   // --- Admin review pipeline: protected by JwtAuthGuard + RolesGuard at the controller. ---
 
   async findForAdmin(
@@ -217,6 +233,26 @@ export class VehiclesService {
     verifiedBy: string,
     notes?: string,
   ): Promise<Vehicle> {
+    const vehicle = await this.runApprovalTransaction(id, verifiedBy, notes);
+
+    // Fired after the transaction commits, not inside it — a notification
+    // for a listing that ends up rolled back would be misleading.
+    await this.notifications.create({
+      userId: vehicle.sellerId,
+      type: NotificationType.vehicle_approved,
+      title: 'Your listing is live',
+      body: `"${vehicle.title}" has been verified and is now live on ${vehicle.publicId ? `Vehicle ID ${vehicle.publicId}` : 'the marketplace'}.`,
+      relatedId: vehicle.id,
+    });
+
+    return vehicle;
+  }
+
+  private async runApprovalTransaction(
+    id: string,
+    verifiedBy: string,
+    notes?: string,
+  ): Promise<Vehicle> {
     return this.prisma.$transaction(async (tx) => {
       let vehicle = await tx.vehicle.findUnique({ where: { id } });
       if (!vehicle) {
@@ -263,10 +299,20 @@ export class VehiclesService {
   async reject(id: string, reason: string): Promise<Vehicle> {
     const vehicle = await this.findByIdOrThrow(id);
     this.statusService.assertTransition(vehicle.status, VehicleStatus.rejected);
-    return this.prisma.vehicle.update({
+    const rejected = await this.prisma.vehicle.update({
       where: { id },
       data: { status: VehicleStatus.rejected, rejectionReason: reason },
     });
+
+    await this.notifications.create({
+      userId: rejected.sellerId,
+      type: NotificationType.vehicle_rejected,
+      title: 'Your listing was rejected',
+      body: `"${rejected.title}" was not approved: ${reason}`,
+      relatedId: rejected.id,
+    });
+
+    return rejected;
   }
 
   private toPublicVehicle(vehicle: VehicleWithPublicInclude): PublicVehicle {

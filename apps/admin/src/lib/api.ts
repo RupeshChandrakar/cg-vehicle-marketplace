@@ -7,6 +7,7 @@ import type {
   EnquiryMessage,
   EnquiryStatus,
 } from '@/types/enquiry';
+import type { AppNotification } from '@/types/notification';
 
 export class ApiError extends Error {
   constructor(
@@ -160,4 +161,16 @@ export function logEnquiryCall(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ outcome, notes }),
   });
+}
+
+export function getNotifications(accessToken: string): Promise<AppNotification[]> {
+  return request('/notifications', accessToken);
+}
+
+export function markNotificationRead(accessToken: string, id: string): Promise<AppNotification> {
+  return request(`/notifications/${id}/read`, accessToken, { method: 'POST' });
+}
+
+export function markAllNotificationsRead(accessToken: string): Promise<void> {
+  return request('/notifications/read-all', accessToken, { method: 'POST' });
 }

@@ -91,11 +91,10 @@ export class AuthService {
     });
   }
 
-  /** Issuing a new pair always overwrites the stored hash, so refreshing rotates the session. */
-  private async issueTokens(
-    userId: string,
-    role: UserRole,
-  ): Promise<TokenPair> {
+  /** Issuing a new pair always overwrites the stored hash, so refreshing
+   *  rotates the session. Public — CustomerAuthService reuses this exact
+   *  logic for OTP login rather than duplicating token issuance. */
+  async issueTokens(userId: string, role: UserRole): Promise<TokenPair> {
     const accessToken = await this.signToken(
       userId,
       role,

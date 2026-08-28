@@ -195,3 +195,146 @@ export function uploadVehicleMedia(
     body: formData,
   });
 }
+
+// --- Customer OTP auth (Phase 4) ---
+
+export interface CustomerUser {
+  id: string;
+  name: string | null;
+  phone: string;
+  role: string;
+}
+
+export interface TokenPair {
+  accessToken: string;
+  refreshToken: string;
+}
+
+export function requestOtp(phone: string): Promise<{ message: string }> {
+  return request('/auth/customer/otp/request', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone }),
+  });
+}
+
+export function verifyOtp(
+  phone: string,
+  otp: string,
+  name?: string,
+): Promise<{ user: CustomerUser; tokens: TokenPair }> {
+  return request('/auth/customer/otp/verify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone, otp, name }),
+  });
+}
+
+function authHeader(accessToken: string): HeadersInit {
+  return { Authorization: `Bearer ${accessToken}` };
+}
+
+// --- Favorites ---
+
+export function toggleFavorite(
+  accessToken: string,
+  vehiclePublicId: number,
+): Promise<{ favorited: boolean }> {
+  return request(`/favorites/${vehiclePublicId}/toggle`, {
+    method: 'POST',
+    headers: authHeader(accessToken),
+  });
+}
+
+export function getFavorites(accessToken: string): Promise<Vehicle[]> {
+  return request('/favorites', { headers: authHeader(accessToken) });
+}
+
+// Only worth calling on the vehicle detail page (one request) — not per
+// card in a listing grid, which would be one request per card.
+export function checkFavorited(
+  accessToken: string,
+  vehiclePublicId: number,
+): Promise<{ favorited: boolean }> {
+  return request(`/favorites/${vehiclePublicId}`, { headers: authHeader(accessToken) });
+}
+
+// --- Customer's own enquiries ---
+
+export interface MyEnquiry {
+  id: string;
+  channel: EnquiryChannel;
+  status: 'open' | 'contacted' | 'negotiating' | 'closed_won' | 'closed_lost';
+  message: string | null;
+  createdAt: string;
+  vehicle: { id: string; publicId: number | null; slug: string; title: string };
+  agent: { id: string; name: string | null } | null;
+}
+
+export function getMyEnquiries(accessToken: string): Promise<MyEnquiry[]> {
+  return request('/enquiries/me', { headers: authHeader(accessToken) });
+}
+
+// --- Notifications ---
+
+export interface AppNotification {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  relatedId: string | null;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export function getNotifications(accessToken: string): Promise<AppNotification[]> {
+  return request('/notifications', { headers: authHeader(accessToken) });
+}
+
+export function markNotificationRead(
+  accessToken: string,
+  id: string,
+): Promise<AppNotification> {
+  return request(`/notifications/${id}/read`, {
+    method: 'POST',
+    headers: authHeader(accessToken),
+  });
+}
+
+export function markAllNotificationsRead(accessToken: string): Promise<void> {
+  return request('/notifications/read-all', {
+    method: 'POST',
+    headers: authHeader(accessToken),
+  });
+}
+
+// --- Reviews ---
+
+export interface VehicleReview {
+  id: string;
+  rating: number;
+  comment: string | null;
+  authorName: string | null;
+  createdAt: string;
+}
+
+export interface VehicleReviewSummary {
+  reviews: VehicleReview[];
+  average: number | null;
+  count: number;
+}
+
+export function getVehicleReviews(vehiclePublicId: number): Promise<VehicleReviewSummary> {
+  return request(`/reviews/vehicle/${vehiclePublicId}`);
+}
+
+export function createReview(
+  accessToken: string,
+  payload: { vehiclePublicId?: number; agentId?: string; rating: number; comment?: string },
+): Promise<VehicleReview> {
+  return request('/reviews', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeader(accessToken) },
+    body: JSON.stringify(payload),
+  });
+}

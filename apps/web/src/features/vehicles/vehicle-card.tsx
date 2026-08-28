@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ShieldCheck, MapPin } from 'lucide-react';
 import type { Vehicle } from '@/types/vehicle';
 import { formatFuelType, formatKm, formatPrice, formatTransmission } from '@/lib/format';
+import { FavoriteButton } from '@/features/favorites/favorite-button';
 
 export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
   const coverImage = vehicle.media[0];
@@ -30,6 +31,10 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
             Verified
           </span>
         )}
+        <FavoriteButton
+          vehiclePublicId={vehicle.publicId}
+          className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-background/90 shadow-card transition hover:bg-background"
+        />
       </div>
 
       <div className="space-y-2 p-4">

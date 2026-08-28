@@ -1,12 +1,13 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { ShieldCheck, Gauge, Fuel, Settings2, User } from 'lucide-react';
-import { getVehicleByPublicId } from '@/lib/api';
+import { ShieldCheck, Gauge, Fuel, Settings2, User, Star } from 'lucide-react';
+import { getVehicleByPublicId, getVehicleReviews, type VehicleReviewSummary } from '@/lib/api';
 import { formatFuelType, formatKm, formatPrice, formatTransmission } from '@/lib/format';
 import { brand } from '@cg/shared-config';
 import type { Vehicle } from '@/types/vehicle';
 import { VehicleGallery } from '@/features/vehicles/vehicle-gallery';
 import { EnquiryActions } from '@/features/enquiries/enquiry-actions';
+import { FavoriteButton } from '@/features/favorites/favorite-button';
 
 async function loadVehicle(publicIdParam: string): Promise<Vehicle | null> {
   const publicId = Number(publicIdParam);
@@ -40,6 +41,10 @@ export default async function VehiclePage(props: PageProps<'/vehicle/[publicId]/
     notFound();
   }
 
+  const reviewSummary = await getVehicleReviews(vehicle.publicId).catch(
+    (): VehicleReviewSummary => ({ reviews: [], average: null, count: 0 }),
+  );
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:py-10">
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
@@ -53,12 +58,15 @@ export default async function VehiclePage(props: PageProps<'/vehicle/[publicId]/
               <h1 className="text-2xl font-bold tracking-tight text-foreground">
                 {vehicle.title}
               </h1>
-              {vehicle.verification && (
-                <span className="flex shrink-0 items-center gap-1 rounded-full bg-primary-light px-2.5 py-1 text-xs font-medium text-primary">
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  Verified
-                </span>
-              )}
+              <div className="flex shrink-0 items-center gap-2">
+                {vehicle.verification && (
+                  <span className="flex items-center gap-1 rounded-full bg-primary-light px-2.5 py-1 text-xs font-medium text-primary">
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    Verified
+                  </span>
+                )}
+                <FavoriteButton vehiclePublicId={vehicle.publicId} checkInitialState />
+              </div>
             </div>
             <p className="font-mono text-2xl font-semibold tabular-nums text-foreground">
               {formatPrice(vehicle.price)}
@@ -68,6 +76,15 @@ export default async function VehiclePage(props: PageProps<'/vehicle/[publicId]/
               {vehicle.specs.areaText ? `, ${vehicle.specs.areaText}` : ''},{' '}
               {vehicle.location.state} &middot; Vehicle ID {vehicle.publicId}
             </p>
+            {reviewSummary.count > 0 && reviewSummary.average !== null && (
+              <div className="flex items-center gap-1 text-sm text-foreground">
+                <Star className="h-4 w-4 fill-gold text-gold" />
+                <span className="font-medium">{reviewSummary.average.toFixed(1)}</span>
+                <span className="text-muted">
+                  ({reviewSummary.count} review{reviewSummary.count === 1 ? '' : 's'})
+                </span>
+              </div>
+            )}
           </div>
 
           <SpecsGrid vehicle={vehicle} />
@@ -84,6 +101,8 @@ export default async function VehiclePage(props: PageProps<'/vehicle/[publicId]/
           )}
 
           <Overview vehicle={vehicle} />
+
+          <Reviews summary={reviewSummary} />
         </div>
       </div>
     </div>
@@ -163,6 +182,32 @@ function Overview({ vehicle }: { vehicle: Vehicle }) {
           </div>
         ))}
       </dl>
+    </div>
+  );
+}
+
+function Reviews({ summary }: { summary: VehicleReviewSummary }) {
+  if (summary.reviews.length === 0) return null;
+
+  return (
+    <div className="space-y-3 border-t border-line pt-5">
+      <h2 className="text-sm font-semibold text-foreground">Customer Reviews</h2>
+      <div className="space-y-3">
+        {summary.reviews.map((review) => (
+          <div key={review.id} className="rounded-xl bg-primary-light/60 p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-foreground">
+                {review.authorName ?? 'Anonymous'}
+              </span>
+              <span className="flex items-center gap-1 text-sm text-foreground">
+                <Star className="h-3.5 w-3.5 fill-gold text-gold" />
+                {review.rating}
+              </span>
+            </div>
+            {review.comment && <p className="mt-1 text-sm text-muted">{review.comment}</p>}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

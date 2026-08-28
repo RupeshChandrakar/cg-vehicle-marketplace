@@ -225,12 +225,45 @@ the same reason.
 | 1 — Core Marketplace         | Categories, locations + district fallback, vehicle CRUD + status workflow, public ID, browse/search/filter/sort, vehicle detail page _(done)_ |
 | 2 — Sell + Verification      | Sell flow, media upload, admin review/approve/reject queue _(done)_                                                                           |
 | 3 — Enquiry & Agent Workflow | Enquiry creation, agent assignment, status state machine, basic chat, call logging _(done)_                                                    |
-| 4 — Accounts & Engagement    | OTP auth polish, favorites, notifications, reviews                                                                                            |
+| 4 — Accounts & Engagement    | OTP auth polish, favorites, notifications, reviews _(done)_                                                                                   |
 | 5 — Intelligent Chat Layer   | AI orchestration on top of Phase 3's deterministic data — never a source of truth                                                             |
 | 6 — Reel Studio              | Template-based FFmpeg video generation, only after 1–4 are stable                                                                             |
 | 7 — Mobile App               | React Native consuming the same API                                                                                                           |
 
-### Phase 3 notes
+### Phase 4 notes
+
+- **OTP auth**: `CustomerAuthService` (`POST /auth/customer/otp/request` / `/verify`) issues the
+  same access+refresh token shape as staff login (`AuthService.issueTokens`, now `public` so both
+  paths share it) — a customer session is indistinguishable from staff at the JWT-payload level
+  beyond `role: customer`. OTPs are 6-digit (`node:crypto`'s `randomInt`, never `Math.random()`
+  for an auth secret), bcrypt-hashed on `User.otpHash` (never stored plaintext), 5-minute TTL,
+  30-second resend cooldown, and lock out after 5 wrong attempts until a fresh OTP is requested.
+  `SmsProvider` (`infra/sms/`) is a provider-agnostic interface with one implementation,
+  `ConsoleSmsProvider`, which prints the OTP via `Logger.warn` — the standard no-op dev transport
+  (there's no real phone to deliver to locally), not the same thing as logging a real OTP in
+  production; once a real gateway is wired in, this class stops being used entirely.
+- **Guests and OTP accounts share history for free**: Phase 3's anonymous enquiry flow and
+  Phase 4's OTP accounts both resolve through `UsersService.findOrCreateByPhone` — a customer who
+  enquired as a guest sees that same enquiry in `GET /enquiries/me` the moment they log in with
+  the same number. No migration or linking step needed.
+- **Favorites**: `Favorite` is a simple `(userId, vehicleId)` unique pin. The toggle endpoint
+  (`POST /favorites/:vehiclePublicId/toggle`) is deliberately not checked per-card on the browse
+  grid (would be one request per card) — only the vehicle detail page calls
+  `GET /favorites/:vehiclePublicId` to show the button's true initial state; cards always start
+  unfilled and rely on the toggle response.
+- **Reviews**: a rating (1-5) targets exactly one of a vehicle or an agent — enforced in
+  `ReviewsService`, not the schema (matches the project's existing DTO-level cross-field-rule
+  pattern). A review requires the author to actually have an `Enquiry` with that vehicle/agent —
+  no drive-by reviews. Resubmitting upserts (`@@unique([authorId, vehicleId])` /
+  `[authorId, agentId]`) rather than erroring, so a customer can edit their review by submitting
+  again. The "leave a review" prompt lives on the customer's My Enquiries page, shown only once
+  an enquiry reaches `closed_won`/`closed_lost`.
+- **Notifications**: a single per-user feed (`NotificationsModule`, `@Global()` so
+  `VehiclesService`/`EnquiriesService` can create rows without a module-import cycle) — not
+  role-restricted. Real triggers only, wired into existing code paths: vehicle
+  approved/rejected → notify the seller; enquiry created → notify the assigned agent and the
+  seller; a new chat message → notify whichever side didn't send it. No push delivery (FCM) yet —
+  in-app feed only, matching this phase's stated scope.
 
 - **Agent assignment**: no district/territory setup exists yet, so a new enquiry is auto-assigned
   to whichever active agent currently carries the fewest open enquiries (`open`/`contacted`/

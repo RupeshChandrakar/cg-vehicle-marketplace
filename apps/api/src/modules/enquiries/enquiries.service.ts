@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../infra/prisma/prisma.service';
 import { UsersService } from '../users/users.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { EnquiryStatusService } from './enquiry-status.service';
 import { CreateEnquiryDto } from './dto/create-enquiry.dto';
 import { AdminEnquiryQueryDto } from './dto/admin-enquiry-query.dto';
@@ -22,8 +23,10 @@ import {
   EnquiryStatus,
   Message,
   MessageSenderType,
+  NotificationType,
   Prisma,
   UserRole,
+  Vehicle,
 } from '../../generated/prisma/client';
 
 const ADMIN_ENQUIRY_INCLUDE = {
@@ -35,6 +38,15 @@ const ADMIN_ENQUIRY_INCLUDE = {
 
 export type AdminEnquiry = Prisma.EnquiryGetPayload<{
   include: typeof ADMIN_ENQUIRY_INCLUDE;
+}>;
+
+const CUSTOMER_ENQUIRY_INCLUDE = {
+  vehicle: { select: { id: true, publicId: true, slug: true, title: true } },
+  agent: { select: { id: true, name: true } },
+} satisfies Prisma.EnquiryInclude;
+
+export type CustomerEnquiry = Prisma.EnquiryGetPayload<{
+  include: typeof CUSTOMER_ENQUIRY_INCLUDE;
 }>;
 
 export interface PublicEnquiry {
@@ -81,6 +93,7 @@ export class EnquiriesService {
     private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
     private readonly statusService: EnquiryStatusService,
+    private readonly notifications: NotificationsService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
@@ -109,6 +122,8 @@ export class EnquiriesService {
       },
     });
 
+    await this.notifyOnEnquiryCreated(enquiry, vehicle, agent?.id);
+
     if (dto.channel !== 'chat') {
       return { enquiry: this.toPublicEnquiry(enquiry) };
     }
@@ -126,6 +141,46 @@ export class EnquiriesService {
       conversationId: conversation.id,
       accessToken,
     };
+  }
+
+  /** Notifies the two staff/seller parties who wouldn't otherwise know an
+   *  enquiry just landed — the assigned agent (their queue just grew) and
+   *  the vehicle's seller (someone is interested). Both are always real
+   *  Users (sellers via findOrCreateByPhone at listing time, agents via
+   *  seeded/admin-created accounts), so this never needs a null check
+   *  beyond "was an agent even assigned yet". */
+  private async notifyOnEnquiryCreated(
+    enquiry: Enquiry,
+    vehicle: Vehicle,
+    agentId: string | undefined,
+  ): Promise<void> {
+    const tasks: Array<Promise<unknown>> = [];
+
+    if (agentId) {
+      tasks.push(
+        this.notifications.create({
+          userId: agentId,
+          type: NotificationType.enquiry_assigned,
+          title: 'New enquiry assigned to you',
+          body: `A customer enquired about "${vehicle.title}".`,
+          relatedId: enquiry.id,
+        }),
+      );
+    }
+
+    if (vehicle.sellerId !== enquiry.customerId) {
+      tasks.push(
+        this.notifications.create({
+          userId: vehicle.sellerId,
+          type: NotificationType.enquiry_received,
+          title: 'Someone is interested in your vehicle',
+          body: `A customer enquired about "${vehicle.title}".`,
+          relatedId: enquiry.id,
+        }),
+      );
+    }
+
+    await Promise.all(tasks);
   }
 
   /** Assigns the newly-created enquiry to whichever active agent currently
@@ -239,6 +294,19 @@ export class EnquiriesService {
     }
   }
 
+  /** A logged-in customer's own enquiry history — only reachable once real
+   *  OTP sessions exist (Phase 4). Since Phase 3's anonymous enquiries and
+   *  Phase 4's OTP accounts both key off phone number (`findOrCreateByPhone`),
+   *  a customer who enquired as a guest sees that same history for free
+   *  once they log in with the same number. */
+  findForCustomer(customerId: string): Promise<CustomerEnquiry[]> {
+    return this.prisma.enquiry.findMany({
+      where: { customerId },
+      include: CUSTOMER_ENQUIRY_INCLUDE,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async getMessages(
     enquiryId: string,
     requester: Requester,
@@ -271,7 +339,7 @@ export class EnquiriesService {
     const senderId =
       requester.kind === 'customer' ? requester.customerId : requester.id;
 
-    return this.prisma.message.create({
+    const message = await this.prisma.message.create({
       data: {
         conversationId: enquiry.conversation.id,
         senderType,
@@ -279,6 +347,25 @@ export class EnquiriesService {
         body,
       },
     });
+
+    // Notify whichever side didn't just send this — a customer message
+    // goes to the assigned agent (if there is one), a staff message always
+    // goes to the customer.
+    const recipientId =
+      senderType === MessageSenderType.customer
+        ? enquiry.agentId
+        : enquiry.customerId;
+    if (recipientId) {
+      await this.notifications.create({
+        userId: recipientId,
+        type: NotificationType.new_message,
+        title: 'New message',
+        body: body.length > 140 ? `${body.slice(0, 140)}…` : body,
+        relatedId: enquiry.id,
+      });
+    }
+
+    return message;
   }
 
   async findForStaff(

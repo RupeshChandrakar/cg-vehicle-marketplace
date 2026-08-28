@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans, Geist_Mono } from 'next/font/google';
 import { brand } from '@cg/shared-config';
 import { SiteHeader } from '@/components/site-header';
+import { CustomerAuthProvider } from '@/lib/customer-auth-context';
 import './globals.css';
 
 // Plus Jakarta Sans: a warm, geometric sans with real character — replaces the
@@ -33,8 +34,10 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
       className={`${displaySans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-warm">
-        <SiteHeader />
-        {children}
+        <CustomerAuthProvider>
+          <SiteHeader />
+          {children}
+        </CustomerAuthProvider>
       </body>
     </html>
   );

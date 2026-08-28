@@ -104,17 +104,22 @@ enum MessageSenderType {
 /// customers authenticate by phone/OTP (Phase 4), never a password.
 /// `refreshTokenHash` holds the hash of the current refresh token so a
 /// stolen token on disk isn't directly usable, and login elsewhere can
-/// invalidate the old session by overwriting it.
+/// invalidate the old session by overwriting it. `otpHash`/`otpExpiresAt`/
+/// `otpAttempts` are the customer OTP login's server-side state — the OTP
+/// itself is never stored in plaintext, mirroring `refreshTokenHash`.
 model User {
-  id               String   @id @default(uuid())
-  phone            String   @unique
+  id               String    @id @default(uuid())
+  phone            String    @unique
   name             String?
-  role             UserRole @default(customer)
-  email            String?  @unique
-  passwordHash     String?  @map("password_hash")
-  refreshTokenHash String?  @map("refresh_token_hash")
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @updatedAt @map("updated_at")
+  role             UserRole  @default(customer)
+  email            String?   @unique
+  passwordHash     String?   @map("password_hash")
+  refreshTokenHash String?   @map("refresh_token_hash")
+  otpHash          String?   @map("otp_hash")
+  otpExpiresAt     DateTime? @map("otp_expires_at")
+  otpAttempts      Int       @default(0) @map("otp_attempts")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
 
   vehiclesSold        Vehicle[]             @relation("VehicleSeller")
   vehicleVerifications VehicleVerification[] @relation("VehicleVerifier")
@@ -122,6 +127,11 @@ model User {
   enquiriesAsCustomer Enquiry[] @relation("EnquiryCustomer")
   enquiriesAsAgent    Enquiry[] @relation("EnquiryAgent")
   callLogs            CallLog[] @relation("CallLogAgent")
+
+  favorites       Favorite[]
+  notifications   Notification[]
+  reviewsWritten  Review[]       @relation("ReviewAuthor")
+  reviewsReceived Review[]       @relation("ReviewAgent")
 
   @@map("users")
 }
@@ -195,6 +205,8 @@ model Vehicle {
   media        VehicleMedia[]
   verification VehicleVerification?
   enquiries    Enquiry[]
+  favorites    Favorite[]
+  reviews      Review[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -322,4 +334,83 @@ model CallLog {
   calledAt DateTime @default(now()) @map("called_at")
 
   @@map("call_logs")
+}
+
+model Favorite {
+  id String @id @default(uuid())
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  vehicleId String  @map("vehicle_id")
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, vehicleId])
+  @@map("favorites")
+}
+
+enum NotificationType {
+  enquiry_assigned
+  enquiry_received
+  new_message
+  vehicle_approved
+  vehicle_rejected
+
+  @@map("notification_type")
+}
+
+/// A per-user feed, not role-restricted — customers, agents, and admins all
+/// get rows here (e.g. "enquiry assigned to you" for an agent, "your
+/// vehicle is live" for a customer/seller).
+model Notification {
+  id String @id @default(uuid())
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type  NotificationType
+  title String
+  body  String
+
+  /// Optional deep-link id (an enquiry or vehicle id, depending on `type`)
+  /// — intentionally untyped rather than a FK, since it can point at more
+  /// than one kind of entity.
+  relatedId String? @map("related_id")
+
+  isRead Boolean @default(false) @map("is_read")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+/// Exactly one of vehicleId/agentId is set — enforced in ReviewsService, not
+/// the DB, matching the project's existing "no premature complexity"
+/// pattern for cross-field rules (e.g. VehicleSpecsDto). The `@@unique`
+/// pairs are still real DB-level "no duplicate review" constraints: Postgres
+/// doesn't count NULLs as duplicates, so a vehicle-review row (agentId
+/// null) never collides with an agent-review row (vehicleId null).
+model Review {
+  id String @id @default(uuid())
+
+  authorId String @map("author_id")
+  author   User   @relation("ReviewAuthor", fields: [authorId], references: [id])
+
+  vehicleId String?  @map("vehicle_id")
+  vehicle   Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  agentId String? @map("agent_id")
+  agent   User?   @relation("ReviewAgent", fields: [agentId], references: [id])
+
+  rating  Int
+  comment String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([authorId, vehicleId])
+  @@unique([authorId, agentId])
+  @@map("reviews")
 }
