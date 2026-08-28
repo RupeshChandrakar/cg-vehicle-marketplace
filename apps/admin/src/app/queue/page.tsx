@@ -3,8 +3,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Share2 } from 'lucide-react';
+import { brand } from '@cg/shared-config';
 import { useAuth } from '@/lib/auth-context';
 import { approveVehicle, getAdminVehicles, rejectVehicle, ApiError } from '@/lib/api';
+import { CUSTOMER_WEB_URL } from '@/config/site';
 import type { AdminVehicle, VehicleStatus } from '@/types/vehicle';
 
 const STATUS_FILTERS: VehicleStatus[] = ['submitted', 'under_review', 'live', 'rejected'];
@@ -24,6 +27,7 @@ export default function QueuePage() {
   const [vehicles, setVehicles] = useState<AdminVehicle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const loadQueue = useCallback(async () => {
     if (!accessToken) return;
@@ -50,12 +54,44 @@ export default function QueuePage() {
     void loadQueue();
   }, [loadQueue]);
 
+  useEffect(() => {
+    // Selection is scoped to whatever's currently on screen — switching
+    // filter tabs should never leave stale, now-invisible IDs selected.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedIds(new Set());
+  }, [status]);
+
+  function toggleSelected(vehicleId: string): void {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(vehicleId)) {
+        next.delete(vehicleId);
+      } else {
+        next.add(vehicleId);
+      }
+      return next;
+    });
+  }
+
+  function handleCreateDigest(): void {
+    const selected = vehicles.filter((v) => selectedIds.has(v.id) && v.publicId);
+    if (selected.length === 0) return;
+
+    const lines = selected.map((v, index) => {
+      const url = `${CUSTOMER_WEB_URL}/vehicle/${v.publicId}/${v.slug}`;
+      return `${index + 1}. *${v.title}*\n   ₹${Number(v.price).toLocaleString('en-IN')} · ${v.location.district}\n   ${url}`;
+    });
+    const message = `🚗 *${brand.name}* — Naye Listings!\n\n${lines.join('\n\n')}\n\nPoori details ke liye link pe click karein! 🙌`;
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
+  }
+
   if (isAuthLoading || !user) {
     return null;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20">
       <div className="flex flex-wrap gap-2">
         {STATUS_FILTERS.map((filter) => (
           <button
@@ -71,6 +107,13 @@ export default function QueuePage() {
           </button>
         ))}
       </div>
+
+      {status === 'live' && (
+        <p className="text-xs text-muted">
+          Live listings pe checkbox se select karke ek WhatsApp digest message bana sakte hain —
+          apne groups me ek hi baar me multiple listings share karne ke liye.
+        </p>
+      )}
 
       {error && (
         <p className="rounded-xl bg-primary-light px-4 py-3 text-sm text-foreground">{error}</p>
@@ -90,8 +133,33 @@ export default function QueuePage() {
               vehicle={vehicle}
               accessToken={accessToken as string}
               onActioned={loadQueue}
+              isSelected={selectedIds.has(vehicle.id)}
+              onToggleSelect={() => toggleSelected(vehicle.id)}
             />
           ))}
+        </div>
+      )}
+
+      {selectedIds.size > 0 && (
+        <div className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-between gap-3 border-t border-line bg-background px-6 py-4 shadow-card-hover sm:left-64">
+          <p className="text-sm font-medium text-foreground">
+            {selectedIds.size} listing{selectedIds.size === 1 ? '' : 's'} selected
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              className="rounded-full px-3 py-2 text-sm text-muted"
+            >
+              Clear
+            </button>
+            <button
+              onClick={handleCreateDigest}
+              className="flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a]"
+            >
+              <Share2 className="h-4 w-4" strokeWidth={1.75} />
+              Create WhatsApp Digest
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -102,10 +170,14 @@ function VehicleReviewCard({
   vehicle,
   accessToken,
   onActioned,
+  isSelected,
+  onToggleSelect,
 }: {
   vehicle: AdminVehicle;
   accessToken: string;
   onActioned: () => void;
+  isSelected: boolean;
+  onToggleSelect: () => void;
 }) {
   const [isRejecting, setIsRejecting] = useState(false);
   const [reason, setReason] = useState('');
@@ -143,10 +215,22 @@ function VehicleReviewCard({
   }
 
   return (
-    <div className="rounded-2xl bg-background p-4 shadow-card">
+    <div
+      className={`rounded-2xl bg-background p-4 shadow-card ${isSelected ? 'ring-2 ring-primary' : ''}`}
+    >
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <h3 className="font-medium text-foreground">{vehicle.title}</h3>
+        <div className="flex items-start gap-3">
+          {vehicle.status === 'live' && (
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={onToggleSelect}
+              aria-label={`Select ${vehicle.title} for WhatsApp digest`}
+              className="mt-1.5 h-4 w-4 shrink-0 accent-primary"
+            />
+          )}
+          <div>
+            <h3 className="font-medium text-foreground">{vehicle.title}</h3>
           <p className="text-sm text-muted">
             {vehicle.category.name} &middot; {vehicle.location.district} &middot;{' '}
             <span className="font-mono">₹{Number(vehicle.price).toLocaleString('en-IN')}</span>
@@ -155,6 +239,7 @@ function VehicleReviewCard({
             {vehicle.year} &middot; {vehicle.kmDriven.toLocaleString('en-IN')} km &middot;{' '}
             {vehicle.fuelType} &middot; {vehicle.transmission}
           </p>
+          </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <span

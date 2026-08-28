@@ -536,6 +536,36 @@ here.
   carries the stored code, the WhatsApp share button's exact message content, and the `/refer`
   page rendering a real referrer's real link and count.
 
+### WhatsApp new-listings digest (2026-08-28)
+
+Follow-up to the WhatsApp share button: PO asked about auto-posting a vehicle directly into a
+WhatsApp group. Answered honestly rather than building it — **WhatsApp's official Business API
+does not support posting into groups at all** (by design, to prevent spam; it only supports
+1:1 messaging with opted-in users), and the unofficial ways to automate a real WhatsApp account
+into a group violate WhatsApp's ToS and risk that number getting permanently banned. Not
+something to build for a real business. Every major marketplace (OLX, Cars24, Spinny) relies on
+the same manual-share pattern for exactly this reason.
+
+Given that, PO chose the practical alternative: make *manual* group-sharing faster for bulk
+listings rather than one vehicle at a time.
+
+- **Vehicle Queue → "live" tab** gained a per-card checkbox (only on `live` listings — a digest
+  of anything else isn't something a customer could actually view). A floating bottom bar appears
+  once 1+ are selected: "N listings selected" + Clear + "Create WhatsApp Digest".
+- The digest button builds one WhatsApp message bundling every selected vehicle (numbered,
+  bold title, price, district, and a real clickable link to that vehicle's public detail page)
+  and opens it via `wa.me` — admin pastes it into as many groups as they want in one motion,
+  instead of repeating the single-vehicle share per listing.
+- **New `CUSTOMER_WEB_URL` config** (`apps/admin/src/config/site.ts`,
+  `NEXT_PUBLIC_CUSTOMER_WEB_URL`, defaults to `http://localhost:3000`) — the first place the admin
+  app needed to know where the *customer* web app lives, to build a real link into someone else's
+  origin.
+- Selection state clears automatically on filter-tab change (a selected ID from the `live` tab
+  would otherwise sit invisibly selected after switching to `rejected`).
+- Verified live: selected 2 real live vehicles, captured the actual `window.open()` call, and
+  confirmed the decoded message content — correct brand name, both numbered entries, both real
+  vehicle links.
+
 ### Phase 2 notes
 
 - **Staff auth** landed here rather than waiting for Phase 4, since the admin review queue
