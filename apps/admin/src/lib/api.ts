@@ -17,6 +17,7 @@ import type {
 } from '@/types/enquiry';
 import type { AppNotification } from '@/types/notification';
 import type { Reel, ReelTemplate, ReelPublishStatus } from '@/types/reel';
+import type { AnalyticsSummary } from '@/types/analytics';
 
 export class ApiError extends Error {
   constructor(
@@ -280,6 +281,10 @@ export function getAdminReels(accessToken: string): Promise<PaginatedResult<Reel
 
 export function getAdminReel(accessToken: string, id: string): Promise<Reel> {
   return request(`/admin/reels/${id}`, accessToken);
+}
+
+export function getAnalyticsSummary(accessToken: string): Promise<AnalyticsSummary> {
+  return request('/admin/analytics/summary', accessToken);
 }
 
 export function updateReelPublishStatus(

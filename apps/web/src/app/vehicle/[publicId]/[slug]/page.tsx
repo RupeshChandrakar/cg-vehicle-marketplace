@@ -6,6 +6,7 @@ import { formatFuelType, formatKm, formatPrice, formatTransmission } from '@/lib
 import { brand } from '@cg/shared-config';
 import type { Vehicle } from '@/types/vehicle';
 import { VehicleGallery } from '@/features/vehicles/vehicle-gallery';
+import { VehicleViewTracker } from '@/features/vehicles/vehicle-view-tracker';
 import { EnquiryActions } from '@/features/enquiries/enquiry-actions';
 import { FavoriteButton } from '@/features/favorites/favorite-button';
 
@@ -47,6 +48,7 @@ export default async function VehiclePage(props: PageProps<'/vehicle/[publicId]/
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:py-10">
+      <VehicleViewTracker vehiclePublicId={vehicle.publicId} />
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
         <div className="lg:col-span-3">
           <VehicleGallery media={vehicle.media} title={vehicle.title} />

@@ -18,6 +18,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { FavoritesModule } from './modules/favorites/favorites.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { ReelsModule } from './modules/reels/reels.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { ReelsModule } from './modules/reels/reels.module';
     FavoritesModule,
     ReviewsModule,
     ReelsModule,
+    AnalyticsModule,
   ],
 })
 export class AppModule {}

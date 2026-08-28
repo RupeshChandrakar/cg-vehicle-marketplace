@@ -452,6 +452,50 @@ reject were the only admin actions on a `Vehicle` until now.
   the edit immediately with `registrationNumber` still stripped; the customer-facing upload
   restriction on a `live` vehicle is unregressed (still 400s).
 
+### Visit & vehicle-view analytics (2026-08-28)
+
+PO asked whether visits and per-vehicle clicks can be tracked — a real gap: no analytics table
+existed anywhere in the schema before this. Scoped to exactly what was asked (site-wide unique
+visitors + a per-vehicle view leaderboard), not the broader views→enquiry-conversion option also
+offered.
+
+- **One event table, `PageView`** (`sessionId`, `path`, optional `vehicleId`, `createdAt`) backs
+  both metrics from the same stream rather than two separate mechanisms: `COUNT(DISTINCT
+  session_id)` over all rows gives unique visitors; the same count grouped by `vehicleId` gives
+  the per-vehicle leaderboard.
+- **Anonymous by design**: `sessionId` is a client-generated UUID (`crypto.randomUUID()`) kept in
+  the browser's `localStorage` (`apps/web/src/lib/analytics.ts`) — no cookie set by the API, no
+  account, no PII. Sidesteps cross-origin cookie configuration entirely between the web app and
+  API, which run on separate origins even in dev.
+- **One event per page view, not two**: `AnalyticsTracker` (mounted once in the root layout)
+  fires on every route change except `/vehicle/*` paths; `VehicleViewTracker` (embedded in the
+  vehicle detail page) reports those instead, tagged with the vehicle's public ID. This avoids
+  a vehicle-page visit generating both a generic and a vehicle-tagged row for the same visit.
+- **Public ID, not the internal UUID**: the tracking payload carries `vehiclePublicId`, resolved
+  to the internal `id` server-side in `AnalyticsService.trackPageView` — same convention as
+  Favorites/Enquiries, despite `Vehicle.id` technically already appearing in the public API
+  response (a pre-existing minor inconsistency, not introduced here). An unknown/stale
+  `vehiclePublicId` is silently dropped (event still recorded, just without the vehicle tag)
+  rather than rejecting the whole request.
+- **`COUNT(DISTINCT session_id)` per vehicle** can't be expressed through Prisma's `groupBy`
+  (no distinct-within-group support) — the same gap the approval pipeline hits for
+  `vehicle_public_id_seq`'s `nextval`, so `AnalyticsService.getMostViewedVehicles()` goes through
+  one parameterized `$queryRaw`, then joins the result back to real `Vehicle` rows for
+  title/status/publicId.
+- **`POST /analytics/page-view` is public and unrate-limited** — consistent with every other
+  public endpoint in this codebase (none have rate limiting yet), but worth flagging here since
+  an anonymous write endpoint is a more obvious abuse target than a read endpoint. Add
+  `@nestjs/throttler` (or equivalent) globally if this becomes a real concern, rather than
+  bolting a one-off limiter onto just this route.
+- **Admin Dashboard**: new "Visitors Today/This Week/All-Time" stat row plus a "Most Viewed
+  Vehicles" table (top 10 by unique viewers), both fed by `GET /admin/analytics/summary`
+  (admin+agent, matching every other Dashboard data source).
+- Verified end-to-end against the real dev stack: a REST script covering session-dedup
+  correctness (repeat views from one session count once), tampered/unknown vehicle ID handling,
+  and DTO validation; five separate live-browser runs (fresh browser context each time, so a
+  genuinely new "visitor") each showed the Dashboard's visitor counts increment by exactly one
+  per real customer-app page visit.
+
 ### Phase 2 notes
 
 - **Staff auth** landed here rather than waiting for Phase 4, since the admin review queue

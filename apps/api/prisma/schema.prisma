@@ -209,6 +209,7 @@ model Vehicle {
   favorites    Favorite[]
   reviews      Review[]
   reels        Reel[]
+  pageViews    PageView[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -476,4 +477,27 @@ model Reel {
   @@index([vehicleId])
   @@index([status])
   @@map("reels")
+}
+
+/// One row per page load, fired fire-and-forget from the customer web app —
+/// anonymous by design (sessionId is a client-generated UUID in
+/// localStorage, no account/PII required). vehicleId is set only for vehicle
+/// detail pages, enabling both site-wide unique-visitor counts
+/// (COUNT(DISTINCT session_id)) and a per-vehicle "most viewed" leaderboard
+/// from the same event stream.
+model PageView {
+  id String @id @default(uuid())
+
+  sessionId String @map("session_id")
+  path      String
+
+  vehicleId String?  @map("vehicle_id")
+  vehicle   Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([sessionId])
+  @@index([vehicleId])
+  @@index([createdAt])
+  @@map("page_views")
 }
