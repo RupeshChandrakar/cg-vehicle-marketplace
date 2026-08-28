@@ -119,7 +119,13 @@ export class CustomerAuthService {
         otpHash: null,
         otpExpiresAt: null,
         otpAttempts: 0,
-        name: name ?? user.name,
+        // Only ever set a name here if the account doesn't already have
+        // one — this field is a first-signup convenience, not an ongoing
+        // edit mechanism (that's PATCH /users/me now, via the Account
+        // page). Once a name exists, nothing typed into the login screen's
+        // optional field on a later login is allowed to silently clobber
+        // an edit the user deliberately made elsewhere.
+        name: user.name ?? name ?? null,
       },
     });
 

@@ -19,6 +19,18 @@ export interface ReferralInfo {
   totalReferred: number;
 }
 
+/** Shape returned to the customer for their own account — deliberately the
+ *  same four fields as the web app's client-side CustomerUser, so the
+ *  frontend can refresh its cache directly from either GET or PATCH
+ *  /users/me without a shape mismatch. No email/avatar/lastLoginAt here —
+ *  none of that was asked for; add fields only when a feature needs them. */
+export interface SelfProfile {
+  id: string;
+  name: string | null;
+  phone: string;
+  role: UserRole;
+}
+
 export interface AdminSeller {
   id: string;
   name: string | null;
@@ -84,6 +96,31 @@ export class UsersService {
     });
 
     return { referralCode, totalReferred };
+  }
+
+  // --- Customer self-service: own profile. ---
+
+  async getSelf(userId: string): Promise<SelfProfile> {
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+    });
+    return this.toSelfProfile(user);
+  }
+
+  /** Name-only by design — see UpdateProfileDto's comment for why phone
+   *  isn't here. Never spreads the raw DTO into `data`, so this can't
+   *  become a privilege-escalation vector even if the global ValidationPipe
+   *  were ever loosened. */
+  async updateProfile(userId: string, name: string): Promise<SelfProfile> {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { name },
+    });
+    return this.toSelfProfile(user);
+  }
+
+  private toSelfProfile(user: User): SelfProfile {
+    return { id: user.id, name: user.name, phone: user.phone, role: user.role };
   }
 
   // --- Admin: sellers/dealers directory. ---

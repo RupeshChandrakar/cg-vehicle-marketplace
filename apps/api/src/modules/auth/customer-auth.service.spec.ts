@@ -9,6 +9,11 @@ import { CustomerAuthService } from './customer-auth.service';
 jest.mock('bcrypt');
 const mockedBcrypt = bcrypt as jest.Mocked<typeof bcrypt>;
 
+interface UpdateArgs {
+  where: { id: string };
+  data: { name?: string | null };
+}
+
 function buildService() {
   const userTable = {
     findUnique: jest.fn(),
@@ -103,5 +108,50 @@ describe('CustomerAuthService.verifyOtp — dev OTP bypass', () => {
       accessToken: 'access',
       refreshToken: 'refresh',
     });
+  });
+});
+
+describe('CustomerAuthService.verifyOtp — name write on login', () => {
+  afterEach(() => jest.clearAllMocks());
+
+  it('sets the name on a brand-new account with none yet', async () => {
+    const { service, prisma } = buildService();
+    prisma.user.findUnique.mockResolvedValue(baseUser({ name: null }));
+    prisma.user.update.mockResolvedValue(baseUser({ name: 'Rahul' }));
+    mockedBcrypt.compare.mockResolvedValue(true as never);
+
+    await service.verifyOtp('+919876543210', '482913', 'Rahul');
+
+    const [[updateArgs]] = prisma.user.update.mock.calls as [UpdateArgs][];
+    expect(updateArgs.data.name).toBe('Rahul');
+  });
+
+  it('never overwrites a name the user already has, even if the login form sends one', async () => {
+    const { service, prisma } = buildService();
+    prisma.user.findUnique.mockResolvedValue(
+      baseUser({ name: 'Existing Name' }),
+    );
+    prisma.user.update.mockResolvedValue(baseUser({ name: 'Existing Name' }));
+    mockedBcrypt.compare.mockResolvedValue(true as never);
+
+    // Simulates a returning user who (accidentally or otherwise) types
+    // something into the login screen's optional name field on a later
+    // login, after already having set their name via PATCH /users/me.
+    await service.verifyOtp('+919876543210', '482913', 'Someone Else');
+
+    const [[updateArgs]] = prisma.user.update.mock.calls as [UpdateArgs][];
+    expect(updateArgs.data.name).toBe('Existing Name');
+  });
+
+  it('leaves the name null when none is set and none is provided', async () => {
+    const { service, prisma } = buildService();
+    prisma.user.findUnique.mockResolvedValue(baseUser({ name: null }));
+    prisma.user.update.mockResolvedValue(baseUser({ name: null }));
+    mockedBcrypt.compare.mockResolvedValue(true as never);
+
+    await service.verifyOtp('+919876543210', '482913');
+
+    const [[updateArgs]] = prisma.user.update.mock.calls as [UpdateArgs][];
+    expect(updateArgs.data.name).toBeNull();
   });
 });

@@ -14,6 +14,7 @@ interface CustomerAuthState {
   accessToken: string | null;
   isLoading: boolean;
   login: (user: CustomerUser, accessToken: string, refreshToken: string) => void;
+  updateUser: (user: CustomerUser) => void;
   logout: () => void;
 }
 
@@ -57,8 +58,17 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
     setAccessToken(null);
   }
 
+  // Refreshes the cached user (e.g. after PATCH /users/me) without touching
+  // tokens — a plain profile edit shouldn't rotate the session.
+  function updateUser(newUser: CustomerUser): void {
+    localStorage.setItem(USER_KEY, JSON.stringify(newUser));
+    setUser(newUser);
+  }
+
   return (
-    <CustomerAuthContext.Provider value={{ user, accessToken, isLoading, login, logout }}>
+    <CustomerAuthContext.Provider
+      value={{ user, accessToken, isLoading, login, updateUser, logout }}
+    >
       {children}
     </CustomerAuthContext.Provider>
   );

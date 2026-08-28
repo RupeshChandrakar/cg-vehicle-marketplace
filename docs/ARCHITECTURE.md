@@ -795,6 +795,66 @@ extras (Trusted Seller badge, CSV export, Last Active tracking, Block/Suspend); 
   total and per-seller counts, clicking "View listings" landing on a correctly filtered Queue
   with the active-filter banner, and "Clear filter" removing it again.
 
+### Customer "My Account" page (2026-08-29)
+
+PO asked: when a seller logs in, shouldn't there be a profile section? Ran a research +
+design Workflow first (dual codebase scan, then 3 independent design angles — minimal account
+info / full dashboard hub / seller-trust lens — synthesized into one recommendation), which
+surfaced a genuine gap: **no profile/account page existed at all**, and no way to ever edit a
+name after first signup (only `GET /users/me/referral` existed on the users module). PO picked
+the synthesized core plus one extra (via `AskUserQuestion`): the minimal account-info screen,
+upgraded with dashboard-style count tiles; declined for now: a referral tile, "member since" +
+listing-history stats (the "Sold" figure specifically needs a self-declare-sale check first, or
+it's a fabricated trust number — same class of problem as the earlier 0%-down financing banner),
+and any public buyer-facing "about this seller" surface (a different, privacy-model-changing
+feature that would need its own explicit sign-off).
+
+- **New `GET /users/me` / `PATCH /users/me`** (customer-role) — the product's first real
+  self-service profile read/write. `UpdateProfileDto` is name-only by design; the global
+  `ValidationPipe` (`whitelist` + `forbidNonWhitelisted`, already on from `main.ts`) rejects any
+  other field, and `UsersService.updateProfile()` never spreads the raw DTO into the Prisma call
+  — both independently prevent this from becoming a privilege-escalation vector against
+  `role`/`referralCode`/etc. Phone is deliberately **not** on the DTO at all: it's the `where:
+  { phone }` upsert key in `findOrCreateByPhone`, and making it editable is a distinct future
+  flow (OTP-to-new-number + verify + re-key + collision handling), not a form field.
+- **Real bug found and fixed while building this, not just found-and-noted**:
+  `CustomerAuthService.verifyOtp()`'s final `prisma.user.update()` did `name: name ?? user.name`
+  on *every* login — meaning a stray value typed into the login screen's optional "Aapka Naam"
+  field on a later login could silently clobber a name the user had deliberately set via the new
+  PATCH. Fixed to `name: user.name ?? name ?? null` — the login-screen field now only ever sets a
+  name once, on an account that doesn't have one yet; it can never overwrite an existing one
+  again. Verified live: PATCH'd a name, then logged back in sending a *different* name in the OTP
+  form on purpose, confirmed the PATCH'd name survived.
+- **New `/account` page** (`apps/web`): identity block (name shown + inline-editable, phone shown
+  read-only and in **full**, never masked — it's the user's own number behind an already-OTP-
+  gated login, so masking it to its owner would add friction with no real security benefit) plus
+  4 dashboard tiles (Listings/Favorites/Active Enquiries/Unread Notifications counts) — all four
+  reuse existing full-list endpoints and count client-side, no new backend for the tiles
+  themselves (the "cheap tier" from the design synthesis; only worth a dedicated aggregate
+  endpoint if this ever needs to collapse the round-trips for real scale). New "My Account" nav
+  link in `site-header.tsx`, same auth-guard pattern as every other account-adjacent page.
+- **Two real bugs caught by a post-build adversarial review Workflow, before commit, not by
+  eyeballing**: (1) `profile` state started at `null` instead of falling back to the
+  already-known `user` from `CustomerAuthContext` — a slow or transiently-failing `GET /users/me`
+  blanked the *entire* identity card, including the phone number, even though the identical data
+  already sat in context/localStorage from login; fixed by seeding `useState` from `user` and
+  only showing the loading state when there's truly nothing to show yet. (2) A genuine logout
+  race: `handleLogout()` called `logout()` then `router.push('/')`, but the page's own
+  auth-guard effect (`!user` → redirect to `/login?next=/account`) fired on the same `user`
+  becoming null and, empirically, its `router.replace()` call — issued from a `useEffect` that
+  runs strictly *after* the click handler returns — reliably won the race over the handler's own
+  earlier `router.push()`, sending a logging-out user to the login screen instead of home. A
+  `useState` flag guarding the effect measurably still lost this race in testing; fixed with a
+  plain `useRef` instead, set synchronously in the same tick as the click, with no dependency on
+  how state updates across the two components happen to batch. Confirmed fixed across 5 repeated
+  logout attempts in a single browser session.
+- Verified end-to-end live throughout: `GET`/`PATCH /users/me` hit directly (including a
+  DTO-whitelist smuggling attempt — a `role` field alongside `name` — correctly rejected with
+  400), a full Puppeteer pass through the real login form, live name-edit with a reload to
+  confirm server-side persistence (not just local state), the dashboard tiles rendering real
+  counts, and the two review-caught bugs each independently reproduced before their fix and
+  reproduced-fixed after.
+
 ### Phase 2 notes
 
 - **Staff auth** landed here rather than waiting for Phase 4, since the admin review queue

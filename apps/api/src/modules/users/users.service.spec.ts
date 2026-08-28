@@ -105,6 +105,55 @@ describe('UsersService', () => {
     });
   });
 
+  describe('getSelf', () => {
+    it('returns the self-profile shape for the given user id', async () => {
+      const { service, prisma } = buildService();
+      prisma.user.findUniqueOrThrow.mockResolvedValue({
+        id: 'user-1',
+        name: 'Rahul',
+        phone: '+919876543210',
+        role: 'customer',
+      });
+
+      const profile = await service.getSelf('user-1');
+
+      expect(prisma.user.findUniqueOrThrow).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+      });
+      expect(profile).toEqual({
+        id: 'user-1',
+        name: 'Rahul',
+        phone: '+919876543210',
+        role: 'customer',
+      });
+    });
+  });
+
+  describe('updateProfile', () => {
+    it("writes only the name field to the caller's own row", async () => {
+      const { service, prisma } = buildService();
+      prisma.user.update.mockResolvedValue({
+        id: 'user-1',
+        name: 'New Name',
+        phone: '+919876543210',
+        role: 'customer',
+      });
+
+      const profile = await service.updateProfile('user-1', 'New Name');
+
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        data: { name: 'New Name' },
+      });
+      expect(profile).toEqual({
+        id: 'user-1',
+        name: 'New Name',
+        phone: '+919876543210',
+        role: 'customer',
+      });
+    });
+  });
+
   describe('findSellersForAdmin', () => {
     it('only queries customers who have at least one vehicle listed', async () => {
       const { service, prisma } = buildService();

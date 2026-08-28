@@ -48,6 +48,12 @@ export function SiteHeader() {
                 )}
               </Link>
               <Link
+                href="/account"
+                className="hidden text-sm font-medium text-foreground sm:inline"
+              >
+                My Account
+              </Link>
+              <Link
                 href="/my-listings"
                 className="hidden text-sm font-medium text-foreground sm:inline"
               >

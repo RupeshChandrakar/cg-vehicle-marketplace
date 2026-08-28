@@ -288,6 +288,20 @@ function authHeader(accessToken: string): HeadersInit {
   return { Authorization: `Bearer ${accessToken}` };
 }
 
+// --- Own profile ("My Account") ---
+
+export function getSelfProfile(accessToken: string): Promise<CustomerUser> {
+  return request('/users/me', { headers: authHeader(accessToken) });
+}
+
+export function updateProfile(accessToken: string, name: string): Promise<CustomerUser> {
+  return request('/users/me', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...authHeader(accessToken) },
+    body: JSON.stringify({ name }),
+  });
+}
+
 // --- Favorites ---
 
 export function toggleFavorite(
