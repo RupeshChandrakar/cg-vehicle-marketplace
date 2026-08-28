@@ -297,7 +297,37 @@ the same reason.
   outcome + notes for a call an agent made off-platform, for accountability.
 - **Admin app was not visually refreshed** in this phase — it keeps the plain
   border/no-shadow style from Phase 2, consistent with the earlier decision to leave the internal
-  tool unstyled unless asked.
+  tool unstyled unless asked. (Refreshed afterward — see "Admin visual refresh" below.)
+
+### Admin visual refresh (2026-08-28)
+
+The product owner shared a full admin-dashboard mockup (dark sidebar, stat cards, donut chart,
+tables) with a much bigger sidebar than what actually exists — Buyers, Sellers/Dealers, Reel
+Studio, CMS, Social Accounts, Activity Logs, Users & Roles, none of which have any backend. Scope
+was deliberately narrowed to: apply the mockup's visual language to what's real, and build a
+genuine Dashboard home page — no fabricated sections, no invented numbers.
+
+- **Design tokens**: `apps/admin` now shares the exact same tokens as `apps/web` — Plus Jakarta
+  Sans, the `--shadow-card`/`--shadow-btn`/etc. custom properties, the `--color-warm`/
+  `--color-gold` derived tones, the same radius hierarchy (pill buttons/badges, rounded-lg
+  inputs, rounded-2xl cards). One consistent look across both surfaces now, not two.
+- **Shell**: `AdminShell` (`components/admin-shell.tsx`) replaced the old flat `SiteHeader` with
+  a persistent dark sidebar (`components/sidebar.tsx`, `bg-foreground`) + light top bar
+  (`components/top-bar.tsx`). The shell renders bare (no chrome) on `/login` and pre-hydration —
+  checked by `pathname === '/login' || !user`, not a Next.js route group, since that would've
+  meant restructuring every existing route. Sidebar nav is real items only: Dashboard, Vehicle
+  Queue, Enquiries (live open-count badge), Notifications (live unread-count badge, shared with
+  the top bar's bell via `useUnreadNotifications()`).
+- **Dashboard** (`app/page.tsx`, previously just a redirect to `/queue` or `/login`): genuine
+  stats computed client-side from one `pageSize=50` fetch each of `/admin/vehicles` and
+  `/admin/enquiries` (both endpoints already return `meta.total` and support `pageSize`, extended
+  this refresh) — no dedicated aggregation endpoint exists yet. **Known scaling limit**: counts
+  are only accurate up to 50 records per entity; replace with a real count/aggregate endpoint
+  once vehicle or enquiry volume exceeds that. The donut chart is a dependency-free CSS
+  `conic-gradient`, not a charting library — proportionate to one chart on one page.
+  Total-Users, Reel Studio, Top-Vehicles-by-Enquiries, and the time-series Listings-Overview
+  chart from the mockup were all left out — no backend support (Users listing, enquiry-by-vehicle
+  aggregation, day-bucketed listing history) exists for any of them yet.
 
 ### Phase 2 notes
 

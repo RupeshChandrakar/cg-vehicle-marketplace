@@ -8,6 +8,13 @@ import type { AdminVehicle, VehicleStatus } from '@/types/vehicle';
 
 const STATUS_FILTERS: VehicleStatus[] = ['submitted', 'under_review', 'live', 'rejected'];
 
+const STATUS_PILL: Record<string, string> = {
+  submitted: 'bg-gold/15 text-gold',
+  under_review: 'bg-gold/15 text-gold',
+  live: 'bg-primary-light text-primary',
+  rejected: 'bg-red-100 text-red-600',
+};
+
 export default function QueuePage() {
   const router = useRouter();
   const { user, accessToken, isLoading: isAuthLoading } = useAuth();
@@ -38,9 +45,6 @@ export default function QueuePage() {
   }, [isAuthLoading, user, router]);
 
   useEffect(() => {
-    // Fetch-on-mount-and-on-filter-change: loadQueue's first synchronous
-    // statement is setIsLoading(true), which already matches useState's
-    // initial value on mount and only does real work on a later re-fetch.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadQueue();
   }, [loadQueue]);
@@ -50,14 +54,16 @@ export default function QueuePage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
-      <div className="mb-6 flex flex-wrap gap-2">
+    <div className="space-y-6">
+      <div className="flex flex-wrap gap-2">
         {STATUS_FILTERS.map((filter) => (
           <button
             key={filter}
             onClick={() => setStatus(filter)}
-            className={`border px-3 py-1.5 text-sm ${
-              status === filter ? 'border-primary text-primary' : 'border-line text-foreground'
+            className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+              status === filter
+                ? 'bg-primary text-white shadow-btn'
+                : 'bg-background text-foreground shadow-card hover:shadow-card-hover'
             }`}
           >
             {filter.replace('_', ' ')}
@@ -66,13 +72,13 @@ export default function QueuePage() {
       </div>
 
       {error && (
-        <p className="mb-4 border border-line bg-primary-light px-4 py-3 text-sm">{error}</p>
+        <p className="rounded-xl bg-primary-light px-4 py-3 text-sm text-foreground">{error}</p>
       )}
 
       {isLoading ? (
         <p className="text-sm text-muted">Loading…</p>
       ) : vehicles.length === 0 ? (
-        <p className="border border-line px-4 py-12 text-center text-sm text-muted">
+        <p className="rounded-2xl bg-background px-4 py-12 text-center text-sm text-muted shadow-card">
           No listings with status &quot;{status.replace('_', ' ')}&quot;.
         </p>
       ) : (
@@ -136,20 +142,26 @@ function VehicleReviewCard({
   }
 
   return (
-    <div className="border border-line p-4">
+    <div className="rounded-2xl bg-background p-4 shadow-card">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h3 className="font-medium text-foreground">{vehicle.title}</h3>
           <p className="text-sm text-muted">
-            {vehicle.category.name} &middot; {vehicle.location.district} &middot; ₹
-            {Number(vehicle.price).toLocaleString('en-IN')}
+            {vehicle.category.name} &middot; {vehicle.location.district} &middot;{' '}
+            <span className="font-mono">₹{Number(vehicle.price).toLocaleString('en-IN')}</span>
           </p>
           <p className="text-sm text-muted">
             {vehicle.year} &middot; {vehicle.kmDriven.toLocaleString('en-IN')} km &middot;{' '}
             {vehicle.fuelType} &middot; {vehicle.transmission}
           </p>
         </div>
-        <span className="border border-line px-2 py-1 text-xs text-muted">{vehicle.status}</span>
+        <span
+          className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
+            STATUS_PILL[vehicle.status] ?? 'bg-line/60 text-muted'
+          }`}
+        >
+          {vehicle.status.replace('_', ' ')}
+        </span>
       </div>
 
       <div className="mt-3 border-t border-line pt-3 text-sm text-muted">
@@ -172,13 +184,13 @@ function VehicleReviewCard({
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="Reason for rejection"
                 rows={2}
-                className="w-full border border-line px-3 py-2 text-sm text-foreground"
+                className="w-full rounded-lg border border-line px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
               />
               <div className="flex gap-2">
                 <button
-                  onClick={handleReject}
+                  onClick={() => void handleReject()}
                   disabled={isSubmitting}
-                  className="border border-line px-3 py-1.5 text-sm text-foreground disabled:opacity-60"
+                  className="rounded-lg border border-line px-3 py-1.5 text-sm text-foreground transition hover:bg-primary-light disabled:opacity-60"
                 >
                   Confirm reject
                 </button>
@@ -193,16 +205,16 @@ function VehicleReviewCard({
           ) : (
             <div className="flex gap-2">
               <button
-                onClick={handleApprove}
+                onClick={() => void handleApprove()}
                 disabled={isSubmitting}
-                className="bg-primary px-3 py-1.5 text-sm font-medium text-white disabled:opacity-60"
+                className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] disabled:opacity-60"
               >
                 Approve
               </button>
               <button
                 onClick={() => setIsRejecting(true)}
                 disabled={isSubmitting}
-                className="border border-line px-3 py-1.5 text-sm text-foreground disabled:opacity-60"
+                className="rounded-full border border-line px-4 py-2 text-sm text-foreground transition hover:bg-primary-light disabled:opacity-60"
               >
                 Reject
               </button>

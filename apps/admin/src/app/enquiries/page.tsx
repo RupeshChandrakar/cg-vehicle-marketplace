@@ -16,6 +16,14 @@ const STATUS_FILTERS: Array<EnquiryStatus | 'all'> = [
   'closed_lost',
 ];
 
+const STATUS_PILL: Record<EnquiryStatus, string> = {
+  open: 'bg-primary-light text-primary',
+  contacted: 'bg-gold/15 text-gold',
+  negotiating: 'bg-blue-100 text-blue-600',
+  closed_won: 'bg-foreground/10 text-foreground',
+  closed_lost: 'bg-line/60 text-muted',
+};
+
 export default function EnquiriesPage() {
   const router = useRouter();
   const { user, accessToken, isLoading: isAuthLoading } = useAuth();
@@ -58,14 +66,16 @@ export default function EnquiriesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
-      <div className="mb-6 flex flex-wrap gap-2">
+    <div className="space-y-6">
+      <div className="flex flex-wrap gap-2">
         {STATUS_FILTERS.map((filter) => (
           <button
             key={filter}
             onClick={() => setStatus(filter)}
-            className={`border px-3 py-1.5 text-sm ${
-              status === filter ? 'border-primary text-primary' : 'border-line text-foreground'
+            className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+              status === filter
+                ? 'bg-primary text-white shadow-btn'
+                : 'bg-background text-foreground shadow-card hover:shadow-card-hover'
             }`}
           >
             {filter.replace('_', ' ')}
@@ -74,13 +84,13 @@ export default function EnquiriesPage() {
       </div>
 
       {error && (
-        <p className="mb-4 border border-line bg-primary-light px-4 py-3 text-sm">{error}</p>
+        <p className="rounded-xl bg-primary-light px-4 py-3 text-sm text-foreground">{error}</p>
       )}
 
       {isLoading ? (
         <p className="text-sm text-muted">Loading…</p>
       ) : enquiries.length === 0 ? (
-        <p className="border border-line px-4 py-12 text-center text-sm text-muted">
+        <p className="rounded-2xl bg-background px-4 py-12 text-center text-sm text-muted shadow-card">
           No enquiries with this status.
         </p>
       ) : (
@@ -98,7 +108,7 @@ function EnquiryRow({ enquiry }: { enquiry: AdminEnquiry }) {
   return (
     <Link
       href={`/enquiries/${enquiry.id}`}
-      className="block border border-line p-4 transition-colors hover:border-primary"
+      className="block rounded-2xl bg-background p-4 shadow-card transition hover:shadow-card-hover"
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
@@ -111,7 +121,9 @@ function EnquiryRow({ enquiry }: { enquiry: AdminEnquiry }) {
             Agent: {enquiry.agent?.name ?? enquiry.agent?.email ?? 'Unassigned'}
           </p>
         </div>
-        <span className="border border-line px-2 py-1 text-xs text-muted">
+        <span
+          className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${STATUS_PILL[enquiry.status]}`}
+        >
           {enquiry.status.replace('_', ' ')}
         </span>
       </div>

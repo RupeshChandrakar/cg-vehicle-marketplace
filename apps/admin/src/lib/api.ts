@@ -78,9 +78,13 @@ export function staffLogin(
 export function getAdminVehicles(
   accessToken: string,
   status?: VehicleStatus,
+  pageSize?: number,
 ): Promise<PaginatedResult<AdminVehicle>> {
-  const query = status ? `?status=${status}` : '';
-  return request(`/admin/vehicles${query}`, accessToken);
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  if (pageSize) params.set('pageSize', String(pageSize));
+  const query = params.toString();
+  return request(`/admin/vehicles${query ? `?${query}` : ''}`, accessToken);
 }
 
 export function approveVehicle(
@@ -110,9 +114,13 @@ export function rejectVehicle(
 export function getAdminEnquiries(
   accessToken: string,
   status?: EnquiryStatus,
+  pageSize?: number,
 ): Promise<PaginatedResult<AdminEnquiry>> {
-  const query = status ? `?status=${status}` : '';
-  return request(`/admin/enquiries${query}`, accessToken);
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  if (pageSize) params.set('pageSize', String(pageSize));
+  const query = params.toString();
+  return request(`/admin/enquiries${query ? `?${query}` : ''}`, accessToken);
 }
 
 export function getAdminEnquiry(accessToken: string, id: string): Promise<AdminEnquiry> {

@@ -32,6 +32,14 @@ const CALL_OUTCOMES: CallOutcome[] = [
   'scheduled_callback',
 ];
 
+const STATUS_PILL: Record<EnquiryStatus, string> = {
+  open: 'bg-primary-light text-primary',
+  contacted: 'bg-gold/15 text-gold',
+  negotiating: 'bg-blue-100 text-blue-600',
+  closed_won: 'bg-foreground/10 text-foreground',
+  closed_lost: 'bg-line/60 text-muted',
+};
+
 export default function EnquiryDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
@@ -65,8 +73,10 @@ export default function EnquiryDetailPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
-      {error && <p className="border border-line bg-primary-light px-4 py-3 text-sm">{error}</p>}
+    <div className="mx-auto max-w-3xl space-y-6">
+      {error && (
+        <p className="rounded-xl bg-primary-light px-4 py-3 text-sm text-foreground">{error}</p>
+      )}
 
       {!enquiry ? (
         <p className="text-sm text-muted">Loading…</p>
@@ -86,10 +96,10 @@ export default function EnquiryDetailPage() {
 
 function Summary({ enquiry }: { enquiry: AdminEnquiry }) {
   return (
-    <div className="border border-line p-4">
+    <div className="rounded-2xl bg-background p-5 shadow-card">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h1 className="font-medium text-foreground">{enquiry.vehicle.title}</h1>
+          <h1 className="font-semibold text-foreground">{enquiry.vehicle.title}</h1>
           <p className="text-sm text-muted">
             {enquiry.customer.name ?? 'Unknown'} &middot; {enquiry.customer.phone} &middot;{' '}
             {enquiry.channel}
@@ -98,7 +108,9 @@ function Summary({ enquiry }: { enquiry: AdminEnquiry }) {
             Agent: {enquiry.agent?.name ?? enquiry.agent?.email ?? 'Unassigned'}
           </p>
         </div>
-        <span className="border border-line px-2 py-1 text-xs text-muted">
+        <span
+          className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${STATUS_PILL[enquiry.status]}`}
+        >
           {enquiry.status.replace('_', ' ')}
         </span>
       </div>
@@ -150,7 +162,7 @@ function StatusActions({
             key={status}
             onClick={() => void moveTo(status)}
             disabled={isSubmitting}
-            className="border border-line px-3 py-1.5 text-sm text-foreground disabled:opacity-60"
+            className="rounded-full bg-background px-4 py-2 text-sm font-medium text-foreground shadow-card transition hover:shadow-card-hover disabled:opacity-60"
           >
             Mark {status.replace('_', ' ')}
           </button>
@@ -202,8 +214,8 @@ function ChatPanel({ accessToken, enquiryId }: { accessToken: string; enquiryId:
   }
 
   return (
-    <div className="space-y-3 border border-line p-4">
-      <h2 className="text-sm font-medium text-foreground">Chat</h2>
+    <div className="space-y-3 rounded-2xl bg-background p-5 shadow-card">
+      <h2 className="text-sm font-semibold text-foreground">Chat</h2>
       <div className="max-h-72 space-y-2 overflow-y-auto">
         {messages.length === 0 && <p className="text-sm text-muted">No messages yet.</p>}
         {messages.map((message) => (
@@ -221,12 +233,12 @@ function ChatPanel({ accessToken, enquiryId }: { accessToken: string; enquiryId:
           onChange={(e) => setDraft(e.target.value)}
           disabled={!ready}
           placeholder="Type a reply…"
-          className="w-full border border-line px-3 py-2 text-sm text-foreground disabled:opacity-60"
+          className="w-full rounded-full border border-line px-4 py-2 text-sm text-foreground focus:border-primary focus:outline-none disabled:opacity-60"
         />
         <button
           type="submit"
           disabled={!ready || draft.trim().length === 0}
-          className="bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+          className="shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] disabled:opacity-60"
         >
           Send
         </button>
@@ -265,8 +277,8 @@ function CallLogPanel({
   }
 
   return (
-    <div className="space-y-3 border border-line p-4">
-      <h2 className="text-sm font-medium text-foreground">Call Log</h2>
+    <div className="space-y-3 rounded-2xl bg-background p-5 shadow-card">
+      <h2 className="text-sm font-semibold text-foreground">Call Log</h2>
 
       {enquiry.callLogs.length > 0 && (
         <ul className="space-y-1 text-sm text-muted">
@@ -283,7 +295,7 @@ function CallLogPanel({
         <select
           value={outcome}
           onChange={(e) => setOutcome(e.target.value as CallOutcome)}
-          className="w-full border border-line px-3 py-2 text-sm text-foreground"
+          className="w-full rounded-lg border border-line px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
         >
           {CALL_OUTCOMES.map((value) => (
             <option key={value} value={value}>
@@ -296,13 +308,13 @@ function CallLogPanel({
           onChange={(e) => setNotes(e.target.value)}
           rows={2}
           placeholder="Notes (optional)"
-          className="w-full border border-line px-3 py-2 text-sm text-foreground"
+          className="w-full rounded-lg border border-line px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
         />
         {error && <p className="text-sm text-foreground">{error}</p>}
         <button
           type="submit"
           disabled={isSubmitting}
-          className="border border-line px-3 py-1.5 text-sm text-foreground disabled:opacity-60"
+          className="rounded-full bg-background px-4 py-2 text-sm font-medium text-foreground shadow-card transition hover:shadow-card-hover disabled:opacity-60"
         >
           {isSubmitting ? 'Saving…' : 'Log Call'}
         </button>

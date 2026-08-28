@@ -60,24 +60,26 @@ export default function NotificationsPage() {
   const hasUnread = notifications.some((n) => !n.isRead);
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-lg font-medium text-foreground">Notifications</h1>
+    <div className="mx-auto max-w-3xl space-y-6">
+      <div className="flex items-center justify-between">
         {hasUnread && (
-          <button onClick={() => void handleMarkAllRead()} className="text-sm text-primary">
+          <button
+            onClick={() => void handleMarkAllRead()}
+            className="ml-auto text-sm font-medium text-primary"
+          >
             Mark all as read
           </button>
         )}
       </div>
 
       {error && (
-        <p className="mb-4 border border-line bg-primary-light px-4 py-3 text-sm">{error}</p>
+        <p className="rounded-xl bg-primary-light px-4 py-3 text-sm text-foreground">{error}</p>
       )}
 
       {isLoading ? (
         <p className="text-sm text-muted">Loading…</p>
       ) : notifications.length === 0 ? (
-        <p className="border border-line px-4 py-12 text-center text-sm text-muted">
+        <p className="rounded-2xl bg-background px-4 py-12 text-center text-sm text-muted shadow-card">
           No notifications.
         </p>
       ) : (
@@ -85,9 +87,10 @@ export default function NotificationsPage() {
           {notifications.map((notification) => (
             <button
               key={notification.id}
+              type="button"
               onClick={() => !notification.isRead && void handleMarkRead(notification.id)}
-              className={`block w-full border p-3 text-left text-sm ${
-                notification.isRead ? 'border-line' : 'border-primary bg-primary-light'
+              className={`block w-full rounded-2xl p-4 text-left text-sm shadow-card transition ${
+                notification.isRead ? 'bg-background' : 'bg-primary-light'
               }`}
             >
               <p className="font-medium text-foreground">{notification.title}</p>

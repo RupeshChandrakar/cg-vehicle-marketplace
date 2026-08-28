@@ -9,6 +9,16 @@
   --color-primary-light: #f2f8f4;
   --color-muted: #6b7280;
   --color-line: #e5e7eb;
+
+  /* Same derived tokens as apps/web, for one consistent look across both
+     surfaces — see apps/web's globals.css for the full rationale. */
+  --color-warm: #fbfaf8;
+  --color-gold: #c4881a;
+
+  --shadow-card: 0 1px 2px 0 rgb(23 23 23 / 0.04), 0 8px 20px -10px rgb(23 23 23 / 0.14);
+  --shadow-card-hover: 0 2px 4px 0 rgb(23 23 23 / 0.06), 0 20px 32px -14px rgb(23 23 23 / 0.2);
+  --shadow-btn: 0 1px 2px 0 rgb(23 23 23 / 0.06);
+  --shadow-btn-hover-primary: 0 10px 24px -8px rgb(22 138 69 / 0.38);
 }
 
 @theme inline {
@@ -18,14 +28,29 @@
   --color-primary-light: var(--color-primary-light);
   --color-muted: var(--color-muted);
   --color-line: var(--color-line);
-  --font-sans: var(--font-geist-sans);
+  --color-warm: var(--color-warm);
+  --color-gold: var(--color-gold);
+  --font-sans: var(--font-display-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 /* No automatic dark mode — see apps/web's globals.css for why. */
 
 body {
-  background: var(--background);
+  background: var(--color-warm);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-display-sans), Arial, Helvetica, sans-serif;
+}
+
+.shadow-card {
+  box-shadow: var(--shadow-card);
+}
+.shadow-card-hover {
+  box-shadow: var(--shadow-card-hover);
+}
+.shadow-btn {
+  box-shadow: var(--shadow-btn);
+}
+.shadow-btn-hover-primary:hover {
+  box-shadow: var(--shadow-btn-hover-primary);
 }

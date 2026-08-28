@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Plus_Jakarta_Sans, Geist_Mono } from 'next/font/google';
 import { brand } from '@cg/shared-config';
 import { AuthProvider } from '@/lib/auth-context';
-import { SiteHeader } from '@/components/site-header';
+import { AdminShell } from '@/components/admin-shell';
 import './globals.css';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+// Same typeface choice as apps/web, for one consistent look across both
+// surfaces — see apps/web's layout.tsx for the full rationale.
+const displaySans = Plus_Jakarta_Sans({
+  variable: '--font-display-sans',
   subsets: ['latin'],
 });
 
@@ -22,11 +24,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
+    <html
+      lang="en"
+      className={`${displaySans.variable} ${geistMono.variable} h-full antialiased`}
+    >
+      <body className="min-h-full bg-warm">
         <AuthProvider>
-          <SiteHeader />
-          {children}
+          <AdminShell>{children}</AdminShell>
         </AuthProvider>
       </body>
     </html>
