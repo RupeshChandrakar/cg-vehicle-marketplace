@@ -19,6 +19,7 @@ import { FavoritesModule } from './modules/favorites/favorites.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { ReelsModule } from './modules/reels/reels.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { FinanceEnquiriesModule } from './modules/finance-enquiries/finance-enquiries.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
     ReviewsModule,
     ReelsModule,
     AnalyticsModule,
+    FinanceEnquiriesModule,
   ],
 })
 export class AppModule {}

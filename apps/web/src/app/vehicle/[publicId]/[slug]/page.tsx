@@ -9,6 +9,7 @@ import { VehicleGallery } from '@/features/vehicles/vehicle-gallery';
 import { VehicleViewTracker } from '@/features/vehicles/vehicle-view-tracker';
 import { WhatsAppShareButton } from '@/features/vehicles/whatsapp-share-button';
 import { EnquiryActions } from '@/features/enquiries/enquiry-actions';
+import { FinanceBanner } from '@/features/vehicles/finance-banner';
 import { FavoriteButton } from '@/features/favorites/favorite-button';
 
 async function loadVehicle(publicIdParam: string): Promise<Vehicle | null> {
@@ -96,6 +97,8 @@ export default async function VehiclePage(props: PageProps<'/vehicle/[publicId]/
           <Highlights vehicle={vehicle} />
 
           <EnquiryActions vehiclePublicId={vehicle.publicId} />
+
+          <FinanceBanner vehiclePublicId={vehicle.publicId} />
 
           {vehicle.description && (
             <div className="space-y-1">

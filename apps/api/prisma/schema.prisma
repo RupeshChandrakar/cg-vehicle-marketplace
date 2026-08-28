@@ -100,6 +100,44 @@ enum MessageSenderType {
   @@map("message_sender_type")
 }
 
+/// new: just submitted. contacted: staff has reached the customer at least
+/// once about financing. closed: done either way (interested/not).
+enum FinanceEnquiryStatus {
+  new
+  contacted
+  closed
+
+  @@map("finance_enquiry_status")
+}
+
+/// A lead-capture record, NOT a loan application or approval — there is no
+/// bank/NBFC integration behind this. A customer submits interest, staff
+/// follows up manually with whatever financing partner is actually lined up
+/// at the time. Never advertise specific terms (rate, down payment %) here
+/// or in the UI unless a real partner has actually committed to them.
+model FinanceEnquiry {
+  id String @id @default(uuid())
+
+  name    String
+  phone   String
+  message String?
+
+  /// Optional — a customer can express finance interest from a specific
+  /// vehicle's page, or generically. SetNull (not Cascade) on vehicle
+  /// delete: this is lead data with its own business value, independent of
+  /// whether the vehicle listing survives.
+  vehicleId String?  @map("vehicle_id")
+  vehicle   Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+
+  status FinanceEnquiryStatus @default(new)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@map("finance_enquiries")
+}
+
 /// `email`/`passwordHash` are only ever set for staff (agent/admin) —
 /// customers authenticate by phone/OTP (Phase 4), never a password.
 /// `refreshTokenHash` holds the hash of the current refresh token so a
@@ -222,6 +260,7 @@ model Vehicle {
   reviews      Review[]
   reels        Reel[]
   pageViews    PageView[]
+  financeEnquiries FinanceEnquiry[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

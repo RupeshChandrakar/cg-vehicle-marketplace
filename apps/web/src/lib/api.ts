@@ -36,6 +36,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (!response.ok) {
     throw new ApiError(await extractErrorMessage(response), response.status);
   }
+  if (response.status === 204) {
+    return undefined as T;
+  }
 
   return response.json() as Promise<T>;
 }
@@ -145,6 +148,23 @@ export interface CreateEnquiryResult {
 
 export function createEnquiry(payload: CreateEnquiryPayload): Promise<CreateEnquiryResult> {
   return request<CreateEnquiryResult>('/enquiries', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export interface FinanceEnquiryPayload {
+  name: string;
+  phone: string;
+  message?: string;
+  vehiclePublicId?: number;
+}
+
+/** Pure lead capture — no loan application, no bank integration behind
+ *  this. See FinanceEnquiriesService on the API. */
+export function submitFinanceEnquiry(payload: FinanceEnquiryPayload): Promise<void> {
+  return request('/finance-enquiries', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),

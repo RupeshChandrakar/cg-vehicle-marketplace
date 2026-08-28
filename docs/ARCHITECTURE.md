@@ -566,6 +566,50 @@ listings rather than one vehicle at a time.
   confirmed the decoded message content — correct brand name, both numbered entries, both real
   vehicle links.
 
+### Finance lead capture — not a lending product (2026-08-28)
+
+PO asked to advertise financing with a specific "0% down payment" claim and a banner. Flagged
+this honestly rather than building it as asked: there is no real bank/NBFC partnership behind
+this platform, and advertising a specific credit term (0% down payment is unusually aggressive
+even for a real lender — used vehicles are depreciated collateral, so real lenders typically
+require 15–30% down) with no lender actually backing it is a **misleading-advertisement risk**,
+not just a copy-writing choice — India's RBI advertising code for credit products and the
+Consumer Protection Act both bear on this. The khetigaadi.com review done earlier the same day
+directly informed this: their own finance page, despite real bank-partner logos, never claims a
+specific guaranteed rate or down-payment figure anywhere — it's a generic enquiry funnel. PO
+agreed to build the honest version instead.
+
+- **`FinanceEnquiry` model is pure lead capture** — name, phone, optional message, optional
+  `vehicleId`, status (`new`/`contacted`/`closed`). No loan application, no bank integration, no
+  approval/underwriting logic anywhere. `onDelete: SetNull` on the vehicle relation (not
+  `Cascade`, unlike `PageView`/`Reel`) — deliberate: this is lead data with its own business
+  value independent of whether the vehicle listing later disappears.
+- **`POST /finance-enquiries`** (public) — the vehicle detail page's "Financing Available" banner
+  submits here. Same `vehiclePublicId`-resolved-server-side convention as
+  Favorites/Enquiries/Analytics/the referral system; an unknown/stale one is dropped rather than
+  failing the submission.
+- **`GET /admin/finance-enquiries` / `POST /admin/finance-enquiries/:id/status`** (admin+agent) —
+  new `/finance-leads` admin page (sidebar, right after Enquiries) lists leads with a status
+  filter and a per-lead status dropdown for manual follow-up. The page's own copy says outright:
+  "Ye pure lead-capture hai — koi bank/NBFC integration nahi hai" — never let the internal tooling
+  imply more automation than exists either.
+- **Banner copy is deliberately generic**: "Financing Available — enquire karein," no rate, no
+  down-payment percentage, no lender name. If a real bank/NBFC partnership is ever signed, this
+  copy (and only this copy) should change to reflect that partner's actual, confirmed terms —
+  never the other way around.
+- **Bug found and fixed during verification, not specific to this feature**: `apps/web`'s shared
+  `request()` helper never handled a `204 No Content` response — it always called
+  `response.json()`, which throws on an empty body. Every prior web-app API call happened to
+  return a JSON body, so this was latent and untriggered; `submitFinanceEnquiry()` (backed by a
+  204 endpoint) was the first caller to hit it. Fixed by adding the same `response.status === 204`
+  short-circuit `apps/admin`'s `request()` already had. The underlying POST had actually already
+  succeeded server-side each time — the bug was purely in the client's response handling, not
+  data loss — confirmed by finding the "failed" test's lead already present in the admin list.
+- Verified end-to-end: a REST script (vehicle-tied lead, generic lead, tampered vehicle ID
+  dropped gracefully, invalid phone rejected, status update, auth-required on the admin list) and
+  a live browser pass (banner → form → real submission → confirmation copy, then the same lead
+  visible on the real admin Finance Leads page reached via actual sidebar navigation).
+
 ### Phase 2 notes
 
 - **Staff auth** landed here rather than waiting for Phase 4, since the admin review queue

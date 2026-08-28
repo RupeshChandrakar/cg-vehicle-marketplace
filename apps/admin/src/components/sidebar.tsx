@@ -11,6 +11,7 @@ import {
   LogOut,
   Clapperboard,
   BarChart3,
+  Wallet,
 } from 'lucide-react';
 import { brand } from '@cg/shared-config';
 import { useAuth } from '@/lib/auth-context';
@@ -28,6 +29,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/queue', label: 'Vehicle Queue', icon: Car },
   { href: '/enquiries', label: 'Enquiries', icon: MessageCircle, badge: 'enquiries' },
+  { href: '/finance-leads', label: 'Finance Leads', icon: Wallet },
   { href: '/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/reels', label: 'Reel Studio', icon: Clapperboard },
   { href: '/notifications', label: 'Notifications', icon: Bell, badge: 'notifications' },

@@ -18,6 +18,7 @@ import type {
 import type { AppNotification } from '@/types/notification';
 import type { Reel, ReelTemplate, ReelPublishStatus } from '@/types/reel';
 import type { AnalyticsSummary } from '@/types/analytics';
+import type { AdminFinanceEnquiry, FinanceEnquiryStatus } from '@/types/finance-enquiry';
 
 export class ApiError extends Error {
   constructor(
@@ -285,6 +286,30 @@ export function getAdminReel(accessToken: string, id: string): Promise<Reel> {
 
 export function getAnalyticsSummary(accessToken: string): Promise<AnalyticsSummary> {
   return request('/admin/analytics/summary', accessToken);
+}
+
+export function getFinanceEnquiries(
+  accessToken: string,
+  status?: FinanceEnquiryStatus,
+  pageSize?: number,
+): Promise<PaginatedResult<AdminFinanceEnquiry>> {
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  if (pageSize) params.set('pageSize', String(pageSize));
+  const query = params.toString();
+  return request(`/admin/finance-enquiries${query ? `?${query}` : ''}`, accessToken);
+}
+
+export function updateFinanceEnquiryStatus(
+  accessToken: string,
+  id: string,
+  status: FinanceEnquiryStatus,
+): Promise<AdminFinanceEnquiry> {
+  return request(`/admin/finance-enquiries/${id}/status`, accessToken, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  });
 }
 
 export function updateReelPublishStatus(
