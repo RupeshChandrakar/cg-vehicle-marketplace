@@ -55,7 +55,7 @@ export default function LoginPage() {
   return (
     <div className="mx-auto flex max-w-sm flex-1 flex-col justify-center px-4 py-16">
       <div className="rounded-2xl bg-background p-6 shadow-card">
-        <h1 className="text-xl font-bold text-foreground">Login / Sign Up</h1>
+        <h1 className="text-xl font-bold tracking-tight text-foreground">Login / Sign Up</h1>
         <p className="mt-1 text-sm text-muted">
           {step === 'phone'
             ? 'Apna mobile number darj karein'
@@ -80,7 +80,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={!INDIAN_MOBILE_PATTERN.test(phoneDigits) || isSubmitting}
-              className="w-full rounded-full bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] disabled:opacity-50"
+              className="press w-full rounded-full bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] disabled:opacity-50"
             >
               {isSubmitting ? 'Bhej rahe hain…' : 'Send OTP'}
             </button>
@@ -107,7 +107,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={otp.length !== 6 || isSubmitting}
-              className="w-full rounded-full bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] disabled:opacity-50"
+              className="press w-full rounded-full bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] disabled:opacity-50"
             >
               {isSubmitting ? 'Verify ho raha hai…' : 'Verify & Continue'}
             </button>

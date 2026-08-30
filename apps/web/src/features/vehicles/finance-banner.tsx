@@ -89,7 +89,7 @@ export function FinanceBanner({ vehiclePublicId }: { vehiclePublicId: number }) 
           <button
             type="button"
             onClick={() => setIsOpen(false)}
-            className="rounded-lg border border-line px-4 py-2.5 text-sm text-foreground transition hover:bg-background"
+            className="press rounded-lg border border-line px-4 py-2.5 text-sm text-foreground transition hover:bg-background"
           >
             Cancel
           </button>
@@ -102,7 +102,7 @@ export function FinanceBanner({ vehiclePublicId }: { vehiclePublicId: number }) 
     <button
       type="button"
       onClick={() => setIsOpen(true)}
-      className="flex w-full items-center gap-3 rounded-2xl bg-primary-light px-4 py-3.5 text-left shadow-card transition hover:shadow-card-hover"
+      className="press-card flex w-full items-center gap-3 rounded-2xl bg-primary-light px-4 py-3.5 text-left shadow-card transition hover:shadow-card-hover"
     >
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-background text-primary">
         <Wallet className="h-4 w-4" strokeWidth={1.75} />

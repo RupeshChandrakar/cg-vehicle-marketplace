@@ -101,8 +101,8 @@ export default async function VehiclePage(props: PageProps<'/vehicle/[publicId]/
           <FinanceBanner vehiclePublicId={vehicle.publicId} />
 
           {vehicle.description && (
-            <div className="space-y-1">
-              <h2 className="text-sm font-medium text-foreground">Description</h2>
+            <div className="space-y-1 border-t border-line pt-5">
+              <h2 className="text-sm font-semibold text-foreground">Description</h2>
               <p className="text-sm text-muted">{vehicle.description}</p>
             </div>
           )}

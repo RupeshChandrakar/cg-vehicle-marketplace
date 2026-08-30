@@ -24,7 +24,7 @@ export function WhatsAppShareButton({ title, price }: { title: string; price: st
       type="button"
       onClick={handleShare}
       aria-label="Share on WhatsApp"
-      className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-light text-primary transition hover:bg-primary hover:text-white"
+      className="press-icon flex h-9 w-9 items-center justify-center rounded-full bg-primary-light text-primary transition hover:bg-primary hover:text-white"
     >
       <Share2 className="h-4 w-4" strokeWidth={1.75} />
     </button>

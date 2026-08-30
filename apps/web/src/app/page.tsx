@@ -142,16 +142,16 @@ function ResultsHeading({
 }) {
   if (query) {
     return (
-      <h2 className="text-sm text-muted">
-        &quot;{query}&quot; ke liye <span className="font-semibold text-foreground">{total}</span>{' '}
-        vehicles mile
+      <h2 className="text-lg font-semibold text-foreground">
+        <span className="font-normal text-muted">&quot;{query}&quot; ke liye</span> {total}{' '}
+        <span className="font-normal text-muted">vehicles mile</span>
       </h2>
     );
   }
   if (activeCategory) {
     return (
-      <h2 className="text-sm text-muted">
-        <span className="font-semibold text-foreground">{total}</span> {activeCategory.name} mile
+      <h2 className="text-lg font-semibold text-foreground">
+        {total} <span className="font-normal text-muted">{activeCategory.name} mile</span>
       </h2>
     );
   }
@@ -164,7 +164,7 @@ function ResultsHeading({
 
 function EmptyState() {
   return (
-    <div className="rounded-2xl bg-primary-light px-4 py-16 text-center text-muted shadow-card">
+    <div className="rounded-2xl bg-primary-light px-4 py-16 text-center text-sm text-muted shadow-card">
       Koi vehicle nahi mila. Category ya location badal ke dekhein.
     </div>
   );

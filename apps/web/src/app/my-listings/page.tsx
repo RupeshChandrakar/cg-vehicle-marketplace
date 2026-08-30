@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Car, ImageOff } from 'lucide-react';
 import { useCustomerAuth } from '@/lib/customer-auth-context';
 import { getMyVehicles, ApiError } from '@/lib/api';
+import { MediaImage } from '@/components/media-image';
 import type { MyVehicle, VehicleStatus } from '@/types/vehicle';
 
 // Anything not in this list (rejected/live/approved/reserved/sold/expired)
@@ -63,7 +65,7 @@ export default function MyListingsPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
       <div>
-        <h1 className="text-lg font-semibold text-foreground">My Listings</h1>
+        <h1 className="text-xl font-bold tracking-tight text-foreground">My Listings</h1>
         <p className="mt-1 text-sm text-muted">
           Aapki saari submit ki hui gaadiyan yahan dikhengi — status, aur jab tak review nahi hua
           hai, edit bhi kar sakte hain.
@@ -75,13 +77,26 @@ export default function MyListingsPage() {
       )}
 
       {isLoading ? (
-        <p className="text-sm text-muted">Loading…</p>
+        <div className="space-y-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="skeleton-row">
+              <div className="skeleton skeleton-circle h-10 w-10" />
+              <div className="flex-1 space-y-2">
+                <div className="skeleton skeleton-title w-2/3" />
+                <div className="skeleton skeleton-text w-1/3" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : vehicles.length === 0 ? (
-        <div className="space-y-3 rounded-2xl bg-primary-light px-4 py-16 text-center shadow-card">
+        <div className="empty-state">
+          <span className="empty-state-icon">
+            <Car className="h-6 w-6" strokeWidth={1.75} />
+          </span>
           <p className="text-sm text-muted">Aapne abhi tak koi vehicle submit nahi ki hai.</p>
           <Link
             href="/sell"
-            className="inline-flex rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a]"
+            className="press inline-flex rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a]"
           >
             Apni Gaadi Bechein
           </Link>
@@ -102,17 +117,18 @@ function ListingCard({ vehicle }: { vehicle: MyVehicle }) {
   const thumbnail = vehicle.media[0]?.url;
 
   return (
-    <div className="flex gap-4 rounded-2xl bg-background p-4 shadow-card">
-      <div className="h-20 w-28 shrink-0 overflow-hidden rounded-xl bg-primary-light">
-        {thumbnail && (
-          // eslint-disable-next-line @next/next/no-img-element -- storage host isn't configured for next/image
-          <img src={thumbnail} alt="" className="h-full w-full object-cover" />
-        )}
-      </div>
+    <div className="press-card flex gap-4 rounded-2xl bg-background p-4 shadow-card">
+      <MediaImage
+        src={thumbnail}
+        alt={vehicle.title}
+        shape="thumb"
+        emptyIcon={ImageOff}
+        className="h-20 w-28 shrink-0 overflow-hidden rounded-xl bg-primary-light"
+      />
 
       <div className="min-w-0 flex-1 space-y-1.5">
         <div className="flex flex-wrap items-start justify-between gap-2">
-          <h3 className="font-medium text-foreground">{vehicle.title}</h3>
+          <h3 className="text-base font-medium text-foreground">{vehicle.title}</h3>
           <span
             className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_PILL[vehicle.status]}`}
           >
@@ -122,7 +138,7 @@ function ListingCard({ vehicle }: { vehicle: MyVehicle }) {
         <p className="font-mono text-sm text-foreground">
           ₹{Number(vehicle.price).toLocaleString('en-IN')}
         </p>
-        <p className="text-xs text-muted">
+        <p className="text-sm text-muted">
           {vehicle.year} &middot; {vehicle.kmDriven.toLocaleString('en-IN')} km &middot;{' '}
           {vehicle.media.length} photo{vehicle.media.length === 1 ? '' : 's'}
         </p>
@@ -135,14 +151,14 @@ function ListingCard({ vehicle }: { vehicle: MyVehicle }) {
           {canEdit ? (
             <Link
               href={`/my-listings/${vehicle.id}/edit`}
-              className="inline-flex rounded-full border border-line px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-primary-light"
+              className="press inline-flex rounded-full border border-line px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-primary-light"
             >
               Edit
             </Link>
           ) : vehicle.status === 'live' && vehicle.publicId ? (
             <Link
               href={`/vehicle/${vehicle.publicId}/${vehicle.slug}`}
-              className="inline-flex rounded-full border border-line px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-primary-light"
+              className="press inline-flex rounded-full border border-line px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-primary-light"
             >
               Live Listing Dekhein
             </Link>

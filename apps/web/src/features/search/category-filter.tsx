@@ -23,7 +23,7 @@ export function CategoryFilter({
 }: CategoryFilterProps) {
   return (
     <div className="space-y-3">
-      <h2 className="text-sm font-semibold text-foreground">Categories</h2>
+      <h2 className="text-lg font-semibold text-foreground">Categories</h2>
       <nav
         className="grid grid-cols-4 gap-3 sm:grid-cols-6 lg:grid-cols-9"
         aria-label="Vehicle categories"
@@ -35,7 +35,7 @@ export function CategoryFilter({
             <Link
               key={category.id}
               href={hrefFor(active ? undefined : category.slug, activeDistrictSlug)}
-              className="group flex flex-col items-center gap-2 text-center"
+              className="group flex flex-col items-center gap-2 text-center press-chip"
             >
               {/* A flat light-gray chip at rest, no card shadow — green is
                   reserved for the active filter, so it stays a clear "this
@@ -43,7 +43,7 @@ export function CategoryFilter({
                   itself is already colorful, so the chip doesn't need to
                   add its own icon color on top. */}
               <span
-                className={`flex h-14 w-14 items-center justify-center rounded-2xl text-3xl transition ${
+                className={`flex h-14 w-14 items-center justify-center rounded-2xl text-3xl transition transition-snappy ${
                   active ? 'bg-primary shadow-btn' : 'category-chip group-hover:bg-line/60'
                 }`}
               >

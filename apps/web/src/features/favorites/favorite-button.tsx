@@ -25,6 +25,7 @@ export function FavoriteButton({
   const { accessToken } = useCustomerAuth();
   const [favorited, setFavorited] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [justFavorited, setJustFavorited] = useState(false);
 
   useEffect(() => {
     if (!checkInitialState || !accessToken) return;
@@ -32,6 +33,12 @@ export function FavoriteButton({
       .then((result) => setFavorited(result.favorited))
       .catch(() => undefined);
   }, [checkInitialState, accessToken, vehiclePublicId]);
+
+  useEffect(() => {
+    if (!justFavorited) return;
+    const timer = setTimeout(() => setJustFavorited(false), 400);
+    return () => clearTimeout(timer);
+  }, [justFavorited]);
 
   async function handleClick(event: MouseEvent): Promise<void> {
     event.preventDefault();
@@ -46,6 +53,9 @@ export function FavoriteButton({
     try {
       const result = await toggleFavorite(accessToken, vehiclePublicId);
       setFavorited(result.favorited);
+      if (result.favorited) {
+        setJustFavorited(true);
+      }
     } catch {
       // A failed toggle isn't worth an error banner — the button simply doesn't change.
     } finally {
@@ -61,11 +71,11 @@ export function FavoriteButton({
       aria-label={favorited ? 'Remove from favorites' : 'Add to favorites'}
       className={
         className ??
-        'flex h-8 w-8 items-center justify-center rounded-full bg-background/90 shadow-card transition hover:bg-background'
+        'press-icon flex h-8 w-8 items-center justify-center rounded-full bg-background/90 shadow-card transition hover:bg-background'
       }
     >
       <Heart
-        className={favorited ? 'h-4 w-4 fill-primary text-primary' : 'h-4 w-4 text-foreground'}
+        className={`${favorited ? 'h-4 w-4 fill-primary text-primary' : 'h-4 w-4 text-foreground'} ${justFavorited ? 'heart-pop' : ''}`}
         strokeWidth={1.75}
       />
     </button>

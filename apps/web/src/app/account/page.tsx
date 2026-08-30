@@ -134,7 +134,7 @@ export default function AccountPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
       <div>
-        <h1 className="text-lg font-semibold text-foreground">My Account</h1>
+        <h1 className="text-xl font-bold tracking-tight text-foreground">My Account</h1>
         <p className="mt-1 text-sm text-muted">Aapki profile aur account ki jaankari.</p>
       </div>
 
@@ -146,7 +146,10 @@ export default function AccountPage() {
 
       <div className="space-y-4 rounded-2xl bg-background p-5 shadow-card">
         {!profile && isLoadingProfile ? (
-          <p className="text-sm text-muted">Loading…</p>
+          <div className="space-y-3">
+            <div className="skeleton skeleton-text w-1/3" />
+            <div className="skeleton skeleton-text w-1/2" />
+          </div>
         ) : (
           profile && (
             <>
@@ -166,14 +169,14 @@ export default function AccountPage() {
                       <button
                         onClick={() => void handleSaveName()}
                         disabled={isSaving}
-                        className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] disabled:opacity-60"
+                        className="press rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] disabled:opacity-60"
                       >
                         {isSaving ? 'Saving…' : 'Save'}
                       </button>
                       <button
                         onClick={() => setIsEditingName(false)}
                         disabled={isSaving}
-                        className="px-4 py-2 text-sm text-muted"
+                        className="press px-4 py-2 text-sm text-muted"
                       >
                         Cancel
                       </button>
@@ -186,7 +189,7 @@ export default function AccountPage() {
                     </p>
                     <button
                       onClick={startEditingName}
-                      className="rounded-full border border-line px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-primary-light"
+                      className="press rounded-full border border-line px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-primary-light"
                     >
                       Edit
                     </button>
@@ -212,7 +215,7 @@ export default function AccountPage() {
             <Link
               key={tile.href}
               href={tile.href}
-              className="rounded-2xl bg-background p-4 shadow-card transition hover:shadow-card-hover"
+              className="press-card rounded-2xl bg-background p-4 shadow-card transition hover:shadow-card-hover"
             >
               <p className="text-2xl font-semibold text-foreground">{tile.count}</p>
               <p className="mt-1 text-xs text-muted">{tile.label}</p>
@@ -223,7 +226,7 @@ export default function AccountPage() {
 
       <button
         onClick={handleLogout}
-        className="rounded-lg border border-line px-4 py-2.5 text-sm text-foreground transition hover:bg-primary-light"
+        className="press rounded-lg border border-line px-4 py-2.5 text-sm text-foreground transition hover:bg-primary-light"
       >
         Logout
       </button>

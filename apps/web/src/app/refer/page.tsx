@@ -58,7 +58,7 @@ export default function ReferPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6 px-4 py-8">
       <div>
-        <h1 className="text-lg font-semibold text-foreground">Invite Friends</h1>
+        <h1 className="text-xl font-bold tracking-tight text-foreground">Invite Friends</h1>
         <p className="mt-1 text-sm text-muted">
           Apna link doston ke saath share karo — jitne zyada log {brand.name} pe aayenge, utni
           achhi gaadiyan aur deals sabke liye banengi.
@@ -70,7 +70,22 @@ export default function ReferPage() {
       )}
 
       {isLoading ? (
-        <p className="text-sm text-muted">Loading…</p>
+        <div className="space-y-6">
+          <div className="skeleton-row">
+            <div className="skeleton skeleton-circle h-10 w-10" />
+            <div className="flex-1 space-y-2">
+              <div className="skeleton skeleton-title w-1/2" />
+              <div className="skeleton skeleton-text w-3/4" />
+            </div>
+          </div>
+          <div className="skeleton-row">
+            <div className="skeleton skeleton-circle h-10 w-10" />
+            <div className="flex-1 space-y-2">
+              <div className="skeleton skeleton-title w-1/3" />
+              <div className="skeleton skeleton-text w-1/2" />
+            </div>
+          </div>
+        </div>
       ) : (
         <>
           <div className="space-y-3 rounded-2xl bg-background p-5 shadow-card">
@@ -83,7 +98,7 @@ export default function ReferPage() {
                 type="button"
                 onClick={() => void handleCopy()}
                 aria-label="Copy link"
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-primary-light hover:text-primary"
+                className="press-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-primary-light hover:text-primary"
               >
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
               </button>
@@ -91,7 +106,7 @@ export default function ReferPage() {
             <button
               type="button"
               onClick={handleWhatsAppShare}
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a]"
+              className="press flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a]"
             >
               <Share2 className="h-4 w-4" strokeWidth={1.75} />
               Share on WhatsApp

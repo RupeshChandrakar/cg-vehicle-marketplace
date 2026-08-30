@@ -1,8 +1,11 @@
+'use client';
+
 import Link from 'next/link';
-import { ShieldCheck, MapPin } from 'lucide-react';
+import { ShieldCheck, MapPin, ImageOff } from 'lucide-react';
 import type { Vehicle } from '@/types/vehicle';
 import { formatFuelType, formatKm, formatPrice, formatTransmission } from '@/lib/format';
 import { FavoriteButton } from '@/features/favorites/favorite-button';
+import { MediaImage } from '@/components/media-image';
 
 export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
   const coverImage = vehicle.media[0];
@@ -10,21 +13,19 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
   return (
     <Link
       href={`/vehicle/${vehicle.publicId}/${vehicle.slug}`}
-      className="group block overflow-hidden rounded-2xl bg-background shadow-card transition-shadow hover:shadow-card-hover"
+      className="press-card group block overflow-hidden rounded-2xl bg-background shadow-card transition-shadow transition-snappy hover:shadow-card-hover"
     >
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-primary-light">
-        {coverImage ? (
-          // eslint-disable-next-line @next/next/no-img-element -- remote media host isn't configured until Phase 2's upload flow lands
-          <img
-            src={coverImage.url}
-            alt={vehicle.title}
-            className="h-full w-full object-cover transition-transform duration-200 ease-out group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-sm text-muted">
-            Photo coming soon
-          </div>
-        )}
+        <MediaImage
+          src={coverImage?.url}
+          alt={vehicle.title}
+          shape="thumb"
+          emptyIcon={ImageOff}
+          emptyIconClassName="h-6 w-6"
+          emptyLabel="Photo coming soon"
+          className="aspect-[4/3] w-full overflow-hidden bg-primary-light"
+          imgClassName="transition-transform duration-200 ease-out group-hover:scale-105"
+        />
         {vehicle.verification && (
           <span className="absolute top-3 left-3 flex items-center gap-1 rounded-full bg-background/95 px-2.5 py-1 text-xs font-medium text-primary shadow-card">
             <ShieldCheck className="h-3 w-3" />
@@ -37,8 +38,8 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
         />
       </div>
 
-      <div className="space-y-2 p-4">
-        <h3 className="font-medium text-foreground">{vehicle.title}</h3>
+      <div className="space-y-1.5 p-4">
+        <h3 className="text-base font-medium text-foreground">{vehicle.title}</h3>
 
         <p className="font-mono text-lg font-semibold tabular-nums text-foreground">
           {formatPrice(vehicle.price)}

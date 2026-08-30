@@ -885,6 +885,80 @@ Auto-rickshaws, Pickups, Trucks, and Other Vehicles from the original 9-category
   pass confirmed the home page's category tiles, the sell wizard's vehicle-type step, and the
   reassigned Bolero/Tata 407 test listings (now filed under Commercial Vehicles) all reflect it.
 
+### Native-app-polish visual pass (2026-08-30)
+
+PO asked to "revamp the whole app in app style." Scope confirmed via `AskUserQuestion` before
+starting: the whole customer site (`apps/web`), visual polish only — no navigation/structure
+change, no bottom tab bar, no mockup-literal rebuild. This is the third visual pass this project
+(after "Design direction" and the "Soft Ignition" refresh) — it builds on the existing token
+system, never replaces it.
+
+- **Process**: a research+design Workflow first audited every visual page/component (23 files)
+  for concrete gaps — bare "Loading…" text instead of skeletons, hover-only controls with zero
+  touch/press feedback, drifting heading sizes for the same conceptual role, flat-color/plain-text
+  image placeholders — then ran 3 independent design proposals (motion & tactile feedback /
+  typography & spacing rhythm / imagery & empty-states) synthesized into one concrete, ready-to-
+  implement spec (exact CSS + exact Tailwind class strings, no ambiguity left for implementers).
+  I then personally implemented the shared foundation (new `globals.css` tokens/classes + a new
+  `components/media-image.tsx`) before fanning a second Workflow out across 7 disjoint file groups
+  to apply the spec everywhere — foundation-first specifically so every apply-agent worked from
+  the same already-tested primitives instead of each inventing its own.
+- **New `globals.css` primitives** (all built only from the existing fixed 5-color palette, every
+  animated rule has a `prefers-reduced-motion` guard): `.press`/`.press-card`/`.press-icon`/
+  `.press-chip`/`.press-text` (five purpose-built tactile-feedback classes, one per tappable-
+  surface shape — filled buttons scale 0.97, whole-card surfaces 0.98, icon buttons 0.88, chips
+  0.95, bare text uses opacity since a scale transform visibly breaks on padding-less text);
+  `.heart-pop` (a bounce keyframe for the favorite toggle); `.skeleton` + shape helpers
+  (`-text`/`-title`/`-circle`/`-thumb`) + composites (`-row`/`-card`/`-bubble`) for shimmer loading
+  placeholders; `.media-img-fade`/`.media-empty` (a photo either shimmers-then-fades-in while
+  genuinely loading, or shows a static icon+label if it's permanently absent — deliberately never
+  the same treatment, since an endlessly-shimmering empty box reads as broken, not "no photo");
+  `.empty-state`/`.empty-state-icon` (zero-results page shell, reusing icons already imported
+  elsewhere in the app — Heart/Bell/MessageCircle/Car — no new icon vocabulary beyond `ImageOff`).
+- **New `components/media-image.tsx`**: the one place the shimmer→fade→empty logic is
+  implemented, reused at every photo call site (VehicleCard, VehicleGallery, My Listings'
+  ListingCard, the edit-listing PhotoManager) instead of copy-pasted four times.
+- **Real bug found and fixed during this build, caught by live testing before shipping (not by
+  the design/apply Workflows themselves)**: `MediaImage` originally relied solely on the `<img>`
+  element's `onLoad` event to flip `loaded` and fade the photo in. A **cached** image can finish
+  loading (the browser paints it immediately) before React even attaches the `onLoad` listener —
+  `onLoad` then never fires, and the photo stays stuck at `opacity: 0` forever. Confirmed live: a
+  vehicle detail page's gallery photo rendered as a blank gray box on repeat visits once the image
+  was in browser cache, even though the underlying `<img>` had `complete: true` and a real
+  `naturalWidth`. Fixed by also checking `imgRef.current.complete` synchronously in a `useEffect`
+  on mount/src-change, so an already-cached image is caught immediately instead of only relying on
+  the event.
+- **Vehicle-card.tsx also needed `'use client'` added**: it was a Server Component passing
+  `emptyIcon={ImageOff}` (a component reference/function) as a prop into the Client Component
+  `MediaImage` — React Server Components can only serialize plain data (or already-rendered JSX)
+  across that boundary, not function/component references, so this crashed at runtime
+  ("Functions cannot be passed directly to Client Components") despite typechecking cleanly.
+  `VehicleGallery` and the My Listings/edit-listing pages were already Client Components so
+  needed no change; `VehicleCard` was the one exception, caught only by an actual browser console
+  error, not by `tsc`/`eslint`.
+- **Typography**: one small, strictly-ordered scale for 7 recurring roles (Page Title/Subtitle,
+  Top-level section heading, Nested section heading, Card Title, Card meta line, Micro-caption,
+  Empty-state message) — resolves real drift found in the audit (8 of 9 utility-page titles were
+  `text-lg font-semibold` but login's was `text-xl font-bold`; VehicleCard/ListingCard's `<h3>`
+  titles had no explicit size class at all; the vehicle detail page's "Description" heading was
+  `font-medium` while its "Overview"/"Customer Reviews" siblings were `font-semibold`). Every
+  page's outer `mx-auto max-w-* space-y-6 px-4 py-8` container rhythm was deliberately left
+  untouched — already correct, and every new skeleton renders as a direct child inside it so
+  loading and loaded states sit at the identical position with zero reflow.
+- **Deliberately out of scope, named rather than silently dropped** (each is a genuinely separate
+  effort, not a token/class addition): native-style bottom-sheet/modal treatment for in-flow forms
+  (enquiry contact form, finance banner lead form, review form); custom-styled dropdowns replacing
+  native `<select>` chrome; gallery dot-pagination/swipe support; a real focus-ring glow on text
+  inputs; the broader "eliminate `border-line`, use `shadow-card` everywhere" cleanup (still present
+  on most text inputs and secondary/outline buttons); a distinct visual treatment for real errors
+  vs. neutral info (both currently render identically); off-palette status-pill colors in My
+  Listings (`bg-red-100`/`bg-blue-100` — a palette-compliance bug, not part of this pass); missing
+  `accent-primary` on three edit-listing checkboxes (same class of bug).
+- Verified end-to-end live throughout: full `tsc --noEmit` + `eslint` pass clean across all 22
+  touched files, then a real browser pass across home/sell-wizard/login/account/favorites/
+  my-listings/notifications/vehicle-detail — confirming press classes, skeletons, empty states,
+  and the fixed cached-image case, with zero JS console errors.
+
 ### Phase 2 notes
 
 - **Staff auth** landed here rather than waiting for Phase 4, since the admin review queue

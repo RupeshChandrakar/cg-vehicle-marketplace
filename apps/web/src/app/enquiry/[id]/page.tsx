@@ -87,7 +87,7 @@ export default function EnquiryChatPage() {
     <div className="mx-auto flex h-[calc(100vh-73px)] max-w-2xl flex-col px-4 py-6">
       <div className="mb-4">
         <h1 className="text-lg font-semibold text-foreground">Agent Se Chat</h1>
-        <p className="text-sm text-muted">
+        <p className="mt-1 text-sm text-muted">
           {state === 'connecting' && 'Connect ho raha hai…'}
           {state === 'ready' && 'Hamara agent jald jawab dega.'}
           {state === 'error' && 'Connection mein dikkat aa rahi hai.'}
@@ -95,7 +95,20 @@ export default function EnquiryChatPage() {
       </div>
 
       <div className="flex-1 space-y-3 overflow-y-auto rounded-2xl bg-primary-light/40 p-4 shadow-card">
-        {messages.length === 0 && (
+        {state === 'connecting' && (
+          <>
+            <div className="skeleton-bubble mr-auto">
+              <div className="skeleton skeleton-text w-[60%]" />
+            </div>
+            <div className="skeleton-bubble ml-auto">
+              <div className="skeleton skeleton-text w-[40%]" />
+            </div>
+            <div className="skeleton-bubble mr-auto">
+              <div className="skeleton skeleton-text w-[70%]" />
+            </div>
+          </>
+        )}
+        {state !== 'connecting' && messages.length === 0 && (
           <p className="pt-8 text-center text-sm text-muted">
             Abhi tak koi message nahi hai — apna sawaal bhejein.
           </p>

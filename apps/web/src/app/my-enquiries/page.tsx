@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Star } from 'lucide-react';
+import { Star, MessageCircle } from 'lucide-react';
 import { useCustomerAuth } from '@/lib/customer-auth-context';
 import { getMyEnquiries, createReview, ApiError, type MyEnquiry } from '@/lib/api';
 
@@ -39,14 +39,27 @@ export default function MyEnquiriesPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
-      <h1 className="text-lg font-semibold text-foreground">My Enquiries</h1>
+      <h1 className="text-xl font-bold tracking-tight text-foreground">My Enquiries</h1>
 
       {isLoading ? (
-        <p className="text-sm text-muted">Loading…</p>
+        <div className="space-y-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="skeleton-row">
+              <div className="skeleton skeleton-circle h-10 w-10" />
+              <div className="flex-1 space-y-2">
+                <div className="skeleton skeleton-title w-2/3" />
+                <div className="skeleton skeleton-text w-1/3" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : enquiries.length === 0 ? (
-        <p className="rounded-2xl bg-primary-light px-4 py-16 text-center text-sm text-muted shadow-card">
-          Aapne abhi tak koi enquiry nahi ki hai.
-        </p>
+        <div className="empty-state">
+          <span className="empty-state-icon">
+            <MessageCircle className="h-6 w-6" strokeWidth={1.75} />
+          </span>
+          <p className="text-sm text-muted">Aapne abhi tak koi enquiry nahi ki hai.</p>
+        </div>
       ) : (
         <div className="space-y-4">
           {enquiries.map((enquiry) => (
@@ -77,7 +90,7 @@ function EnquiryCard({ enquiry, accessToken }: { enquiry: MyEnquiry; accessToken
       </div>
 
       {enquiry.channel === 'chat' && (
-        <Link href={`/enquiry/${enquiry.id}`} className="text-sm font-medium text-primary">
+        <Link href={`/enquiry/${enquiry.id}`} className="press-text text-sm font-medium text-primary">
           Chat dekhein →
         </Link>
       )}
@@ -149,7 +162,7 @@ function ReviewForm({ enquiry, accessToken }: { enquiry: MyEnquiry; accessToken:
         type="button"
         onClick={() => void handleSubmit()}
         disabled={isSubmitting}
-        className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] disabled:opacity-50"
+        className="press rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] disabled:opacity-50"
       >
         {isSubmitting ? 'Submitting…' : 'Submit Review'}
       </button>

@@ -115,7 +115,7 @@ export function EnquiryActions({ vehiclePublicId }: { vehiclePublicId: number })
           <button
             type="button"
             onClick={() => setActiveChannel(null)}
-            className="rounded-lg border border-line px-4 py-2.5 text-sm text-foreground transition hover:bg-primary-light"
+            className="press rounded-lg border border-line px-4 py-2.5 text-sm text-foreground transition hover:bg-primary-light"
           >
             Cancel
           </button>

@@ -1,26 +1,26 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ImageOff } from 'lucide-react';
 import type { Vehicle } from '@/types/vehicle';
+import { MediaImage } from '@/components/media-image';
 
 export function VehicleGallery({ media, title }: { media: Vehicle['media']; title: string }) {
   const [index, setIndex] = useState(0);
-
-  if (media.length === 0) {
-    return (
-      <div className="flex aspect-[4/3] w-full items-center justify-center rounded-2xl bg-primary-light text-sm text-muted">
-        Photos coming soon
-      </div>
-    );
-  }
-
   const active = media[index];
 
   return (
     <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-primary-light shadow-card">
-      {/* eslint-disable-next-line @next/next/no-img-element -- remote media host isn't configured until we finalize a CDN */}
-      <img src={active.url} alt={title} className="h-full w-full object-cover" />
+      <MediaImage
+        key={active?.url}
+        src={active?.url}
+        alt={title}
+        shape="thumb"
+        emptyIcon={ImageOff}
+        emptyIconClassName="h-8 w-8"
+        emptyLabel="Photos coming soon"
+        className="aspect-[4/3] w-full rounded-2xl bg-primary-light"
+      />
 
       {media.length > 1 && (
         <>
@@ -28,7 +28,7 @@ export function VehicleGallery({ media, title }: { media: Vehicle['media']; titl
             type="button"
             aria-label="Previous photo"
             onClick={() => setIndex((i) => (i - 1 + media.length) % media.length)}
-            className="absolute top-1/2 left-3 -translate-y-1/2 rounded-full bg-background/90 p-2 shadow-card transition hover:bg-background"
+            className="press-icon absolute top-1/2 left-3 -translate-y-1/2 rounded-full bg-background/90 p-2 shadow-card transition hover:bg-background"
           >
             <ChevronLeft className="h-4 w-4 text-foreground" />
           </button>
@@ -36,7 +36,7 @@ export function VehicleGallery({ media, title }: { media: Vehicle['media']; titl
             type="button"
             aria-label="Next photo"
             onClick={() => setIndex((i) => (i + 1) % media.length)}
-            className="absolute top-1/2 right-3 -translate-y-1/2 rounded-full bg-background/90 p-2 shadow-card transition hover:bg-background"
+            className="press-icon absolute top-1/2 right-3 -translate-y-1/2 rounded-full bg-background/90 p-2 shadow-card transition hover:bg-background"
           >
             <ChevronRight className="h-4 w-4 text-foreground" />
           </button>

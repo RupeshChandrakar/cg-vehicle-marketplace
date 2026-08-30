@@ -32,13 +32,17 @@ export function SiteHeader() {
         <div className="flex items-center gap-4">
           {user && (
             <>
-              <Link href="/favorites" aria-label="Favorites" className="text-foreground">
+              <Link
+                href="/favorites"
+                aria-label="Favorites"
+                className="press-icon text-foreground"
+              >
                 <Heart className="h-5 w-5" strokeWidth={1.75} />
               </Link>
               <Link
                 href="/notifications"
                 aria-label="Notifications"
-                className="relative text-foreground"
+                className="press-icon relative text-foreground"
               >
                 <Bell className="h-5 w-5" strokeWidth={1.75} />
                 {unreadCount > 0 && (
@@ -49,25 +53,25 @@ export function SiteHeader() {
               </Link>
               <Link
                 href="/account"
-                className="hidden text-sm font-medium text-foreground sm:inline"
+                className="press-text hidden text-sm font-medium text-foreground sm:inline"
               >
                 My Account
               </Link>
               <Link
                 href="/my-listings"
-                className="hidden text-sm font-medium text-foreground sm:inline"
+                className="press-text hidden text-sm font-medium text-foreground sm:inline"
               >
                 My Listings
               </Link>
               <Link
                 href="/my-enquiries"
-                className="hidden text-sm font-medium text-foreground sm:inline"
+                className="press-text hidden text-sm font-medium text-foreground sm:inline"
               >
                 My Enquiries
               </Link>
               <Link
                 href="/refer"
-                className="hidden text-sm font-medium text-foreground sm:inline"
+                className="press-text hidden text-sm font-medium text-foreground sm:inline"
               >
                 Invite Friends
               </Link>
@@ -84,14 +88,14 @@ export function SiteHeader() {
           {user ? (
             <button
               onClick={logout}
-              className="rounded-lg border border-line px-3 py-2 text-sm text-foreground transition hover:bg-primary-light"
+              className="press rounded-lg border border-line px-3 py-2 text-sm text-foreground transition hover:bg-primary-light"
             >
               Logout
             </button>
           ) : (
             <Link
               href="/login"
-              className="rounded-lg border border-line px-3 py-2 text-sm text-foreground transition hover:bg-primary-light"
+              className="press rounded-lg border border-line px-3 py-2 text-sm text-foreground transition hover:bg-primary-light"
             >
               Login
             </Link>

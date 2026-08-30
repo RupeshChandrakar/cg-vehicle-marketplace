@@ -13,6 +13,8 @@ import {
   ApiError,
 } from '@/lib/api';
 import { useCustomerAuth } from '@/lib/customer-auth-context';
+import { MediaImage } from '@/components/media-image';
+import { ImageOff } from 'lucide-react';
 import type {
   Category,
   Location,
@@ -90,7 +92,7 @@ export default function EditMyListingPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6 px-4 py-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-foreground">Edit Listing</h1>
+        <h1 className="text-xl font-bold tracking-tight text-foreground">Edit Listing</h1>
         <Link href="/my-listings" className="text-sm text-muted transition hover:text-foreground">
           &larr; My Listings
         </Link>
@@ -101,7 +103,21 @@ export default function EditMyListingPage() {
       )}
 
       {isLoading ? (
-        <p className="text-sm text-muted">Loading…</p>
+        <div className="space-y-5 rounded-2xl bg-background p-5 shadow-card">
+          <div className="skeleton skeleton-title w-1/3" />
+          <div className="skeleton skeleton-thumb w-full" />
+          <div className="space-y-3">
+            <div className="skeleton-row">
+              <div className="skeleton skeleton-text w-full" />
+            </div>
+            <div className="skeleton-row">
+              <div className="skeleton skeleton-text w-2/3" />
+            </div>
+            <div className="skeleton-row">
+              <div className="skeleton skeleton-text w-1/2" />
+            </div>
+          </div>
+        </div>
       ) : vehicle && canEdit ? (
         <>
           <EditForm
@@ -398,7 +414,7 @@ function EditForm({
       <button
         type="submit"
         disabled={isSaving}
-        className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] disabled:opacity-60"
+        className="press rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] disabled:opacity-60"
       >
         {isSaving ? 'Save ho raha hai…' : 'Save Changes'}
       </button>
@@ -457,7 +473,7 @@ function PhotoManager({
           Photos ({photos.length}/{MAX_PHOTOS})
         </h2>
         <label
-          className={`cursor-pointer rounded-full border border-line px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-primary-light ${
+          className={`press cursor-pointer rounded-full border border-line px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-primary-light ${
             isUploading || photos.length >= MAX_PHOTOS ? 'pointer-events-none opacity-50' : ''
           }`}
         >
@@ -480,14 +496,19 @@ function PhotoManager({
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {photos.map((photo) => (
-            <div key={photo.id} className="relative overflow-hidden rounded-xl border border-line">
-              {/* eslint-disable-next-line @next/next/no-img-element -- storage host isn't configured for next/image */}
-              <img src={photo.url} alt="" className="aspect-square w-full object-cover" />
+            <div key={photo.id} className="relative overflow-hidden rounded-xl shadow-card">
+              <MediaImage
+                src={photo.url}
+                alt=""
+                shape="thumb"
+                emptyIcon={ImageOff}
+                className="aspect-square w-full"
+              />
               <button
                 type="button"
                 onClick={() => void handleRemove(photo.id)}
                 disabled={busyMediaId !== null}
-                className="absolute inset-x-0 bottom-0 bg-foreground/70 py-1 text-xs text-white transition hover:text-red-300 disabled:opacity-50"
+                className="press-icon absolute inset-x-0 bottom-0 bg-foreground/70 py-1 text-xs text-white transition hover:text-red-300 disabled:opacity-50"
               >
                 Remove
               </button>

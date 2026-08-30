@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Bell } from 'lucide-react';
 import { useCustomerAuth } from '@/lib/customer-auth-context';
 import {
   getNotifications,
@@ -49,11 +50,11 @@ export default function NotificationsPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6 px-4 py-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-foreground">Notifications</h1>
+        <h1 className="text-xl font-bold tracking-tight text-foreground">Notifications</h1>
         {hasUnread && (
           <button
             onClick={() => void handleMarkAllRead()}
-            className="text-sm font-medium text-primary"
+            className="press-text text-sm font-medium text-primary"
           >
             Mark all as read
           </button>
@@ -61,11 +62,24 @@ export default function NotificationsPage() {
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-muted">Loading…</p>
+        <div className="space-y-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="skeleton-row">
+              <div className="skeleton skeleton-circle h-10 w-10" />
+              <div className="flex-1 space-y-2">
+                <div className="skeleton skeleton-title w-2/3" />
+                <div className="skeleton skeleton-text w-1/2" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : notifications.length === 0 ? (
-        <p className="rounded-2xl bg-primary-light px-4 py-16 text-center text-sm text-muted shadow-card">
-          Koi notification nahi hai.
-        </p>
+        <div className="empty-state">
+          <span className="empty-state-icon">
+            <Bell className="h-6 w-6" strokeWidth={1.75} />
+          </span>
+          <p className="text-sm text-muted">Koi notification nahi hai.</p>
+        </div>
       ) : (
         <div className="space-y-2">
           {notifications.map((notification) => (
@@ -73,7 +87,7 @@ export default function NotificationsPage() {
               key={notification.id}
               type="button"
               onClick={() => !notification.isRead && void handleMarkRead(notification.id)}
-              className={`w-full space-y-1 rounded-xl p-4 text-left shadow-card transition ${
+              className={`press-card w-full space-y-1 rounded-xl p-4 text-left shadow-card transition ${
                 notification.isRead ? 'bg-background' : 'bg-primary-light'
               }`}
             >

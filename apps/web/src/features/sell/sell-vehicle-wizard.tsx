@@ -191,7 +191,7 @@ export function SellVehicleWizard({
           <button
             type="button"
             onClick={() => setStep((s) => s - 1)}
-            className="rounded-lg border border-line px-4 py-3 text-sm font-medium text-foreground transition hover:bg-primary-light"
+            className="press rounded-lg border border-line px-4 py-3 text-sm font-medium text-foreground transition hover:bg-primary-light"
           >
             Back
           </button>
@@ -201,7 +201,7 @@ export function SellVehicleWizard({
             type="button"
             disabled={!canContinue()}
             onClick={() => setStep((s) => s + 1)}
-            className="flex-1 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] hover:shadow-btn-hover-primary active:scale-[0.98] disabled:opacity-50 disabled:shadow-none disabled:active:scale-100"
+            className="press flex-1 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] hover:shadow-btn-hover-primary disabled:opacity-50 disabled:shadow-none"
           >
             Continue
           </button>
@@ -210,7 +210,7 @@ export function SellVehicleWizard({
             type="button"
             disabled={submitState.status === 'submitting'}
             onClick={handleSubmit}
-            className="flex-1 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] hover:shadow-btn-hover-primary active:scale-[0.98] disabled:opacity-60 disabled:shadow-none disabled:active:scale-100"
+            className="press flex-1 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] hover:shadow-btn-hover-primary disabled:opacity-60 disabled:shadow-none"
           >
             {submitState.status === 'submitting' ? 'Submitting…' : 'Submit Listing'}
           </button>
@@ -258,7 +258,7 @@ function StepVehicleType({
               key={category.id}
               type="button"
               onClick={() => onChange(category.slug)}
-              className={`flex flex-col items-center gap-2 rounded-xl p-4 transition ${
+              className={`press-chip flex flex-col items-center gap-2 rounded-xl p-4 transition ${
                 active
                   ? 'bg-primary text-white shadow-btn'
                   : 'bg-primary-light text-primary hover:shadow-card'
@@ -390,14 +390,14 @@ function StepPhotos({
               type="button"
               onClick={() => removeAt(index)}
               aria-label="Remove photo"
-              className="absolute top-1.5 right-1.5 rounded-full bg-foreground/70 p-1.5"
+              className="press absolute top-1.5 right-1.5 rounded-full bg-foreground/70 p-1.5"
             >
               <X className="h-3 w-3 text-white" />
             </button>
           </div>
         ))}
         {photos.length < MAX_PHOTOS && (
-          <label className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-line text-xs text-muted transition hover:border-primary hover:text-primary">
+          <label className="press flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-line text-xs text-muted transition hover:border-primary hover:text-primary">
             + Add Photo
             <input
               type="file"
@@ -466,7 +466,7 @@ function StepLocation({
         type="button"
         onClick={useCurrentLocation}
         disabled={isDetecting}
-        className="flex items-center gap-2 rounded-lg border border-line px-3.5 py-2.5 text-sm font-medium text-foreground transition hover:bg-primary-light disabled:opacity-60"
+        className="press flex items-center gap-2 rounded-lg border border-line px-3.5 py-2.5 text-sm font-medium text-foreground transition hover:bg-primary-light disabled:opacity-60"
       >
         <Navigation className="h-4 w-4 text-primary" />
         {isDetecting ? 'Detecting…' : 'Use My Current Location'}
