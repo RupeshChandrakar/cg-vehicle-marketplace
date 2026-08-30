@@ -855,6 +855,36 @@ feature that would need its own explicit sign-off).
   counts, and the two review-caught bugs each independently reproduced before their fix and
   reproduced-fixed after.
 
+### Category list trimmed to 5 (2026-08-30)
+
+PO asked to keep only Cars, Bikes, Scooters, Tractors, and Commercial Vehicles — dropping
+Auto-rickshaws, Pickups, Trucks, and Other Vehicles from the original 9-category seed list.
+
+- Categories have no admin CRUD (`CategoriesController` only ever exposed a public `GET`) — this
+  was purely reference data set up once via `prisma/seed.ts`. Auto-rickshaws and Other Vehicles
+  had zero vehicles and were dropped outright; Pickups and Trucks each had one real (test) vehicle
+  attached, and the required `Vehicle.categoryId` relation has no `onDelete` override (Prisma's
+  default `RESTRICT`), so those two vehicles were reassigned to Commercial Vehicles — the natural
+  fit for a pickup and a light truck — via a one-off script before deleting the two categories,
+  rather than losing that data or leaving the delete to fail on the FK constraint. Confirmed via
+  `Category.name` — checking user intent, not slug — matches PO's plain-English list.
+- Ran directly against the live dev DB with the same `PrismaPg` adapter pattern `seed.ts` already
+  uses; the throwaway script and its build output were deleted immediately after running — it's a
+  one-time data fix, not reusable seed logic, so it isn't part of the repo.
+- `prisma/seed.ts`'s `CATEGORIES` const and the two `SAMPLE_VEHICLES` entries that used to
+  reference Pickups/Trucks were updated to match, so a fresh seed on a new environment produces
+  the same 5-category state without a second manual fix.
+- `apps/web`'s `category-icons.tsx` (`CATEGORY_ICONS`/`CATEGORY_EMOJI` maps) had the four removed
+  slugs' entries deleted rather than left dangling — both lookups already fall back gracefully
+  for any unrecognized slug, so this is pure cleanup, not a behavior change.
+- No hardcoded category list existed anywhere in either frontend — `CategoryFilter`, the sell
+  wizard's vehicle-type picker, and the admin edit page's category dropdown all fetch from the
+  same public `GET /categories` — so removing the rows from the database was the entire fix; no
+  other frontend code needed to change to stop offering the dropped categories.
+- Verified live: `GET /categories` returns exactly the 5 remaining categories, and a full browser
+  pass confirmed the home page's category tiles, the sell wizard's vehicle-type step, and the
+  reassigned Bolero/Tata 407 test listings (now filed under Commercial Vehicles) all reflect it.
+
 ### Phase 2 notes
 
 - **Staff auth** landed here rather than waiting for Phase 4, since the admin review queue

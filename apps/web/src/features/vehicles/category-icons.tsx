@@ -3,24 +3,21 @@ import {
   Motorbike,
   Scooter,
   Tractor,
-  CarTaxiFront,
-  Van,
-  Truck,
   Bus,
   MoreHorizontal,
   type LucideIcon,
 } from 'lucide-react';
 
+// Categories trimmed to 5 (2026-08-30, PO request) — Auto-rickshaws/
+// Pickups/Trucks/Other Vehicles no longer exist as categories, so their
+// icon/emoji entries were removed rather than left mapping to nothing. Both
+// lookups already fall back gracefully for any slug not listed here.
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
   cars: Car,
   bikes: Motorbike,
   scooters: Scooter,
   tractors: Tractor,
-  'auto-rickshaws': CarTaxiFront,
-  pickups: Van,
-  trucks: Truck,
   'commercial-vehicles': Bus,
-  'other-vehicles': MoreHorizontal,
 };
 
 export function getCategoryIcon(slug: string): LucideIcon {
@@ -40,11 +37,7 @@ const CATEGORY_EMOJI: Record<string, string> = {
   bikes: '🏍️',
   scooters: '🛵',
   tractors: '🚜',
-  'auto-rickshaws': '🛺',
-  pickups: '🛻',
-  trucks: '🚛',
   'commercial-vehicles': '🚌',
-  'other-vehicles': '🚙',
 };
 
 export function getCategoryEmoji(slug: string): string {

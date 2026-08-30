@@ -15,17 +15,10 @@ const prisma = new PrismaClient({ adapter });
 const PASSWORD_HASH_ROUNDS = 10;
 
 // Matches the categories named in the product spec, in display order.
-const CATEGORIES = [
-  'Cars',
-  'Bikes',
-  'Scooters',
-  'Tractors',
-  'Auto-rickshaws',
-  'Pickups',
-  'Trucks',
-  'Commercial Vehicles',
-  'Other Vehicles',
-];
+// Trimmed to 5 (2026-08-30, PO request) — Auto-rickshaws/Pickups/Trucks/Other
+// Vehicles removed; the two sample listings that used to sit under
+// Pickups/Trucks below now use Commercial Vehicles instead.
+const CATEGORIES = ['Cars', 'Bikes', 'Scooters', 'Tractors', 'Commercial Vehicles'];
 
 // Major Chhattisgarh districts with approximate headquarters coordinates,
 // used for nearest-district detection. The newest districts created in the
@@ -83,7 +76,7 @@ interface SeedVehicle {
 
 const SAMPLE_VEHICLES: SeedVehicle[] = [
   {
-    categoryName: 'Pickups',
+    categoryName: 'Commercial Vehicles',
     districtName: 'Rajnandgaon',
     title: 'Mahindra Bolero B4',
     brand: 'Mahindra',
@@ -158,7 +151,7 @@ const SAMPLE_VEHICLES: SeedVehicle[] = [
     status: 'live',
   },
   {
-    categoryName: 'Trucks',
+    categoryName: 'Commercial Vehicles',
     districtName: 'Korba',
     title: 'Tata 407 Gold',
     brand: 'Tata',
