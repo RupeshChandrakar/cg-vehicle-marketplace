@@ -6,6 +6,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService, AuthenticatedStaff, TokenPair } from './auth.service';
 import {
   CustomerAuthService,
@@ -28,6 +29,10 @@ export class AuthController {
     private readonly customerAuthService: CustomerAuthService,
   ) {}
 
+  // 5 attempts / 15 min per IP -- password brute-force guard. Deliberately
+  // separate from the global default since this is the one endpoint where
+  // a wrong guess should get materially more expensive to repeat.
+  @Throttle({ default: { limit: 5, ttl: 900_000 } })
   @Post('staff/login')
   login(
     @Body() dto: StaffLoginDto,
@@ -35,11 +40,20 @@ export class AuthController {
     return this.authService.loginStaff(dto.email, dto.password);
   }
 
+  // 3 / 5 min per IP -- each call sends a real SMS, so this is a cost/spam
+  // guard as much as a security one (unlimited requests let anyone SMS-bomb
+  // an arbitrary phone number for free).
+  @Throttle({ default: { limit: 3, ttl: 300_000 } })
   @Post('customer/otp/request')
   requestOtp(@Body() dto: RequestOtpDto): Promise<{ message: string }> {
     return this.customerAuthService.requestOtp(dto.phone, dto.referralCode);
   }
 
+  // 10 / 5 min per IP -- CustomerAuthService already locks out a single
+  // account after MAX_OTP_ATTEMPTS wrong codes; this adds an IP-level
+  // backstop against guessing across many different phone numbers from
+  // one source.
+  @Throttle({ default: { limit: 10, ttl: 300_000 } })
   @Post('customer/otp/verify')
   verifyOtp(
     @Body() dto: VerifyOtpDto,

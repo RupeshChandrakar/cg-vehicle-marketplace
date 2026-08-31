@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { envValidationSchema } from './config/env.validation';
 import { PrismaModule } from './infra/prisma/prisma.module';
 import { StorageModule } from './infra/storage/storage.module';
@@ -27,6 +29,11 @@ import { FinanceEnquiriesModule } from './modules/finance-enquiries/finance-enqu
       isGlobal: true,
       validationSchema: envValidationSchema,
     }),
+    // Generous global default (keyed per-IP) so normal browsing -- listing,
+    // search, vehicle detail -- never gets caught. Sensitive unauthenticated
+    // routes (OTP request/verify, staff login, finance enquiries) override
+    // this with a tighter @Throttle() limit at the controller method.
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
     PrismaModule,
     StorageModule,
     SmsModule,
@@ -47,5 +54,6 @@ import { FinanceEnquiriesModule } from './modules/finance-enquiries/finance-enqu
     AnalyticsModule,
     FinanceEnquiriesModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}
