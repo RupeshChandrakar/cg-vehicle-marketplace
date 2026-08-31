@@ -162,7 +162,7 @@ function ReviewForm({ enquiry, accessToken }: { enquiry: MyEnquiry; accessToken:
         type="button"
         onClick={() => void handleSubmit()}
         disabled={isSubmitting}
-        className="press rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] disabled:opacity-50"
+        className="press rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark disabled:opacity-50"
       >
         {isSubmitting ? 'Submitting…' : 'Submit Review'}
       </button>

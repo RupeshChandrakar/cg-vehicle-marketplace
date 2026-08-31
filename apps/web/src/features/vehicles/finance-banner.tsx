@@ -82,7 +82,7 @@ export function FinanceBanner({ vehiclePublicId }: { vehiclePublicId: number }) 
             type="button"
             onClick={() => void handleSubmit()}
             disabled={!canSubmit() || isSubmitting}
-            className="flex-1 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] active:scale-[0.97] disabled:opacity-50 disabled:active:scale-100"
+            className="flex-1 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark active:scale-[0.97] disabled:opacity-50 disabled:active:scale-100"
           >
             {isSubmitting ? 'Bhej rahe hain…' : 'Enquiry Bhejein'}
           </button>

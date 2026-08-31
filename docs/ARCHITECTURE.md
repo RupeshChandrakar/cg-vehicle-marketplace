@@ -959,6 +959,90 @@ system, never replaces it.
   my-listings/notifications/vehicle-detail — confirming press classes, skeletons, empty states,
   and the fixed cached-image case, with zero JS console errors.
 
+### Ola/Uber-style redesign (2026-08-31)
+
+PO asked for the app to "look like the Ola/Uber app." Given the scale of what that could mean,
+confirmed scope via two explicit `AskUserQuestion` rounds before touching anything: (1) whether
+to keep CG Auto Mart's own fixed green brand color or adopt Ola/Uber's real color scheme — PO
+chose the latter, a deliberate one-time departure from this project's original "these five hex
+values are fixed by the product brief and never change" rule; (2) whether to go visual-only or
+also restructure navigation — PO chose to also add real bottom-tab navigation. Both are named
+here explicitly as PO-directed exceptions to standing rules, not decisions made unilaterally.
+
+- **Research before design, as always**: a Workflow inspected Uber's real public site
+  (www.uber.com/m.uber.com) live via Puppeteer + `getComputedStyle()` — high confidence — and
+  found Uber's actual "brand color" is near-black used the way another brand uses a saturated
+  primary (#000000 was 379 of 449 sampled color occurrences: nav bar, every CTA, body text), not
+  a metaphor. Ola's research pass had no live browser access in that session and had to fall back
+  to WebSearch/brand-aggregator sites — flagged throughout as secondary-sourced/lower-confidence,
+  most concretely Ola's "Pear" accent color (~#d7df23, a yellow-green, not pure yellow) and its
+  bottom-nav structure (three different, hard-to-reconcile descriptions found across sources).
+  The single best-corroborated real fact from the whole research — Uber's actual global rider-app
+  redesign (Feb 2023, cross-checked via TechCrunch + Uber's own newsroom + Uber's live Base
+  design-system docs) — is a flat 4-tab bottom nav (Home/Services/Activity/Account) with **no
+  raised/floating center action button**, contrary to the common assumption. This directly shaped
+  CG Auto Mart's own bottom nav: the "Sell" tab gets a flat accent-color icon fill for prominence,
+  not a FAB.
+- **Preview before full rollout**: given this changes brand identity color AND site structure —
+  both hard to cheaply undo across dozens of files — built a temporary, unlinked `/style-preview`
+  page (same precedent as the earlier hero-background-variants review) showing the new color
+  tokens and a mobile mockup with the bottom nav before touching any real page. Deleted after the
+  PO confirmed the direction.
+- **New color tokens** (`globals.css`, values grounded in the research above): `--color-primary:
+  #111111` (near-black, was #168a45 green) for CTAs/actions; new `--color-primary-dark: #000000`
+  for hover/pressed/active states; `--color-primary-light: #f3f3f3` (was a light-green tint, now
+  doubles as Uber's real "surface" fill for inputs/chips/search bar — a light tint of near-black
+  is just light gray, so one token serves both old roles); `--color-muted: #757575` /
+  `--color-line: #f0f0f0` (both directly observed Uber values); `--color-gold: #d7df23` (Ola's
+  Pear, same ratings/Featured role gold always had); new `--color-success: #048848` — **this is
+  the project's old primary green**, demoted from "the brand's action color" to a narrow
+  verification/trust-only semantic role, so it never again competes with black for that job.
+  `--color-warm` removed outright (one flat white canvas everywhere, no warm-tinted alternate).
+- **Real bug this specific kind of token change creates, caught and fixed via an audit Workflow
+  before shipping**: throughout the codebase, `bg-primary`/`text-primary` classes had been used
+  for BOTH real CTAs (correctly inherit the new black automatically) AND trust/verification
+  signals (the "Verified" badge + ShieldCheck icon on vehicle cards/detail page, the RC/Insurance/
+  Challan/Non-Accident highlight badges, My Listings' "approved"/"live" status pill) — those
+  would have silently rendered black instead of green after the token swap, undermining the exact
+  thing they're meant to signal. A dedicated audit Workflow read every `-primary`/`-primary-light`
+  usage across 26 files, classified each as action vs. trust, and found exactly 6 real
+  reclassifications needed (all now `bg-success`/`text-success`) among 105 total usages —
+  everything else was correctly already going to inherit the new black. The audit also caught a
+  separate real bug outside its own requested scope: 12+ files hardcoded a stale
+  `hover:bg-[#12703a]` (the old dark-green hover shade) that the token swap couldn't touch since
+  it's a literal hex, not a class — fixed to `hover:bg-primary-dark` everywhere. Also retinted
+  `globals.css`'s several hardcoded `rgb(22 138 69 / …)` decorative accents (PromoTicker's badge
+  gradient, RotatingHeroCard's 4 background variants) — hardcoded raw RGB triplets backing
+  "tint --color-primary, no new colors" comments that the token change, being class-based, never
+  touched — to the new near-black family so they stay consistent with everything else.
+- **New bottom-tab navigation** (`components/bottom-nav.tsx`, mobile-only via `sm:hidden`): Home /
+  Favorites / Sell / Enquiries / Account, flat equal-weight tabs (no FAB, per the research
+  finding above), active tab in black, inactive in muted gray, "Sell" gets a flat pear-accent
+  icon-fill for visual prominence. `SiteHeader` now splits by breakpoint: **mobile shrinks to a
+  logo-only ~56px bar** (BottomNav becomes the sole primary nav there — mirrors Uber's own real
+  split between its top-nav website and bottom-tab native app, rather than forcing a native-app
+  pattern onto desktop browsers where neither brand's own product has any precedent for it);
+  **desktop is completely unchanged**, full nav + CTA, no bottom nav renders above the `sm`
+  breakpoint. Root `layout.tsx` wraps `{children}` in a `pb-20 sm:pb-0` div (clears the fixed
+  mobile bar) and renders `<BottomNav />` once, globally — no per-page changes needed for the
+  padding. Notifications/My Listings were already surfaced as dashboard tiles on the existing
+  `/account` page (built in the prior "My Account" feature) — only "Invite Friends" had no
+  equivalent there, so `/account` gained one new row linking to `/refer`.
+- **Button-shape distinction, applied selectively, not blanket**: adopted Uber's real two-shape
+  convention (pill for secondary/nav actions, an 8px-radius rounded-rect reserved for the one
+  genuinely dominant CTA per screen) only where a screen actually has one clear primary action —
+  the home hero's "Apni Gaadi Bechein", the sell wizard's Continue/Submit, and login's Send-OTP/
+  Verify buttons. Deliberately left the vehicle detail page's Chat Now/Call Now as matching pills
+  (they're two co-equal actions side by side — making one rectangular and one a pill would look
+  broken, not distinguished) and left smaller inline utility buttons (Edit, Save-name, empty-state
+  CTAs) as pills — over-applying the "one distinguished shape" signal to every button on the site
+  would have diluted it into meaninglessness.
+- Verified end-to-end live throughout: `tsc`/`eslint` clean across every touched file at each
+  step; a live browser pass at both mobile (390px, BottomNav visible, header logo-only) and
+  desktop (1300px, BottomNav absent, full header) widths confirmed the Verified badge renders
+  green (`rgb(4, 136, 72)`, confirmed via `getComputedStyle`) not black, the Sell tab's pear-accent
+  fill, the Account page's new hub link, and zero JS console errors on every page visited.
+
 ### Phase 2 notes
 
 - **Staff auth** landed here rather than waiting for Phase 4, since the admin review queue

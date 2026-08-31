@@ -201,7 +201,7 @@ export function SellVehicleWizard({
             type="button"
             disabled={!canContinue()}
             onClick={() => setStep((s) => s + 1)}
-            className="press flex-1 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] hover:shadow-btn-hover-primary disabled:opacity-50 disabled:shadow-none"
+            className="press flex-1 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark hover:shadow-btn-hover-primary disabled:opacity-50 disabled:shadow-none"
           >
             Continue
           </button>
@@ -210,7 +210,7 @@ export function SellVehicleWizard({
             type="button"
             disabled={submitState.status === 'submitting'}
             onClick={handleSubmit}
-            className="press flex-1 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] hover:shadow-btn-hover-primary disabled:opacity-60 disabled:shadow-none"
+            className="press flex-1 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark hover:shadow-btn-hover-primary disabled:opacity-60 disabled:shadow-none"
           >
             {submitState.status === 'submitting' ? 'Submitting…' : 'Submit Listing'}
           </button>

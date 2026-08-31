@@ -106,7 +106,7 @@ export default function ReferPage() {
             <button
               type="button"
               onClick={handleWhatsAppShare}
-              className="press flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a]"
+              className="press flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark"
             >
               <Share2 className="h-4 w-4" strokeWidth={1.75} />
               Share on WhatsApp

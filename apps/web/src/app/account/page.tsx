@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Gift, ChevronRight } from 'lucide-react';
 import { useCustomerAuth } from '@/lib/customer-auth-context';
 import {
   getSelfProfile,
@@ -169,7 +170,7 @@ export default function AccountPage() {
                       <button
                         onClick={() => void handleSaveName()}
                         disabled={isSaving}
-                        className="press rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] disabled:opacity-60"
+                        className="press rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark disabled:opacity-60"
                       >
                         {isSaving ? 'Saving…' : 'Save'}
                       </button>
@@ -223,6 +224,22 @@ export default function AccountPage() {
           ))}
         </div>
       )}
+
+      {/* On mobile, BottomNav covers Home/Favorites/Sell/Enquiries/Account —
+          this page absorbs everything else that used to be a top-header
+          link there (My Listings/Notifications already surface above as
+          dashboard tiles; Invite Friends has no tile of its own, so it
+          gets a row here instead). */}
+      <Link
+        href="/refer"
+        className="press-card flex items-center justify-between rounded-2xl bg-background p-4 shadow-card transition hover:shadow-card-hover"
+      >
+        <span className="flex items-center gap-3">
+          <Gift className="h-5 w-5 text-foreground" strokeWidth={1.75} />
+          <span className="text-sm font-medium text-foreground">Invite Friends</span>
+        </span>
+        <ChevronRight className="h-4 w-4 text-muted" />
+      </Link>
 
       <button
         onClick={handleLogout}

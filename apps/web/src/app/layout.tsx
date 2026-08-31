@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans, Geist_Mono } from 'next/font/google';
 import { brand } from '@cg/shared-config';
 import { SiteHeader } from '@/components/site-header';
+import { BottomNav } from '@/components/bottom-nav';
 import { AnalyticsTracker } from '@/components/analytics-tracker';
 import { ReferralCapture } from '@/components/referral-capture';
 import { CustomerAuthProvider } from '@/lib/customer-auth-context';
@@ -35,12 +36,16 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
       lang="en"
       className={`${displaySans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-warm">
+      <body className="min-h-full flex flex-col bg-background">
         <CustomerAuthProvider>
           <AnalyticsTracker />
           <ReferralCapture />
           <SiteHeader />
-          {children}
+          {/* pb-20 clears the fixed mobile BottomNav (sm:hidden itself, so
+              this bottom padding is likewise dropped at sm — no dead space
+              on desktop, where the header is the only nav). */}
+          <div className="flex flex-1 flex-col pb-20 sm:pb-0">{children}</div>
+          <BottomNav />
         </CustomerAuthProvider>
       </body>
     </html>

@@ -80,7 +80,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={!INDIAN_MOBILE_PATTERN.test(phoneDigits) || isSubmitting}
-              className="press w-full rounded-full bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] disabled:opacity-50"
+              className="press w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark disabled:opacity-50"
             >
               {isSubmitting ? 'Bhej rahe hain…' : 'Send OTP'}
             </button>
@@ -107,7 +107,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={otp.length !== 6 || isSubmitting}
-              className="press w-full rounded-full bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] disabled:opacity-50"
+              className="press w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark disabled:opacity-50"
             >
               {isSubmitting ? 'Verify ho raha hai…' : 'Verify & Continue'}
             </button>

@@ -29,7 +29,13 @@ export function SiteHeader() {
           {brand.name}
         </Link>
 
-        <div className="flex items-center gap-4">
+        {/* Mobile (<sm): logo only — BottomNav is the primary nav there
+            (Home/Favorites/Sell/Enquiries/Account), and Notifications/My
+            Listings/Invite Friends live inside the Account tab's hub
+            instead. Desktop (>=sm): unchanged full nav — no bottom nav
+            renders there, matching Uber's own real split between its
+            top-nav website and bottom-tab native app. */}
+        <div className="hidden items-center gap-4 sm:flex">
           {user && (
             <>
               <Link
@@ -80,7 +86,7 @@ export function SiteHeader() {
 
           <Link
             href="/sell"
-            className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] hover:shadow-btn-hover-primary active:scale-[0.97]"
+            className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark hover:shadow-btn-hover-primary active:scale-[0.97]"
           >
             Sell Your Vehicle
           </Link>

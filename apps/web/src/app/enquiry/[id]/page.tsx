@@ -130,7 +130,7 @@ export default function EnquiryChatPage() {
         <button
           type="submit"
           disabled={state !== 'ready' || draft.trim().length === 0}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-btn transition hover:bg-[#12703a] active:scale-[0.97] disabled:opacity-50 disabled:active:scale-100"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-btn transition hover:bg-primary-dark active:scale-[0.97] disabled:opacity-50 disabled:active:scale-100"
           aria-label="Send message"
         >
           <Send className="h-4 w-4" />

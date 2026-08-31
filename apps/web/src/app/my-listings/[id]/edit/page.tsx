@@ -414,7 +414,7 @@ function EditForm({
       <button
         type="submit"
         disabled={isSaving}
-        className="press rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] disabled:opacity-60"
+        className="press rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark disabled:opacity-60"
       >
         {isSaving ? 'Save ho raha hai…' : 'Save Changes'}
       </button>

@@ -27,7 +27,7 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
           imgClassName="transition-transform duration-200 ease-out group-hover:scale-105"
         />
         {vehicle.verification && (
-          <span className="absolute top-3 left-3 flex items-center gap-1 rounded-full bg-background/95 px-2.5 py-1 text-xs font-medium text-primary shadow-card">
+          <span className="absolute top-3 left-3 flex items-center gap-1 rounded-full bg-background/95 px-2.5 py-1 text-xs font-medium text-success shadow-card">
             <ShieldCheck className="h-3 w-3" />
             Verified
           </span>

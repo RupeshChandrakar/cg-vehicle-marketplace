@@ -29,8 +29,8 @@ const STATUS_PILL: Record<VehicleStatus, string> = {
   draft: 'bg-line/60 text-muted',
   submitted: 'bg-gold/15 text-gold',
   under_review: 'bg-gold/15 text-gold',
-  approved: 'bg-primary-light text-primary',
-  live: 'bg-primary-light text-primary',
+  approved: 'bg-success/15 text-success',
+  live: 'bg-success/15 text-success',
   rejected: 'bg-red-100 text-red-600',
   reserved: 'bg-blue-100 text-blue-600',
   sold: 'bg-foreground/10 text-foreground',
@@ -96,7 +96,7 @@ export default function MyListingsPage() {
           <p className="text-sm text-muted">Aapne abhi tak koi vehicle submit nahi ki hai.</p>
           <Link
             href="/sell"
-            className="press inline-flex rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a]"
+            className="press inline-flex rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark"
           >
             Apni Gaadi Bechein
           </Link>

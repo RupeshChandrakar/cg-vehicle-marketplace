@@ -4,20 +4,41 @@
   --background: #ffffff;
   --foreground: #171717;
 
-  /* Brand palette — see packages/shared-config/src/brand.ts for the source values.
-     These five hex values are fixed by the product brief and never change. */
-  --color-primary: #168a45;
-  --color-primary-light: #f2f8f4;
-  --color-muted: #6b7280;
-  --color-line: #e5e7eb;
+  /* Ola/Uber-adapted palette (2026-08-31, deliberate PO-directed departure
+     from this project's original fixed 5-color brief — see
+     docs/ARCHITECTURE.md "Ola/Uber-style redesign"). Primary is near-black,
+     grounded in live getComputedStyle() inspection of uber.com/m.uber.com,
+     where #000000 was the single dominant color across every sampled page
+     (nav bar, every CTA, body text) — Uber's "brand color" IS black, used
+     the way another brand uses a saturated primary. Softened one step to
+     #111111 so a full-bleed button doesn't read as a harsh void on white;
+     --color-primary-dark is the true #000000 for hover/pressed/active
+     states and the single highest-emphasis text moment (e.g. price). */
+  --color-primary: #111111;
+  --color-primary-dark: #000000;
+  /* Doubles as Uber's real "surface" fill (inputs, search bar, filter
+     chips, bottom-nav-adjacent surfaces) — directly observed as the
+     Pickup/Dropoff field background on m.uber.com's booking widget. A
+     "light tint of near-black" is just light gray, so this single token
+     now serves both the old primary-light role and the new surface role. */
+  --color-primary-light: #f3f3f3;
+  --color-muted: #757575;
+  --color-line: #f0f0f0;
 
-  /* Derived, non-brief tones — additive, never a replacement for the fixed
-     palette above. Warm off-white alternates section backgrounds so the page
-     isn't a stack of identical white blocks; muted gold is reserved strictly
-     for ratings/"Featured" callouts so it never competes with green's
-     "action/trust" meaning. See docs/ARCHITECTURE.md "Design language". */
-  --color-warm: #fbfaf8;
-  --color-gold: #c4881a;
+  /* Ola's real "Pear" accent (secondary-sourced from brand-color
+     aggregators, not a live app session — directionally right, re-verify
+     before treating as pixel-final). Same semantic role gold always had
+     here — ratings/"Featured" callouts only, a fill with a dark
+     icon/text on top, never text color on its own (weak contrast). */
+  --color-gold: #d7df23;
+
+  /* New: verification/approval semantic state. The OLD primary green
+     (#168a45) lives on here, demoted from "the brand's action color" to
+     this narrow role — sourced from Uber's own documented Base
+     design-system "positive/success" token — so trust signals (Verified
+     badges, approved status) keep a principled green without it ever
+     again competing with black as the action color. */
+  --color-success: #048848;
 
   /* Ambient, dark-tinted shadows (never plain gray/black) — these replace
      `border` as the primary way cards separate from the page. Two layers:
@@ -25,7 +46,7 @@
   --shadow-card: 0 1px 2px 0 rgb(23 23 23 / 0.04), 0 8px 20px -10px rgb(23 23 23 / 0.14);
   --shadow-card-hover: 0 2px 4px 0 rgb(23 23 23 / 0.06), 0 20px 32px -14px rgb(23 23 23 / 0.2);
   --shadow-btn: 0 1px 2px 0 rgb(23 23 23 / 0.06);
-  --shadow-btn-hover-primary: 0 10px 24px -8px rgb(22 138 69 / 0.38);
+  --shadow-btn-hover-primary: 0 10px 24px -8px rgb(17 17 17 / 0.32);
   --shadow-float: 0 12px 32px -8px rgb(23 23 23 / 0.18);
 }
 
@@ -33,11 +54,12 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--color-primary);
+  --color-primary-dark: var(--color-primary-dark);
   --color-primary-light: var(--color-primary-light);
   --color-muted: var(--color-muted);
   --color-line: var(--color-line);
-  --color-warm: var(--color-warm);
   --color-gold: var(--color-gold);
+  --color-success: var(--color-success);
   --font-sans: var(--font-display-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -114,12 +136,11 @@ body {
 .promo-badge {
   position: relative;
   overflow: hidden;
-  /* rgb(22 138 69) is --color-primary itself, at low opacity — a translucent
-   * tint of the existing brand green, not a new color — giving the
-   * white shimmer sweep below something to actually contrast against
-   * (--color-primary-light alone is nearly white, too close to the
-   * shimmer's own color to read as motion). */
-  background: linear-gradient(135deg, rgb(22 138 69 / 0.12), #ffffff 50%, rgb(22 138 69 / 0.12));
+  /* rgb(17 17 17) is --color-primary itself, at low opacity — a translucent
+   * tint of the current near-black brand color (2026-08-31 Ola/Uber
+   * palette; was a green tint before that), not a new color — giving the
+   * white shimmer sweep below something to actually contrast against. */
+  background: linear-gradient(135deg, rgb(17 17 17 / 0.12), #ffffff 50%, rgb(17 17 17 / 0.12));
 }
 .promo-badge::after {
   content: '';
@@ -148,20 +169,21 @@ body {
   }
 }
 
-/* Home hero card background — a soft gradient plus two large, blurred,
- * brand-green "blob" accents for depth, replacing the old flat
- * bg-primary-light fill. Same "tint --color-primary at low opacity" trick
- * as promo-badge, so it stays a family of one visual language rather than
- * inventing new colors. Blobs are purely decorative (aria-hidden in markup)
- * and sit behind the actual heading/copy via z-index. */
+/* Home hero card background — a soft gradient plus two large, blurred
+ * near-black "blob" accents for depth (2026-08-31: retinted from green to
+ * track the current Ola/Uber-adapted --color-primary), replacing the old
+ * flat bg-primary-light fill. Same "tint --color-primary at low opacity"
+ * trick as promo-badge, so it stays a family of one visual language rather
+ * than inventing new colors. Blobs are purely decorative (aria-hidden in
+ * markup) and sit behind the actual heading/copy via z-index. */
 .hero-background {
-  background: linear-gradient(135deg, rgb(22 138 69 / 0.16) 0%, var(--color-primary-light) 45%, rgb(22 138 69 / 0.1) 100%);
+  background: linear-gradient(135deg, rgb(17 17 17 / 0.16) 0%, var(--color-primary-light) 45%, rgb(17 17 17 / 0.1) 100%);
 }
 .hero-blob-a {
-  background: rgb(22 138 69 / 0.18);
+  background: rgb(17 17 17 / 0.18);
 }
 .hero-blob-b {
-  background: rgb(22 138 69 / 0.1);
+  background: rgb(17 17 17 / 0.1);
 }
 
 /* --- The 4 approved hero background looks (a 5th, a "road motif," was
@@ -174,7 +196,7 @@ body {
  * modern-SaaS decorative texture. */
 .hero-variant-dots {
   background-color: var(--color-primary-light);
-  background-image: radial-gradient(rgb(22 138 69 / 0.35) 1.5px, transparent 1.5px);
+  background-image: radial-gradient(rgb(17 17 17 / 0.35) 1.5px, transparent 1.5px);
   background-size: 22px 22px;
 }
 
@@ -184,8 +206,8 @@ body {
   background-color: var(--color-primary-light);
   background-image: repeating-linear-gradient(
     115deg,
-    rgb(22 138 69 / 0.1) 0px,
-    rgb(22 138 69 / 0.1) 1px,
+    rgb(17 17 17 / 0.1) 0px,
+    rgb(17 17 17 / 0.1) 1px,
     transparent 1px,
     transparent 14px
   );
@@ -194,7 +216,7 @@ body {
 /* D: a single soft radial "spotlight" glow — the most minimal option, one
  * glow instead of scattered blobs/texture. */
 .hero-variant-spotlight {
-  background: radial-gradient(circle at 88% 12%, rgb(22 138 69 / 0.28), transparent 55%), var(--color-primary-light);
+  background: radial-gradient(circle at 88% 12%, rgb(17 17 17 / 0.28), transparent 55%), var(--color-primary-light);
 }
 
 /* RotatingHeroCard's background layer remounts (via a React `key` change)

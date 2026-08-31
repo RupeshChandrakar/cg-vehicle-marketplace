@@ -59,12 +59,12 @@ export default async function VehiclePage(props: PageProps<'/vehicle/[publicId]/
         <div className="space-y-6 lg:col-span-2">
           <div className="space-y-2">
             <div className="flex items-start justify-between gap-2">
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
                 {vehicle.title}
               </h1>
               <div className="flex shrink-0 items-center gap-2">
                 {vehicle.verification && (
-                  <span className="flex items-center gap-1 rounded-full bg-primary-light px-2.5 py-1 text-xs font-medium text-primary">
+                  <span className="flex items-center gap-1 rounded-full bg-success/15 px-2.5 py-1 text-xs font-medium text-success">
                     <ShieldCheck className="h-3.5 w-3.5" />
                     Verified
                   </span>
@@ -159,9 +159,9 @@ function Highlights({ vehicle }: { vehicle: Vehicle }) {
       {highlights.map((label) => (
         <span
           key={label}
-          className="flex items-center gap-1.5 rounded-full bg-primary-light px-3 py-1.5 text-xs font-medium text-foreground"
+          className="flex items-center gap-1.5 rounded-full bg-success/15 px-3 py-1.5 text-xs font-medium text-foreground"
         >
-          <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+          <ShieldCheck className="h-3.5 w-3.5 text-success" />
           {label}
         </span>
       ))}

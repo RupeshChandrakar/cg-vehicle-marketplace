@@ -100,7 +100,7 @@ function HeroBanner({
     <div className="relative">
       <RotatingHeroCard>
         <PromoTicker />
-        <h1 className="mt-4 max-w-lg text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+        <h1 className="mt-4 max-w-lg text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
           Sahi Gaadi, <span className="text-primary">Sahi Daam</span>
         </h1>
         <p className="mt-3 max-w-md text-sm text-muted sm:text-base">
@@ -108,7 +108,7 @@ function HeroBanner({
         </p>
         <Link
           href="/sell"
-          className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] hover:shadow-btn-hover-primary active:scale-[0.97]"
+          className="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark hover:shadow-btn-hover-primary active:scale-[0.97]"
         >
           Apni Gaadi Bechein
         </Link>
