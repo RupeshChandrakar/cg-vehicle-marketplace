@@ -72,10 +72,6 @@ export default function MyListingsPage() {
         </p>
       </div>
 
-      {error && (
-        <p className="rounded-xl bg-primary-light px-4 py-3 text-sm text-foreground">{error}</p>
-      )}
-
       {isLoading ? (
         <div className="space-y-4">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -88,6 +84,8 @@ export default function MyListingsPage() {
             </div>
           ))}
         </div>
+      ) : error ? (
+        <p className="rounded-xl bg-primary-light px-4 py-3 text-sm text-foreground">{error}</p>
       ) : vehicles.length === 0 ? (
         <div className="empty-state">
           <span className="empty-state-icon">

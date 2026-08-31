@@ -20,6 +20,7 @@ export default function MyEnquiriesPage() {
   const { user, accessToken, isLoading: isAuthLoading } = useCustomerAuth();
   const [enquiries, setEnquiries] = useState<MyEnquiry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAuthLoading && !user) {
@@ -31,7 +32,9 @@ export default function MyEnquiriesPage() {
     if (!accessToken) return;
     getMyEnquiries(accessToken)
       .then(setEnquiries)
-      .catch(() => undefined)
+      .catch((err) => {
+        setError(err instanceof ApiError ? err.message : 'Enquiries load nahi ho paayi.');
+      })
       .finally(() => setIsLoading(false));
   }, [accessToken]);
 
@@ -53,6 +56,8 @@ export default function MyEnquiriesPage() {
             </div>
           ))}
         </div>
+      ) : error ? (
+        <p className="rounded-xl bg-primary-light px-4 py-3 text-sm text-foreground">{error}</p>
       ) : enquiries.length === 0 ? (
         <div className="empty-state">
           <span className="empty-state-icon">

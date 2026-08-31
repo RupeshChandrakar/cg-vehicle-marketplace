@@ -8,6 +8,7 @@ import {
   getNotifications,
   markNotificationRead,
   markAllNotificationsRead,
+  ApiError,
   type AppNotification,
 } from '@/lib/api';
 
@@ -16,6 +17,7 @@ export default function NotificationsPage() {
   const { user, accessToken, isLoading: isAuthLoading } = useCustomerAuth();
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAuthLoading && !user) {
@@ -27,20 +29,32 @@ export default function NotificationsPage() {
     if (!accessToken) return;
     getNotifications(accessToken)
       .then(setNotifications)
-      .catch(() => undefined)
+      .catch((err) => {
+        setError(err instanceof ApiError ? err.message : 'Notifications load nahi ho paayin.');
+      })
       .finally(() => setIsLoading(false));
   }, [accessToken]);
 
   async function handleMarkRead(id: string): Promise<void> {
     if (!accessToken) return;
-    await markNotificationRead(accessToken, id);
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
+    try {
+      await markNotificationRead(accessToken, id);
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
+    } catch {
+      // Best-effort — a failed mark-as-read just leaves the item showing
+      // unread, which is a safe, visible fallback rather than a silently
+      // wrong state.
+    }
   }
 
   async function handleMarkAllRead(): Promise<void> {
     if (!accessToken) return;
-    await markAllNotificationsRead(accessToken);
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    try {
+      await markAllNotificationsRead(accessToken);
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    } catch {
+      // Same fallback as handleMarkRead above.
+    }
   }
 
   if (isAuthLoading || !user) return null;
@@ -73,6 +87,8 @@ export default function NotificationsPage() {
             </div>
           ))}
         </div>
+      ) : error ? (
+        <p className="rounded-xl bg-primary-light px-4 py-3 text-sm text-foreground">{error}</p>
       ) : notifications.length === 0 ? (
         <div className="empty-state">
           <span className="empty-state-icon">
