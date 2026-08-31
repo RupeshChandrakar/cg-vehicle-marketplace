@@ -1,6 +1,10 @@
 import Link from 'next/link';
 import type { Category } from '@/types/vehicle';
-import { getCategoryEmoji, getCategoryTint } from '@/features/vehicles/category-icons';
+import {
+  getCategoryIcon,
+  getCategoryIconColor,
+  getCategoryTint,
+} from '@/features/vehicles/category-icons';
 
 interface CategoryFilterProps {
   categories: Category[];
@@ -29,8 +33,9 @@ export function CategoryFilter({
         aria-label="Vehicle categories"
       >
         {categories.map((category) => {
-          const emoji = getCategoryEmoji(category.slug);
+          const Icon = getCategoryIcon(category.slug);
           const tint = getCategoryTint(category.slug);
+          const iconColor = getCategoryIconColor(category.slug);
           const active = activeCategorySlug === category.slug;
           return (
             <Link
@@ -39,15 +44,17 @@ export function CategoryFilter({
               className="group flex flex-col items-center gap-2 text-center press-chip"
             >
               {/* Selected uses the real "this is active" signal (solid
-                  primary fill); at rest, each category gets its own soft
-                  pastel tint (getCategoryTint) instead of one uniform gray
-                  chip — purely decorative variety, not a semantic color. */}
+                  primary fill, white icon); at rest, each category gets its
+                  own soft pastel tint plus a matching icon color
+                  (getCategoryTint/getCategoryIconColor) instead of one
+                  uniform gray chip — matches the reference app's own
+                  colored-line-icon convention, not a semantic color. */}
               <span
-                className={`flex h-12 w-12 items-center justify-center rounded-2xl text-2xl transition transition-snappy ${
+                className={`flex h-12 w-12 items-center justify-center rounded-2xl transition transition-snappy ${
                   active ? 'bg-primary shadow-btn' : tint
                 }`}
               >
-                {emoji}
+                <Icon className={`h-6 w-6 ${active ? 'text-white' : iconColor}`} strokeWidth={1.75} />
               </span>
               <span className="text-xs font-medium text-foreground">{category.name}</span>
             </Link>

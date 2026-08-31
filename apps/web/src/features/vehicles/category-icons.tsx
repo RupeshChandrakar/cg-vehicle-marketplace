@@ -25,26 +25,6 @@ export function getCategoryIcon(slug: string): LucideIcon {
 }
 
 /**
- * Colorful vehicle emoji, used where a playful/illustrative look is wanted
- * (home page category tiles, the sell wizard's vehicle-type picker) instead
- * of the monochrome line icons above. Real platform emoji, not a copy of
- * any specific stock illustration set — there's no license to reproduce a
- * purchased icon pack pixel-for-pixel, but native emoji genuinely deliver
- * the same "colorful, instantly recognizable vehicle icon" effect for free.
- */
-const CATEGORY_EMOJI: Record<string, string> = {
-  cars: '🚗',
-  bikes: '🏍️',
-  scooters: '🛵',
-  tractors: '🚜',
-  'commercial-vehicles': '🚌',
-};
-
-export function getCategoryEmoji(slug: string): string {
-  return CATEGORY_EMOJI[slug] ?? '🚙';
-}
-
-/**
  * A soft pastel tint per category tile, at rest (2026-08-31) — purely
  * decorative variety, not tied to the brand/semantic palette (primary/
  * success/gold keep their own real meanings elsewhere). Modeled on a
@@ -65,4 +45,22 @@ const CATEGORY_TINT: Record<string, string> = {
 
 export function getCategoryTint(slug: string): string {
   return CATEGORY_TINT[slug] ?? 'bg-line/40';
+}
+
+/**
+ * The icon's own color, paired one-to-one with getCategoryTint (2026-08-31)
+ * — matches the reference app's own convention exactly: each tile's icon is
+ * colored to match its background tint (a blue icon on light blue, not a
+ * flat black icon on a colored chip), not just the background varying.
+ */
+const CATEGORY_ICON_COLOR: Record<string, string> = {
+  cars: 'text-blue-600',
+  bikes: 'text-orange-600',
+  scooters: 'text-purple-600',
+  tractors: 'text-success',
+  'commercial-vehicles': 'text-rose-600',
+};
+
+export function getCategoryIconColor(slug: string): string {
+  return CATEGORY_ICON_COLOR[slug] ?? 'text-muted';
 }

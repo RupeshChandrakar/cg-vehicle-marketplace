@@ -1129,6 +1129,16 @@ the complaint was about overall scale, not one viewport.
   .fontFamily` actually resolves to Inter; a full browser pass across home (mobile + desktop),
   vehicle detail, sell wizard, account, and my-listings confirmed the tighter scale, corrected
   button shapes, and recolored tiles with zero JS console errors and no visual regressions.
+- **Follow-up, category icons switched from emoji back to line icons**: PO pointed at CoolCare's
+  icon style specifically. Its own `Icon.jsx` describes itself as "Feather/Lucide-style" — the
+  same family `getCategoryIcon()` (Car/Motorbike/Scooter/Tractor/Bus from `lucide-react`) already
+  used before the earlier switch to emoji, just left dormant since then. Reactivated it in both
+  `category-filter.tsx` and the sell wizard's `StepVehicleType` picker in place of
+  `getCategoryEmoji()` (removed — no longer used anywhere), and added a new
+  `getCategoryIconColor()` paired one-to-one with the existing `getCategoryTint()` so each tile's
+  icon is colored to match its own pastel background (a blue icon on light blue, etc.), mirroring
+  CoolCare's own `--tile-X-bg`/`--tile-X-fg` pairing exactly rather than a flat dark icon on a
+  colored chip. The active/selected state keeps its existing solid black fill with a white icon.
 
 ### Phase 2 notes
 
