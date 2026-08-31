@@ -8,6 +8,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { EnquiriesService, Requester } from './enquiries.service';
 import { Message } from '../../generated/prisma/client';
+import { getCorsOrigins } from '../../config/cors-origins.util';
 
 interface JoinPayload {
   enquiryId: string;
@@ -45,7 +46,10 @@ function roomFor(enquiryId: string): string {
  *  kinds are resolved the same way REST does it, via
  *  EnquiriesService.resolveRequesterFromToken. Kept intentionally minimal
  *  (send/receive text only) — "basic chat" per the Phase 3 scope. */
-@WebSocketGateway({ namespace: '/enquiries', cors: { origin: '*' } })
+@WebSocketGateway({
+  namespace: '/enquiries',
+  cors: { origin: getCorsOrigins() },
+})
 export class EnquiriesGateway {
   @WebSocketServer()
   server!: Server<ListenEvents, EmitEvents>;

@@ -13,6 +13,15 @@ export const envValidationSchema = Joi.object({
     .uri({ scheme: ['postgresql', 'postgres'] })
     .required(),
 
+  // Comma-separated list of origins allowed to call this API (REST) and
+  // connect to EnquiriesGateway (Socket.IO). Defaults match the customer
+  // web (3000) and admin (3001) apps' local dev ports — see
+  // config/cors-origins.util.ts. Override in production with the real
+  // deployed origins.
+  CORS_ORIGINS: Joi.string().default(
+    'http://localhost:3000,http://localhost:3001',
+  ),
+
   JWT_SECRET: Joi.string().min(16).required(),
   JWT_ACCESS_TOKEN_TTL: Joi.string().default('15m'),
   JWT_REFRESH_TOKEN_TTL: Joi.string().default('30d'),
