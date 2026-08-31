@@ -6,6 +6,7 @@ import {
   IsISO8601,
   IsOptional,
   IsString,
+  MaxLength,
   Min,
 } from 'class-validator';
 
@@ -23,6 +24,7 @@ export type PreferredContactMethod = (typeof PREFERRED_CONTACT_METHODS)[number];
 export class VehicleSpecsDto {
   @IsOptional()
   @IsString()
+  @MaxLength(20)
   registrationNumber?: string;
 
   @IsOptional()
@@ -50,6 +52,7 @@ export class VehicleSpecsDto {
   /** Free-text area/city/village — supplements the district-level Location relation. */
   @IsOptional()
   @IsString()
+  @MaxLength(150)
   areaText?: string;
 
   @IsOptional()

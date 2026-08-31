@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
   Matches,
+  MaxLength,
   MinLength,
 } from 'class-validator';
 import { EnquiryChannel } from '../../../generated/prisma/client';
@@ -23,6 +24,7 @@ export class CreateEnquiryDto {
 
   @IsString()
   @MinLength(2)
+  @MaxLength(100) // matches CreateVehicleDto.sellerName's bound
   customerName!: string;
 
   @Matches(INDIAN_MOBILE_PATTERN, {
@@ -33,5 +35,6 @@ export class CreateEnquiryDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(500) // matches CreateFinanceEnquiryDto.message's bound
   message?: string;
 }

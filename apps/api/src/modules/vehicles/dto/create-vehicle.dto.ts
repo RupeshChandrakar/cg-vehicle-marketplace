@@ -7,6 +7,7 @@ import {
   IsString,
   Matches,
   Max,
+  MaxLength,
   Min,
   MinLength,
   ValidateNested,
@@ -23,19 +24,24 @@ const INDIAN_MOBILE_PATTERN = /^\+91[6-9]\d{9}$/;
 
 export class CreateVehicleDto {
   @IsString()
+  @MaxLength(100)
   categorySlug!: string;
 
   @IsString()
+  @MaxLength(100)
   locationSlug!: string;
 
   @IsString()
   @MinLength(3)
+  @MaxLength(150)
   title!: string;
 
   @IsString()
+  @MaxLength(60)
   brand!: string;
 
   @IsString()
+  @MaxLength(60)
   model!: string;
 
   @Type(() => Number)
@@ -66,6 +72,7 @@ export class CreateVehicleDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(5000)
   description?: string;
 
   @IsOptional()
@@ -74,6 +81,7 @@ export class CreateVehicleDto {
   specs?: VehicleSpecsDto;
 
   @IsString()
+  @MaxLength(100)
   sellerName!: string;
 
   @Matches(INDIAN_MOBILE_PATTERN, {

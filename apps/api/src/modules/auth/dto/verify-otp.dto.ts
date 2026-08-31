@@ -3,6 +3,7 @@ import {
   IsString,
   Length,
   Matches,
+  MaxLength,
   MinLength,
 } from 'class-validator';
 
@@ -23,5 +24,6 @@ export class VerifyOtpDto {
   @IsOptional()
   @IsString()
   @MinLength(2)
+  @MaxLength(80) // matches UpdateProfileDto's bound on the same field
   name?: string;
 }

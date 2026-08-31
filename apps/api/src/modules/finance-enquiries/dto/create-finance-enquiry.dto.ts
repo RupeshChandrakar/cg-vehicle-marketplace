@@ -13,6 +13,7 @@ const INDIAN_MOBILE_PATTERN = /^\+91[6-9]\d{9}$/;
 export class CreateFinanceEnquiryDto {
   @IsString()
   @MinLength(2)
+  @MaxLength(100) // matches CreateVehicleDto.sellerName's bound
   name!: string;
 
   @Matches(INDIAN_MOBILE_PATTERN, {

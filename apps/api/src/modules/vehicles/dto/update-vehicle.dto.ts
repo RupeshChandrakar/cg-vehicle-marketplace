@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsString,
   Max,
+  MaxLength,
   Min,
   MinLength,
   ValidateNested,
@@ -31,23 +32,28 @@ const OLDEST_ACCEPTED_YEAR = 1980;
 export class UpdateVehicleDto {
   @IsOptional()
   @IsString()
+  @MaxLength(100)
   categorySlug?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(100)
   locationSlug?: string;
 
   @IsOptional()
   @IsString()
   @MinLength(3)
+  @MaxLength(150)
   title?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(60)
   brand?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(60)
   model?: string;
 
   @IsOptional()
@@ -83,6 +89,7 @@ export class UpdateVehicleDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(5000)
   description?: string;
 
   @IsOptional()
