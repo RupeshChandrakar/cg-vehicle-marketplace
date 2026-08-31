@@ -40,6 +40,15 @@
      again competing with black as the action color. */
   --color-success: #048848;
 
+  /* New: rejection/error semantic state, and a neutral "informational"
+     state (2026-08-31) — added specifically to stop status pills reaching
+     for ad-hoc Tailwind reds/blues (`bg-red-100 text-red-600` etc., a real
+     off-palette usage found in My Listings' status pill) that weren't
+     sourced from any real design decision. Both values match the same
+     reference app's own --color-danger/--color-blue tokens. */
+  --color-danger: #dc2626;
+  --color-info: #2563eb;
+
   /* Ambient, dark-tinted shadows (never plain gray/black) — these replace
      `border` as the primary way cards separate from the page. Two layers:
      a tight contact shadow plus a soft wide ambient one. */
@@ -60,6 +69,8 @@
   --color-line: var(--color-line);
   --color-gold: var(--color-gold);
   --color-success: var(--color-success);
+  --color-danger: var(--color-danger);
+  --color-info: var(--color-info);
   --font-sans: var(--font-display-sans);
   --font-mono: var(--font-geist-mono);
 }

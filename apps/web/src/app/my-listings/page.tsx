@@ -31,8 +31,8 @@ const STATUS_PILL: Record<VehicleStatus, string> = {
   under_review: 'bg-gold/15 text-gold',
   approved: 'bg-success/15 text-success',
   live: 'bg-success/15 text-success',
-  rejected: 'bg-red-100 text-red-600',
-  reserved: 'bg-blue-100 text-blue-600',
+  rejected: 'bg-danger/10 text-danger',
+  reserved: 'bg-info/10 text-info',
   sold: 'bg-foreground/10 text-foreground',
   expired: 'bg-line/60 text-muted',
 };

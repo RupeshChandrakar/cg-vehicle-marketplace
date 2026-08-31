@@ -384,6 +384,7 @@ function EditForm({
           <label className="flex items-center gap-2 text-sm text-foreground">
             <input
               type="checkbox"
+              className="accent-primary"
               checked={rcAvailable}
               onChange={(e) => setRcAvailable(e.target.checked)}
             />
@@ -392,6 +393,7 @@ function EditForm({
           <label className="flex items-center gap-2 text-sm text-foreground">
             <input
               type="checkbox"
+              className="accent-primary"
               checked={noChallan}
               onChange={(e) => setNoChallan(e.target.checked)}
             />
@@ -400,6 +402,7 @@ function EditForm({
           <label className="flex items-center gap-2 text-sm text-foreground">
             <input
               type="checkbox"
+              className="accent-primary"
               checked={nonAccident}
               onChange={(e) => setNonAccident(e.target.checked)}
             />
