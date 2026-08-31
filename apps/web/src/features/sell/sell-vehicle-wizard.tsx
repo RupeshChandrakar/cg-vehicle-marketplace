@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Navigation, X } from 'lucide-react';
 import type { Category, Location, FuelType, Transmission } from '@/types/vehicle';
 import { createVehicle, uploadVehicleMedia, detectLocation, ApiError } from '@/lib/api';
-import { getCategoryEmoji } from '@/features/vehicles/category-icons';
+import { getCategoryEmoji, getCategoryTint } from '@/features/vehicles/category-icons';
 
 const FUEL_TYPES: FuelType[] = ['petrol', 'diesel', 'electric', 'cng', 'lpg', 'other'];
 const TRANSMISSIONS: Transmission[] = ['manual', 'automatic'];
@@ -201,7 +201,7 @@ export function SellVehicleWizard({
             type="button"
             disabled={!canContinue()}
             onClick={() => setStep((s) => s + 1)}
-            className="press flex-1 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark hover:shadow-btn-hover-primary disabled:opacity-50 disabled:shadow-none"
+            className="press flex-1 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark hover:shadow-btn-hover-primary disabled:opacity-50 disabled:shadow-none"
           >
             Continue
           </button>
@@ -210,7 +210,7 @@ export function SellVehicleWizard({
             type="button"
             disabled={submitState.status === 'submitting'}
             onClick={handleSubmit}
-            className="press flex-1 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark hover:shadow-btn-hover-primary disabled:opacity-60 disabled:shadow-none"
+            className="press flex-1 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark hover:shadow-btn-hover-primary disabled:opacity-60 disabled:shadow-none"
           >
             {submitState.status === 'submitting' ? 'Submitting…' : 'Submit Listing'}
           </button>
@@ -252,19 +252,18 @@ function StepVehicleType({
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
         {categories.map((category) => {
           const emoji = getCategoryEmoji(category.slug);
+          const tint = getCategoryTint(category.slug);
           const active = value === category.slug;
           return (
             <button
               key={category.id}
               type="button"
               onClick={() => onChange(category.slug)}
-              className={`press-chip flex flex-col items-center gap-2 rounded-xl p-4 transition ${
-                active
-                  ? 'bg-primary text-white shadow-btn'
-                  : 'bg-primary-light text-primary hover:shadow-card'
+              className={`press-chip flex flex-col items-center gap-2 rounded-xl p-3 transition ${
+                active ? 'bg-primary text-white shadow-btn' : `${tint} text-foreground hover:shadow-card`
               }`}
             >
-              <span className="text-2xl">{emoji}</span>
+              <span className="text-xl">{emoji}</span>
               <span className="text-xs font-medium">{category.name}</span>
             </button>
           );

@@ -38,8 +38,8 @@ export default function MyEnquiriesPage() {
   if (isAuthLoading || !user) return null;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
-      <h1 className="text-xl font-bold tracking-tight text-foreground">My Enquiries</h1>
+    <div className="mx-auto max-w-3xl space-y-5 px-4 py-6">
+      <h1 className="text-lg font-bold tracking-tight text-foreground">My Enquiries</h1>
 
       {isLoading ? (
         <div className="space-y-4">
@@ -162,7 +162,7 @@ function ReviewForm({ enquiry, accessToken }: { enquiry: MyEnquiry; accessToken:
         type="button"
         onClick={() => void handleSubmit()}
         disabled={isSubmitting}
-        className="press rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark disabled:opacity-50"
+        className="press rounded-2xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark disabled:opacity-50"
       >
         {isSubmitting ? 'Submitting…' : 'Submit Review'}
       </button>

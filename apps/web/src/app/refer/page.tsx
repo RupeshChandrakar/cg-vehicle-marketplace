@@ -56,9 +56,9 @@ export default function ReferPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 px-4 py-8">
+    <div className="mx-auto max-w-2xl space-y-5 px-4 py-6">
       <div>
-        <h1 className="text-xl font-bold tracking-tight text-foreground">Invite Friends</h1>
+        <h1 className="text-lg font-bold tracking-tight text-foreground">Invite Friends</h1>
         <p className="mt-1 text-sm text-muted">
           Apna link doston ke saath share karo — jitne zyada log {brand.name} pe aayenge, utni
           achhi gaadiyan aur deals sabke liye banengi.
@@ -88,7 +88,7 @@ export default function ReferPage() {
         </div>
       ) : (
         <>
-          <div className="space-y-3 rounded-2xl bg-background p-5 shadow-card">
+          <div className="space-y-3 rounded-2xl bg-background p-4 shadow-card">
             <p className="text-xs font-medium text-muted">Aapka referral link</p>
             <div className="flex items-center gap-2 rounded-lg border border-line px-3.5 py-2.5">
               <span className="flex-1 truncate font-mono text-sm text-foreground">
@@ -106,7 +106,7 @@ export default function ReferPage() {
             <button
               type="button"
               onClick={handleWhatsAppShare}
-              className="press flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark"
+              className="press flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark"
             >
               <Share2 className="h-4 w-4" strokeWidth={1.75} />
               Share on WhatsApp

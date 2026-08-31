@@ -90,9 +90,9 @@ export default function EditMyListingPage() {
   const canEdit = vehicle && EDITABLE_STATUSES.includes(vehicle.status);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 px-4 py-8">
+    <div className="mx-auto max-w-2xl space-y-5 px-4 py-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold tracking-tight text-foreground">Edit Listing</h1>
+        <h1 className="text-lg font-bold tracking-tight text-foreground">Edit Listing</h1>
         <Link href="/my-listings" className="text-sm text-muted transition hover:text-foreground">
           &larr; My Listings
         </Link>
@@ -103,7 +103,7 @@ export default function EditMyListingPage() {
       )}
 
       {isLoading ? (
-        <div className="space-y-5 rounded-2xl bg-background p-5 shadow-card">
+        <div className="space-y-5 rounded-2xl bg-background p-4 shadow-card">
           <div className="skeleton skeleton-title w-1/3" />
           <div className="skeleton skeleton-thumb w-full" />
           <div className="space-y-3">
@@ -234,7 +234,7 @@ function EditForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl bg-background p-5 shadow-card">
+    <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl bg-background p-4 shadow-card">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Title">
           <input className={inputClass} value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -414,7 +414,7 @@ function EditForm({
       <button
         type="submit"
         disabled={isSaving}
-        className="press rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark disabled:opacity-60"
+        className="press rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark disabled:opacity-60"
       >
         {isSaving ? 'Save ho raha hai…' : 'Save Changes'}
       </button>
@@ -467,7 +467,7 @@ function PhotoManager({
   }
 
   return (
-    <div className="space-y-3 rounded-2xl bg-background p-5 shadow-card">
+    <div className="space-y-3 rounded-2xl bg-background p-4 shadow-card">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-foreground">
           Photos ({photos.length}/{MAX_PHOTOS})

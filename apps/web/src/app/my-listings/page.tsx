@@ -63,9 +63,9 @@ export default function MyListingsPage() {
   if (isAuthLoading || !user) return null;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
+    <div className="mx-auto max-w-3xl space-y-5 px-4 py-6">
       <div>
-        <h1 className="text-xl font-bold tracking-tight text-foreground">My Listings</h1>
+        <h1 className="text-lg font-bold tracking-tight text-foreground">My Listings</h1>
         <p className="mt-1 text-sm text-muted">
           Aapki saari submit ki hui gaadiyan yahan dikhengi — status, aur jab tak review nahi hua
           hai, edit bhi kar sakte hain.
@@ -96,7 +96,7 @@ export default function MyListingsPage() {
           <p className="text-sm text-muted">Aapne abhi tak koi vehicle submit nahi ki hai.</p>
           <Link
             href="/sell"
-            className="press inline-flex rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark"
+            className="press inline-flex rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark"
           >
             Apni Gaadi Bechein
           </Link>
@@ -128,7 +128,7 @@ function ListingCard({ vehicle }: { vehicle: MyVehicle }) {
 
       <div className="min-w-0 flex-1 space-y-1.5">
         <div className="flex flex-wrap items-start justify-between gap-2">
-          <h3 className="text-base font-medium text-foreground">{vehicle.title}</h3>
+          <h3 className="text-sm font-semibold text-foreground">{vehicle.title}</h3>
           <span
             className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_PILL[vehicle.status]}`}
           >

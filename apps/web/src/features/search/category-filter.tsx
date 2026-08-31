@@ -23,7 +23,7 @@ export function CategoryFilter({
 }: CategoryFilterProps) {
   return (
     <div className="space-y-3">
-      <h2 className="text-lg font-semibold text-foreground">Categories</h2>
+      <h2 className="text-base font-semibold text-foreground">Categories</h2>
       <nav
         className="grid grid-cols-4 gap-3 sm:grid-cols-6 lg:grid-cols-9"
         aria-label="Vehicle categories"
@@ -43,7 +43,7 @@ export function CategoryFilter({
                   pastel tint (getCategoryTint) instead of one uniform gray
                   chip — purely decorative variety, not a semantic color. */}
               <span
-                className={`flex h-14 w-14 items-center justify-center rounded-2xl text-3xl transition transition-snappy ${
+                className={`flex h-12 w-12 items-center justify-center rounded-2xl text-2xl transition transition-snappy ${
                   active ? 'bg-primary shadow-btn' : tint
                 }`}
               >

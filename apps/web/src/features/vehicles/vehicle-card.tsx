@@ -39,7 +39,7 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
       </div>
 
       <div className="space-y-1.5 p-4">
-        <h3 className="text-base font-medium text-foreground">{vehicle.title}</h3>
+        <h3 className="text-sm font-semibold text-foreground">{vehicle.title}</h3>
 
         <p className="font-mono text-lg font-semibold tabular-nums text-foreground">
           {formatPrice(vehicle.price)}

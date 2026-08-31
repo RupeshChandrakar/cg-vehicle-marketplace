@@ -1092,6 +1092,44 @@ what was actually asked for.
   `scrollTo(0, 900)` and reappears on scrolling back up; a separate desktop-viewport pass
   confirmed the bottom nav still never renders there and nothing else regressed.
 
+### Compact/Inter density pass (2026-08-31, same day)
+
+PO said everything still looked "big and heavy" and the font "wasn't fun," pointing at the same
+CoolCare reference again specifically for its type/density/icon feel. Concrete, mechanical
+follow-up to the mobile-polish pass above, this time applied site-wide (not mobile-only) since
+the complaint was about overall scale, not one viewport.
+
+- **Font swap**: `Plus_Jakarta_Sans` → `Inter` in `layout.tsx` (both Google Fonts, one-line
+  change). Inter's tighter, more neutral letterforms read noticeably less "bloated" than Jakarta
+  Sans's wider geometric shapes at the same nominal size — this alone was a meaningful part of
+  the "heavy" feeling, independent of any spacing change.
+- **Typography scale shrunk one step at every role** (mirroring CoolCare's own tighter numbers —
+  e.g. its page-header title is 17px, section titles 15px, card titles 14-14.5px, vs. Tailwind's
+  looser defaults this app had been using): Page Title role `text-xl`→`text-lg` (8 files); Section
+  heading role `text-lg`→`text-base` (home's `ResultsHeading`, Categories heading); Card Title role
+  `text-base font-medium`→`text-sm font-semibold` (VehicleCard, My Listings' ListingCard); home
+  hero H1 `text-3xl sm:text-4xl`→`text-2xl sm:text-3xl`; vehicle detail title `text-2xl`→`text-xl`.
+- **Button shape convention corrected against CoolCare's real CSS**: re-reading its `index.css`
+  showed `.btn-primary`/`.btn-secondary` (its full-width action buttons) use a 16px rounded-rect
+  (`--radius-md`), NOT a pill — pills there are reserved for compact chips/tags/segmented
+  controls only. The prior Ola/Uber pass had only converted 3 buttons to rounded-rect (guessing
+  "the one dominant CTA per screen" from Uber's site alone, without this second reference yet);
+  this pass applies the rule consistently to every genuine full-width/prominent action button
+  across ~12 files (`rounded-full`→`rounded-2xl`, Tailwind's 16px step) — Sell Your Vehicle,
+  Chat Now/Call Now, Save/Save Changes, Submit Review, WhatsApp Share, empty-state CTAs, error/
+  404 buttons — while leaving genuinely circular icon-only buttons (send button, share icon) and
+  real pill badges/chips/status-pills untouched, since CoolCare keeps those pill-shaped too.
+- **Category tiles shrunk and recolored consistently**: home page's tiles `h-14 w-14 text-3xl` →
+  `h-12 w-12 text-2xl`; the sell wizard's `StepVehicleType` picker gained the same
+  `getCategoryTint()` per-category pastel fill the home page tiles got in the prior pass (was
+  still a flat `bg-primary-light` there) and shrunk its padding/emoji size to match.
+- **Page container rhythm tightened**: the 7 utility pages sharing `mx-auto max-w-* space-y-6
+  px-4 py-8` moved to `space-y-5 px-4 py-6`; their `p-5` identity/info cards moved to `p-4`.
+- Verified end-to-end live: `tsc`/`eslint` clean; confirmed `getComputedStyle(document.body)
+  .fontFamily` actually resolves to Inter; a full browser pass across home (mobile + desktop),
+  vehicle detail, sell wizard, account, and my-listings confirmed the tighter scale, corrected
+  button shapes, and recolored tiles with zero JS console errors and no visual regressions.
+
 ### Phase 2 notes
 
 - **Staff auth** landed here rather than waiting for Phase 4, since the admin review queue

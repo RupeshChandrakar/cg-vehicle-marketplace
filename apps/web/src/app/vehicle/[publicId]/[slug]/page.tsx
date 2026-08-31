@@ -59,7 +59,7 @@ export default async function VehiclePage(props: PageProps<'/vehicle/[publicId]/
         <div className="space-y-6 lg:col-span-2">
           <div className="space-y-2">
             <div className="flex items-start justify-between gap-2">
-              <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
+              <h1 className="text-xl font-extrabold tracking-tight text-foreground">
                 {vehicle.title}
               </h1>
               <div className="flex shrink-0 items-center gap-2">

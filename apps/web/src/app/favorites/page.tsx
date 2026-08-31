@@ -34,8 +34,8 @@ export default function FavoritesPage() {
   if (isAuthLoading || !user) return null;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
-      <h1 className="text-xl font-bold tracking-tight text-foreground">My Favorites</h1>
+    <div className="mx-auto max-w-6xl space-y-5 px-4 py-6">
+      <h1 className="text-lg font-bold tracking-tight text-foreground">My Favorites</h1>
 
       {error && (
         <p className="rounded-xl bg-primary-light px-4 py-3 text-sm text-foreground">{error}</p>

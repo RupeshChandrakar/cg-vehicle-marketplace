@@ -133,9 +133,9 @@ export default function AccountPage() {
   if (isAuthLoading || !user) return null;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
+    <div className="mx-auto max-w-3xl space-y-5 px-4 py-6">
       <div>
-        <h1 className="text-xl font-bold tracking-tight text-foreground">My Account</h1>
+        <h1 className="text-lg font-bold tracking-tight text-foreground">My Account</h1>
         <p className="mt-1 text-sm text-muted">Aapki profile aur account ki jaankari.</p>
       </div>
 
@@ -145,7 +145,7 @@ export default function AccountPage() {
         </p>
       )}
 
-      <div className="space-y-4 rounded-2xl bg-background p-5 shadow-card">
+      <div className="space-y-4 rounded-2xl bg-background p-4 shadow-card">
         {!profile && isLoadingProfile ? (
           <div className="space-y-3">
             <div className="skeleton skeleton-text w-1/3" />
@@ -170,7 +170,7 @@ export default function AccountPage() {
                       <button
                         onClick={() => void handleSaveName()}
                         disabled={isSaving}
-                        className="press rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark disabled:opacity-60"
+                        className="press rounded-2xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark disabled:opacity-60"
                       >
                         {isSaving ? 'Saving…' : 'Save'}
                       </button>

@@ -102,15 +102,15 @@ function HeroBanner({
       <RotatingHeroCard>
         <PersonalGreeting />
         <PromoTicker />
-        <h1 className="mt-4 max-w-lg text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+        <h1 className="mt-3 max-w-lg text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
           Sahi Gaadi, <span className="text-primary">Sahi Daam</span>
         </h1>
-        <p className="mt-3 max-w-md text-sm text-muted sm:text-base">
+        <p className="mt-2 max-w-md text-sm text-muted">
           Verified vehicles, best condition, best deals — Chhattisgarh ke local experts ke saath.
         </p>
         <Link
           href="/sell"
-          className="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark hover:shadow-btn-hover-primary active:scale-[0.97]"
+          className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark hover:shadow-btn-hover-primary active:scale-[0.97]"
         >
           Apni Gaadi Bechein
         </Link>
@@ -144,7 +144,7 @@ function ResultsHeading({
 }) {
   if (query) {
     return (
-      <h2 className="text-lg font-semibold text-foreground">
+      <h2 className="text-base font-semibold text-foreground">
         <span className="font-normal text-muted">&quot;{query}&quot; ke liye</span> {total}{' '}
         <span className="font-normal text-muted">vehicles mile</span>
       </h2>
@@ -152,7 +152,7 @@ function ResultsHeading({
   }
   if (activeCategory) {
     return (
-      <h2 className="text-lg font-semibold text-foreground">
+      <h2 className="text-base font-semibold text-foreground">
         {total} <span className="font-normal text-muted">{activeCategory.name} mile</span>
       </h2>
     );

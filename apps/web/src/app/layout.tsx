@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Plus_Jakarta_Sans, Geist_Mono } from 'next/font/google';
+import { Inter, Geist_Mono } from 'next/font/google';
 import { brand } from '@cg/shared-config';
 import { SiteHeader } from '@/components/site-header';
 import { BottomNav } from '@/components/bottom-nav';
@@ -8,12 +8,13 @@ import { ReferralCapture } from '@/components/referral-capture';
 import { CustomerAuthProvider } from '@/lib/customer-auth-context';
 import './globals.css';
 
-// Plus Jakarta Sans: a warm, geometric sans with real character — replaces the
-// generic Geist Sans default. Chosen after reviewing Spinny/Ola/Uber's actual
-// typefaces (see docs/ARCHITECTURE.md "Design language" section): it's in the
-// same confident-geometric family as Spinny's Jost-based identity without
-// reusing anyone's proprietary/licensed font.
-const displaySans = Plus_Jakarta_Sans({
+// Inter (2026-08-31): swapped from Plus Jakarta Sans — the PO pointed at a
+// sibling reference app (see docs/ARCHITECTURE.md "Mobile 'real app' polish")
+// that uses Inter and reads noticeably tighter/less "bloated" at the same
+// nominal sizes; Jakarta Sans's wider, more geometric letterforms were a real
+// contributor to the site feeling bigger/heavier than intended everywhere,
+// not just on one page.
+const displaySans = Inter({
   variable: '--font-display-sans',
   subsets: ['latin'],
 });

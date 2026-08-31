@@ -102,7 +102,7 @@ export function EnquiryActions({ vehiclePublicId }: { vehiclePublicId: number })
             type="button"
             onClick={() => void handleSubmit(activeChannel)}
             disabled={!canSubmit() || isSubmitting}
-            className={`flex-1 rounded-full px-4 py-2.5 text-sm font-semibold text-white shadow-btn transition active:scale-[0.97] disabled:opacity-50 disabled:active:scale-100 ${
+            className={`flex-1 rounded-2xl px-4 py-2.5 text-sm font-semibold text-white shadow-btn transition active:scale-[0.97] disabled:opacity-50 disabled:active:scale-100 ${
               activeChannel === 'chat' ? 'bg-primary hover:bg-primary-dark' : 'bg-foreground'
             }`}
           >
@@ -129,7 +129,7 @@ export function EnquiryActions({ vehiclePublicId }: { vehiclePublicId: number })
       <button
         type="button"
         onClick={() => setActiveChannel('chat')}
-        className="flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark hover:shadow-btn-hover-primary active:scale-[0.97]"
+        className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark hover:shadow-btn-hover-primary active:scale-[0.97]"
       >
         <MessageCircle className="h-4 w-4" />
         Chat Now
@@ -137,7 +137,7 @@ export function EnquiryActions({ vehiclePublicId }: { vehiclePublicId: number })
       <button
         type="button"
         onClick={() => setActiveChannel('call')}
-        className="flex flex-1 items-center justify-center gap-2 rounded-full bg-foreground px-4 py-3 text-sm font-semibold text-white shadow-btn transition active:scale-[0.97]"
+        className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-foreground px-4 py-3 text-sm font-semibold text-white shadow-btn transition active:scale-[0.97]"
       >
         <Phone className="h-4 w-4" />
         Call Now

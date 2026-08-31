@@ -48,9 +48,9 @@ export default function NotificationsPage() {
   const hasUnread = notifications.some((n) => !n.isRead);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 px-4 py-8">
+    <div className="mx-auto max-w-2xl space-y-5 px-4 py-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold tracking-tight text-foreground">Notifications</h1>
+        <h1 className="text-lg font-bold tracking-tight text-foreground">Notifications</h1>
         {hasUnread && (
           <button
             onClick={() => void handleMarkAllRead()}
