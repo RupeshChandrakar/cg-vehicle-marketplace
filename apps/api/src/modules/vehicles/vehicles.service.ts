@@ -18,7 +18,6 @@ import { slugify } from '../../common/utils/slug.util';
 import {
   NotificationType,
   Prisma,
-  User,
   Vehicle,
   VehicleMedia,
   VehicleStatus,
@@ -33,7 +32,11 @@ const PUBLIC_VEHICLE_INCLUDE = {
 
 const ADMIN_VEHICLE_INCLUDE = {
   ...PUBLIC_VEHICLE_INCLUDE,
-  seller: true,
+  // `select`, not `true` — the bare relation would pull the full User row
+  // (passwordHash, refreshTokenHash, otpHash, otpAttempts, email, referral
+  // fields, ...) into every admin vehicle response. Admins only ever need
+  // to identify/contact the seller, so narrow it to that.
+  seller: { select: { id: true, name: true, phone: true } },
 } satisfies Prisma.VehicleInclude;
 
 type VehicleWithPublicInclude = Prisma.VehicleGetPayload<{
@@ -54,7 +57,6 @@ export type PublicVehicle = Omit<VehicleWithPublicInclude, 'media'> & {
 };
 export type AdminVehicle = Omit<VehicleWithAdminInclude, 'media'> & {
   media: PublicVehicleMedia[];
-  seller: User;
 };
 /** A seller's view of their own listing — same fields as PublicVehicle
  *  (no nested `seller` object, since the seller already *is* the viewer)
