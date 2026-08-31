@@ -6,6 +6,7 @@ import { SearchLocationBar } from '@/features/search/search-location-bar';
 import { PromoTicker } from '@/features/home/promo-ticker';
 import { PersonalGreeting } from '@/features/home/personal-greeting';
 import { RotatingHeroCard } from '@/features/home/rotating-hero-card';
+import { WhyChooseUs } from '@/features/home/why-choose-us';
 import type { Category, Location, PaginatedResult, Vehicle } from '@/types/vehicle';
 
 function firstValue(value: string | string[] | undefined): string | undefined {
@@ -84,6 +85,8 @@ export default async function Home(props: PageProps<'/'>) {
           districtSlug={districtSlug}
         />
       </div>
+
+      <WhyChooseUs />
     </div>
   );
 }

@@ -1140,6 +1140,23 @@ the complaint was about overall scale, not one viewport.
   CoolCare's own `--tile-X-bg`/`--tile-X-fg` pairing exactly rather than a flat dark icon on a
   colored chip. The active/selected state keeps its existing solid black fill with a white icon.
 
+### "Why CG Auto Mart" home section (2026-08-31, same day)
+
+PO asked for a "why us" section on the home page, matching the current theme, and left the
+content to my judgment. New `features/home/why-choose-us.tsx` — a 5-card grid placed after the
+vehicle results/pagination (closing trust section, not pushed ahead of the actual browsing task).
+Every point is grounded in a real, already-shipped feature — same discipline `PromoTicker`
+already follows (never a placeholder/unshipped claim): Verified Listings (the real RC/Insurance/
+Challan Highlights + admin approval workflow), Chhattisgarh Focus (real district-based location
+detection), Direct Agent Support (the real Chat/Call enquiry system — worded as talking to "hamare
+agent," never the seller directly, per the standing no-direct-buyer-seller-contact rule), Aasan
+Selling Process (the real 6-step sell wizard), Financing Sahayata (the existing honest
+lead-capture `FinanceEnquiry` flow — deliberately no rate/term claim, same wording discipline as
+that feature's own banner). Reuses the exact 5 pastel tint/icon-color pairs `category-icons.tsx`
+already established (blue/orange/purple/success/rose) for the same colored-icon-badge language,
+rather than inventing new colors for what is really the same "why us" idea in a bigger format.
+Verified live at both viewports: `tsc`/`eslint` clean, zero JS console errors.
+
 ### Phase 2 notes
 
 - **Staff auth** landed here rather than waiting for Phase 4, since the admin review queue
