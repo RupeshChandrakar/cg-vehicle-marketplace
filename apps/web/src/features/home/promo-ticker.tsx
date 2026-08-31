@@ -15,7 +15,6 @@ interface PromoItem {
  */
 const PROMOS: PromoItem[] = [
   { icon: ShieldCheck, text: '500+ Verified Sellers Chhattisgarh Mein' },
-  { icon: ShieldCheck, text: 'Har Listing Verified — RC, Insurance, Sab Check Kiya Jaata Hai' },
   { icon: Users, text: 'Dost Ko Invite Karo — WhatsApp Pe Share Karein' },
   { icon: MessageCircle, text: 'Seedha Agent Se Baat Karein — Chat Ya Call' },
 ];
