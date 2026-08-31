@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Category } from '@/types/vehicle';
-import { getCategoryEmoji } from '@/features/vehicles/category-icons';
+import { getCategoryEmoji, getCategoryTint } from '@/features/vehicles/category-icons';
 
 interface CategoryFilterProps {
   categories: Category[];
@@ -30,6 +30,7 @@ export function CategoryFilter({
       >
         {categories.map((category) => {
           const emoji = getCategoryEmoji(category.slug);
+          const tint = getCategoryTint(category.slug);
           const active = activeCategorySlug === category.slug;
           return (
             <Link
@@ -37,14 +38,13 @@ export function CategoryFilter({
               href={hrefFor(active ? undefined : category.slug, activeDistrictSlug)}
               className="group flex flex-col items-center gap-2 text-center press-chip"
             >
-              {/* A flat light-gray chip at rest, no card shadow — green is
-                  reserved for the active filter, so it stays a clear "this
-                  is selected" signal rather than default noise. The emoji
-                  itself is already colorful, so the chip doesn't need to
-                  add its own icon color on top. */}
+              {/* Selected uses the real "this is active" signal (solid
+                  primary fill); at rest, each category gets its own soft
+                  pastel tint (getCategoryTint) instead of one uniform gray
+                  chip — purely decorative variety, not a semantic color. */}
               <span
                 className={`flex h-14 w-14 items-center justify-center rounded-2xl text-3xl transition transition-snappy ${
-                  active ? 'bg-primary shadow-btn' : 'category-chip group-hover:bg-line/60'
+                  active ? 'bg-primary shadow-btn' : tint
                 }`}
               >
                 {emoji}

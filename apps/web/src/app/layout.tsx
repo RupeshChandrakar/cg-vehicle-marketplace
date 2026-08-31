@@ -41,10 +41,11 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
           <AnalyticsTracker />
           <ReferralCapture />
           <SiteHeader />
-          {/* pb-20 clears the fixed mobile BottomNav (sm:hidden itself, so
-              this bottom padding is likewise dropped at sm — no dead space
-              on desktop, where the header is the only nav). */}
-          <div className="flex flex-1 flex-col pb-20 sm:pb-0">{children}</div>
+          {/* pb-24 clears the fixed mobile BottomNav, which floats with its
+              own bottom margin now (not flush to the edge) — sm:hidden
+              itself, so this bottom padding is likewise dropped at sm, no
+              dead space on desktop where the header is the only nav. */}
+          <div className="flex flex-1 flex-col pb-24 sm:pb-0">{children}</div>
           <BottomNav />
         </CustomerAuthProvider>
       </body>

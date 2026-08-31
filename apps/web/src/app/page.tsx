@@ -4,6 +4,7 @@ import { VehicleCard } from '@/features/vehicles/vehicle-card';
 import { CategoryFilter } from '@/features/search/category-filter';
 import { SearchLocationBar } from '@/features/search/search-location-bar';
 import { PromoTicker } from '@/features/home/promo-ticker';
+import { PersonalGreeting } from '@/features/home/personal-greeting';
 import { RotatingHeroCard } from '@/features/home/rotating-hero-card';
 import type { Category, Location, PaginatedResult, Vehicle } from '@/types/vehicle';
 
@@ -99,6 +100,7 @@ function HeroBanner({
   return (
     <div className="relative">
       <RotatingHeroCard>
+        <PersonalGreeting />
         <PromoTicker />
         <h1 className="mt-4 max-w-lg text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
           Sahi Gaadi, <span className="text-primary">Sahi Daam</span>

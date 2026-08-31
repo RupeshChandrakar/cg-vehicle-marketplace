@@ -1043,6 +1043,55 @@ here explicitly as PO-directed exceptions to standing rules, not decisions made 
   green (`rgb(4, 136, 72)`, confirmed via `getComputedStyle`) not black, the Sell tab's pear-accent
   fill, the Account page's new hub link, and zero JS console errors on every page visited.
 
+### Mobile "real app" polish, referenced against a sibling project (2026-08-31)
+
+PO said the app still didn't feel like a real app after the Ola/Uber redesign, and pointed at a
+separate local project (`ac-servicing-app`, "CoolCare," running on :5174) as a concrete reference
+for what was missing. Actually inspected it live (read its full `index.css` + screenshotted it at
+both desktop and mobile widths) rather than guessing from the name alone — this is a genuinely
+different kind of build: a **permanent phone-frame mockup** (a black-bordered, rounded, elevated
+`.phone-shell` that renders even at desktop viewport widths, centered on a neutral gray backdrop)
+built for demo/prototype fidelity, not a real responsive website. Concrete things it does well
+that CG Auto Mart didn't: a genuinely *floating* pill-shaped bottom nav (margin off both edges,
+backdrop-blur, real shadow, and it auto-hides while scrolling down) rather than a flush full-width
+bar; a personalized "Hi, {name} 👋" greeting instead of a generic tagline for a known user; and
+distinctly colorful per-category tiles (a different pastel background per tile) instead of one
+uniform neutral chip.
+
+Confirmed scope before building anything, since the permanent-phone-frame idea is a real,
+consequential structural choice: keep desktop as a genuine wide website (real marketplace
+browsing/comparison + SEO would suffer badly locked into a fake phone bezel — CoolCare's own
+approach is fine for a demo but wrong for this product), and bring the *mobile* viewport's
+experience up to that same richness. Both, deliberately not the phone-frame gimmick itself, were
+what was actually asked for.
+
+- **Floating pill bottom nav**: `components/bottom-nav.tsx` now floats (`inset-x-4`, a real
+  bottom gap plus `env(safe-area-inset-bottom)`, `rounded-[28px]`, `bg-background/95
+  backdrop-blur-md`, `shadow-float` — no `border-t`, the shadow alone now does the separation
+  work) instead of sitting flush against the screen edge with a hairline top border. New
+  `hooks/use-auto-hide-on-scroll.ts` (`useAutoHideOnScroll`) tracks scroll direction via a
+  `window.scroll` listener and returns a boolean the nav translates/fades on — visible near the
+  top or while scrolling up, hidden past a small threshold while scrolling down, respecting
+  `prefers-reduced-motion` via Tailwind's `motion-reduce:` variant. Root `layout.tsx`'s bottom
+  clearance padding bumped from `pb-20` to `pb-24` to match the nav's new floating gap.
+- **`features/home/personal-greeting.tsx`** (new): a small client component reading
+  `useCustomerAuth()` — renders "Hi, {first name} 👋" above the hero's `PromoTicker` when logged
+  in, renders nothing for a guest (the tagline alone already carries the value prop for someone
+  the app doesn't know yet). Mounted directly inside the Server Component `HeroBanner`, the same
+  pattern `PromoTicker`/`RotatingHeroCard` already use for embedding client interactivity in an
+  otherwise server-rendered home page.
+- **Colorful category tiles**: `category-icons.tsx` gained `getCategoryTint(slug)`, a small
+  per-category pastel background map (`bg-blue-50`/`bg-orange-50`/`bg-purple-50`/`bg-rose-50`,
+  plus tractors reusing the real `--color-success` green — a meaningful tie-in, not one more
+  arbitrary hue) replacing the old uniform flat-gray `.category-chip` fill at rest. Explicitly
+  scoped as decorative variety only, not a semantic-palette change — the active/selected state
+  still uses the real primary-black fill unchanged, and no other component reads these tint
+  values.
+- Verified end-to-end live: `tsc`/`eslint` clean; a mobile-viewport browser pass confirmed the
+  logged-in greeting renders, all 5 category tiles show distinct tints, the nav visibly hides on
+  `scrollTo(0, 900)` and reappears on scrolling back up; a separate desktop-viewport pass
+  confirmed the bottom nav still never renders there and nothing else regressed.
+
 ### Phase 2 notes
 
 - **Staff auth** landed here rather than waiting for Phase 4, since the admin review queue
