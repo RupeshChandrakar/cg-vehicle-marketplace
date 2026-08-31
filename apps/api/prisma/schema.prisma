@@ -272,6 +272,7 @@ model Vehicle {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([status, categoryId, locationId])
+  @@index([sellerId])
   @@map("vehicles")
 }
 
