@@ -14,7 +14,7 @@ export function VehicleGallery({ media, title }: { media: Vehicle['media']; titl
       <MediaImage
         key={active?.url}
         src={active?.url}
-        alt={title}
+        alt={media.length > 1 ? `${title} — photo ${index + 1} of ${media.length}` : title}
         shape="thumb"
         emptyIcon={ImageOff}
         emptyIconClassName="h-8 w-8"

@@ -139,14 +139,27 @@ export default function EditMyListingPage() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  error,
+  children,
+}: {
+  label: string;
+  error?: string;
+  children: React.ReactNode;
+}) {
   return (
     <label className="block space-y-1.5">
       <span className="text-xs font-medium text-muted">{label}</span>
       {children}
+      {error && <span className="block text-xs text-danger">{error}</span>}
     </label>
   );
 }
+
+type EditFormErrors = Partial<
+  Record<'title' | 'brand' | 'model' | 'year' | 'price' | 'kmDriven', string>
+>;
 
 function EditForm({
   vehicle,
@@ -190,10 +203,34 @@ function EditForm({
 
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<EditFormErrors>({});
   const [savedAt, setSavedAt] = useState<number | null>(null);
+
+  function validate(): EditFormErrors {
+    const errors: EditFormErrors = {};
+    if (!title.trim()) errors.title = 'Title zaroori hai.';
+    if (!brand.trim()) errors.brand = 'Brand zaroori hai.';
+    if (!model.trim()) errors.model = 'Model zaroori hai.';
+    const yearNum = Number(year);
+    if (!year.trim() || !Number.isInteger(yearNum) || yearNum < 1980) {
+      errors.year = 'Valid year daalein.';
+    }
+    const priceNum = Number(price);
+    if (!price.trim() || !Number.isFinite(priceNum) || priceNum <= 0) {
+      errors.price = 'Valid price daalein.';
+    }
+    const kmNum = Number(kmDriven);
+    if (!kmDriven.trim() || !Number.isFinite(kmNum) || kmNum < 0) {
+      errors.kmDriven = 'Valid KM daalein.';
+    }
+    return errors;
+  }
 
   async function handleSubmit(event: FormEvent): Promise<void> {
     event.preventDefault();
+    const errors = validate();
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
     setIsSaving(true);
     setError(null);
     try {
@@ -236,7 +273,7 @@ function EditForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl bg-background p-4 shadow-card">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field label="Title">
+        <Field label="Title" error={fieldErrors.title}>
           <input className={inputClass} value={title} onChange={(e) => setTitle(e.target.value)} />
         </Field>
         <Field label="Category">
@@ -252,13 +289,13 @@ function EditForm({
             ))}
           </select>
         </Field>
-        <Field label="Brand">
+        <Field label="Brand" error={fieldErrors.brand}>
           <input className={inputClass} value={brand} onChange={(e) => setBrand(e.target.value)} />
         </Field>
-        <Field label="Model">
+        <Field label="Model" error={fieldErrors.model}>
           <input className={inputClass} value={model} onChange={(e) => setModel(e.target.value)} />
         </Field>
-        <Field label="Year">
+        <Field label="Year" error={fieldErrors.year}>
           <input
             type="number"
             className={inputClass}
@@ -266,7 +303,7 @@ function EditForm({
             onChange={(e) => setYear(e.target.value)}
           />
         </Field>
-        <Field label="Price (₹)">
+        <Field label="Price (₹)" error={fieldErrors.price}>
           <input
             type="number"
             className={inputClass}
@@ -274,7 +311,7 @@ function EditForm({
             onChange={(e) => setPrice(e.target.value)}
           />
         </Field>
-        <Field label="KM Driven">
+        <Field label="KM Driven" error={fieldErrors.kmDriven}>
           <input
             type="number"
             className={inputClass}
@@ -498,11 +535,11 @@ function PhotoManager({
         <p className="text-sm text-muted">Abhi koi photo nahi hai.</p>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {photos.map((photo) => (
+          {photos.map((photo, index) => (
             <div key={photo.id} className="relative overflow-hidden rounded-xl shadow-card">
               <MediaImage
                 src={photo.url}
-                alt=""
+                alt={`${vehicle.title} — photo ${index + 1} of ${photos.length}`}
                 shape="thumb"
                 emptyIcon={ImageOff}
                 className="aspect-square w-full"

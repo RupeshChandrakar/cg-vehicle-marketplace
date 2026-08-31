@@ -64,6 +64,37 @@ const INITIAL_DATA: WizardData = {
 
 type SubmitState = { status: 'idle' | 'submitting' } | { status: 'error'; message: string };
 
+type StepErrors = Partial<Record<keyof WizardData, string>>;
+
+/** Mirrors canContinue()'s per-step gate, but with a message per missing/
+ *  invalid field instead of one pass/fail boolean — shown only once the
+ *  user actually tries to continue past an incomplete step (see
+ *  showErrors below), not proactively while they're still filling it in. */
+function getStepErrors(step: number, data: WizardData): StepErrors {
+  const errors: StepErrors = {};
+  switch (step) {
+    case 2:
+      if (!data.brand) errors.brand = 'Brand zaroori hai.';
+      if (!data.model) errors.model = 'Model zaroori hai.';
+      if (!data.year) errors.year = 'Year zaroori hai.';
+      if (!data.price) errors.price = 'Price zaroori hai.';
+      if (!data.fuelType) errors.fuelType = 'Fuel type select karein.';
+      if (!data.transmission) errors.transmission = 'Transmission select karein.';
+      if (!data.kmDriven) errors.kmDriven = 'KM driven zaroori hai.';
+      break;
+    case 4:
+      if (!data.locationSlug) errors.locationSlug = 'District select karein.';
+      break;
+    case 5:
+      if (!data.sellerName) errors.sellerName = 'Naam zaroori hai.';
+      if (!INDIAN_MOBILE_PATTERN.test(data.phoneDigits)) {
+        errors.phoneDigits = 'Valid 10-digit mobile number daalein.';
+      }
+      break;
+  }
+  return errors;
+}
+
 export function SellVehicleWizard({
   categories,
   locations,
@@ -77,10 +108,14 @@ export function SellVehicleWizard({
   const [photos, setPhotos] = useState<File[]>([]);
   const [submitState, setSubmitState] = useState<SubmitState>({ status: 'idle' });
   const [submitted, setSubmitted] = useState(false);
+  const [showErrors, setShowErrors] = useState(false);
 
   function update<K extends keyof WizardData>(key: K, value: WizardData[K]): void {
     setData((prev) => ({ ...prev, [key]: value }));
+    setShowErrors(false);
   }
+
+  const stepErrors = showErrors ? getStepErrors(step, data) : {};
 
   function canContinue(): boolean {
     switch (step) {
@@ -170,10 +205,12 @@ export function SellVehicleWizard({
             onChange={(slug) => update('categorySlug', slug)}
           />
         )}
-        {step === 2 && <StepVehicleDetails data={data} update={update} />}
+        {step === 2 && <StepVehicleDetails data={data} update={update} errors={stepErrors} />}
         {step === 3 && <StepPhotos photos={photos} setPhotos={setPhotos} />}
-        {step === 4 && <StepLocation locations={locations} data={data} update={update} />}
-        {step === 5 && <StepSellerDetails data={data} update={update} />}
+        {step === 4 && (
+          <StepLocation locations={locations} data={data} update={update} errors={stepErrors} />
+        )}
+        {step === 5 && <StepSellerDetails data={data} update={update} errors={stepErrors} />}
         {step === 6 && (
           <StepReview
             data={data}
@@ -194,7 +231,10 @@ export function SellVehicleWizard({
         {step > 1 && (
           <button
             type="button"
-            onClick={() => setStep((s) => s - 1)}
+            onClick={() => {
+              setShowErrors(false);
+              setStep((s) => s - 1);
+            }}
             className="press rounded-lg border border-line px-4 py-3 text-sm font-medium text-foreground transition hover:bg-primary-light"
           >
             Back
@@ -203,9 +243,15 @@ export function SellVehicleWizard({
         {step < TOTAL_STEPS ? (
           <button
             type="button"
-            disabled={!canContinue()}
-            onClick={() => setStep((s) => s + 1)}
-            className="press flex-1 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark hover:shadow-btn-hover-primary disabled:opacity-50 disabled:shadow-none"
+            onClick={() => {
+              if (canContinue()) {
+                setShowErrors(false);
+                setStep((s) => s + 1);
+              } else {
+                setShowErrors(true);
+              }
+            }}
+            className="press flex-1 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark hover:shadow-btn-hover-primary"
           >
             Continue
           </button>
@@ -281,27 +327,29 @@ function StepVehicleType({
 function StepVehicleDetails({
   data,
   update,
+  errors,
 }: {
   data: WizardData;
   update: <K extends keyof WizardData>(key: K, value: WizardData[K]) => void;
+  errors: StepErrors;
 }) {
   return (
     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-      <Field label="Brand *">
+      <Field label="Brand *" error={errors.brand}>
         <TextInput
           value={data.brand}
           onChange={(v) => update('brand', v)}
           placeholder="e.g. Mahindra"
         />
       </Field>
-      <Field label="Model *">
+      <Field label="Model *" error={errors.model}>
         <TextInput
           value={data.model}
           onChange={(v) => update('model', v)}
           placeholder="e.g. Bolero B4"
         />
       </Field>
-      <Field label="Year *">
+      <Field label="Year *" error={errors.year}>
         <TextInput
           type="number"
           value={data.year}
@@ -310,10 +358,10 @@ function StepVehicleDetails({
           max={new Date().getFullYear() + 1}
         />
       </Field>
-      <Field label="Expected Price (₹) *">
+      <Field label="Expected Price (₹) *" error={errors.price}>
         <TextInput type="number" value={data.price} onChange={(v) => update('price', v)} min={0} />
       </Field>
-      <Field label="Fuel Type *">
+      <Field label="Fuel Type *" error={errors.fuelType}>
         <Select value={data.fuelType} onChange={(v) => update('fuelType', v as FuelType)}>
           <option value="" disabled>
             Select fuel type
@@ -325,7 +373,7 @@ function StepVehicleDetails({
           ))}
         </Select>
       </Field>
-      <Field label="Transmission *">
+      <Field label="Transmission *" error={errors.transmission}>
         <Select
           value={data.transmission}
           onChange={(v) => update('transmission', v as Transmission)}
@@ -340,7 +388,7 @@ function StepVehicleDetails({
           ))}
         </Select>
       </Field>
-      <Field label="KM Driven *">
+      <Field label="KM Driven *" error={errors.kmDriven}>
         <TextInput
           type="number"
           value={data.kmDriven}
@@ -424,10 +472,12 @@ function StepLocation({
   locations,
   data,
   update,
+  errors,
 }: {
   locations: Location[];
   data: WizardData;
   update: <K extends keyof WizardData>(key: K, value: WizardData[K]) => void;
+  errors: StepErrors;
 }) {
   const [isDetecting, setIsDetecting] = useState(false);
 
@@ -447,7 +497,7 @@ function StepLocation({
 
   return (
     <div className="space-y-4">
-      <Field label="District *">
+      <Field label="District *" error={errors.locationSlug}>
         <Select value={data.locationSlug} onChange={(v) => update('locationSlug', v)}>
           <option value="" disabled>
             Select district
@@ -482,16 +532,18 @@ function StepLocation({
 function StepSellerDetails({
   data,
   update,
+  errors,
 }: {
   data: WizardData;
   update: <K extends keyof WizardData>(key: K, value: WizardData[K]) => void;
+  errors: StepErrors;
 }) {
   return (
     <div className="space-y-4">
-      <Field label="Aapka Naam *">
+      <Field label="Aapka Naam *" error={errors.sellerName}>
         <TextInput value={data.sellerName} onChange={(v) => update('sellerName', v)} />
       </Field>
-      <Field label="Mobile Number *">
+      <Field label="Mobile Number *" error={errors.phoneDigits}>
         <div className="flex items-center overflow-hidden rounded-lg border border-line focus-within:border-primary">
           <span className="px-3 text-sm text-muted">+91</span>
           <input
@@ -572,11 +624,20 @@ function StepReview({
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  error,
+  children,
+}: {
+  label: string;
+  error?: string;
+  children: React.ReactNode;
+}) {
   return (
     <label className="block space-y-1.5">
       <span className="text-sm text-muted">{label}</span>
       {children}
+      {error && <span className="block text-xs text-danger">{error}</span>}
     </label>
   );
 }

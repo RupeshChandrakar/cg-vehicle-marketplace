@@ -21,13 +21,15 @@ export function EnquiryActions({ vehiclePublicId }: { vehiclePublicId: number })
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [callConfirmed, setCallConfirmed] = useState(false);
-
-  function canSubmit(): boolean {
-    return name.trim().length > 0 && INDIAN_MOBILE_PATTERN.test(phoneDigits);
-  }
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
 
   async function handleSubmit(channel: Channel): Promise<void> {
-    if (!canSubmit()) return;
+    const nameInvalid = name.trim().length === 0;
+    const phoneInvalid = !INDIAN_MOBILE_PATTERN.test(phoneDigits);
+    setNameError(nameInvalid ? 'Naam daalein.' : null);
+    setPhoneError(phoneInvalid ? 'Valid 10-digit mobile number daalein.' : null);
+    if (nameInvalid || phoneInvalid) return;
     setIsSubmitting(true);
     setError(null);
     try {
@@ -70,22 +72,34 @@ export function EnquiryActions({ vehiclePublicId }: { vehiclePublicId: number })
             ? 'Chat shuru karne ke liye apni details bharein'
             : 'Call ke liye apni details bharein'}
         </p>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Aapka Naam"
-          className="w-full rounded-lg border border-line bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
-        />
-        <div className="flex items-center overflow-hidden rounded-lg border border-line bg-background focus-within:border-primary">
-          <span className="px-3 text-sm text-muted">+91</span>
+        <div>
           <input
-            type="tel"
-            inputMode="numeric"
-            value={phoneDigits}
-            onChange={(e) => setPhoneDigits(e.target.value.replace(/\D/g, '').slice(0, 10))}
-            placeholder="98765 43210"
-            className="w-full border-l border-line px-3 py-2.5 text-sm text-foreground focus:outline-none"
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              setNameError(null);
+            }}
+            placeholder="Aapka Naam"
+            className="w-full rounded-lg border border-line bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
           />
+          {nameError && <p className="mt-1 text-xs text-danger">{nameError}</p>}
+        </div>
+        <div>
+          <div className="flex items-center overflow-hidden rounded-lg border border-line bg-background focus-within:border-primary">
+            <span className="px-3 text-sm text-muted">+91</span>
+            <input
+              type="tel"
+              inputMode="numeric"
+              value={phoneDigits}
+              onChange={(e) => {
+                setPhoneDigits(e.target.value.replace(/\D/g, '').slice(0, 10));
+                setPhoneError(null);
+              }}
+              placeholder="98765 43210"
+              className="w-full border-l border-line px-3 py-2.5 text-sm text-foreground focus:outline-none"
+            />
+          </div>
+          {phoneError && <p className="mt-1 text-xs text-danger">{phoneError}</p>}
         </div>
         {activeChannel === 'chat' && (
           <textarea
@@ -101,7 +115,7 @@ export function EnquiryActions({ vehiclePublicId }: { vehiclePublicId: number })
           <button
             type="button"
             onClick={() => void handleSubmit(activeChannel)}
-            disabled={!canSubmit() || isSubmitting}
+            disabled={isSubmitting}
             className={`flex-1 rounded-2xl px-4 py-2.5 text-sm font-semibold text-white shadow-btn transition active:scale-[0.97] disabled:opacity-50 disabled:active:scale-100 ${
               activeChannel === 'chat' ? 'bg-primary hover:bg-primary-dark' : 'bg-foreground'
             }`}
@@ -114,7 +128,11 @@ export function EnquiryActions({ vehiclePublicId }: { vehiclePublicId: number })
           </button>
           <button
             type="button"
-            onClick={() => setActiveChannel(null)}
+            onClick={() => {
+              setActiveChannel(null);
+              setNameError(null);
+              setPhoneError(null);
+            }}
             className="press rounded-lg border border-line px-4 py-2.5 text-sm text-foreground transition hover:bg-primary-light"
           >
             Cancel
