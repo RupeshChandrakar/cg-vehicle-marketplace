@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ShieldCheck, Wallet, Users, MessageCircle, type LucideIcon } from 'lucide-react';
+import { ShieldCheck, Users, MessageCircle, type LucideIcon } from 'lucide-react';
 
 interface PromoItem {
   icon: LucideIcon;
@@ -15,7 +15,6 @@ interface PromoItem {
  */
 const PROMOS: PromoItem[] = [
   { icon: ShieldCheck, text: '500+ Verified Sellers Chhattisgarh Mein' },
-  { icon: Wallet, text: 'Financing Available — Apni Pasand ki Gaadi Aasani Se Kharido' },
   { icon: ShieldCheck, text: 'Har Listing Verified — RC, Insurance, Sab Check Kiya Jaata Hai' },
   { icon: Users, text: 'Dost Ko Invite Karo — WhatsApp Pe Share Karein' },
   { icon: MessageCircle, text: 'Seedha Agent Se Baat Karein — Chat Ya Call' },
