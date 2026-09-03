@@ -1270,6 +1270,59 @@ listing (uploaded via the admin media endpoint for this test, removed after) pag
 to `pan-y` (vertical page scroll still works over the gallery) — zero console/page errors
 throughout, full mobile + desktop pass clean.
 
+### Category-aware technical Specifications (2026-09-03)
+
+PO asked for the vehicle detail page's specifications to be richer and more "eye catching,"
+naming cars/bikes/tractors specifically and explicitly inviting reference to other sites. Real
+gap: `Vehicle.specs` had only ever held trust/verification fields (RC, insurance, challan, owner
+count) — no technical spec data (engine, power, mileage, capacity) existed anywhere in the model.
+
+Added 10 new optional fields to `VehicleSpecsDto` (`engineCc`, `powerBhp`, `mileageKmpl`,
+`seatingCapacity`, `groundClearanceMm`, `fuelTankCapacityL`, `ptoHp`, `liftingCapacityKg`,
+`loadCapacityKg`, `numberOfCylinders`, `numberOfGears`) — no migration needed since `specs` is
+already a flexible JSON column, and `toPublicSpecs()`'s denylist approach (only ever strips
+`registrationNumber`) means these flow through to the public API automatically. Which of these
+apply to which category is a frontend decision: new `features/vehicles/spec-fields.ts` (web) /
+`lib/spec-fields.ts` (admin, duplicated per the same "hand-written until a second consumer needs
+it" call the base Vehicle types already made) is the single source of truth mapping category slug
+→ field list, in display order, with label/unit/icon, and which 1-2 are "highlight" (headline)
+specs — grounded in what real marketplaces (Cars24/CarDekho for cars/bikes; khetigaadi.com for
+tractors, already reviewed once this project — see "Competitive review — khetigaadi.com") actually
+show: a car gets Power/Mileage/Engine/Seating/Ground Clearance/Fuel Tank, a tractor gets Power
+(labeled "HP," not "BHP")/Lifting Capacity/PTO Power/Cylinders/Gears/Fuel Tank instead.
+
+Vehicle detail page: replaced the old flat 4-tile `SpecsGrid` with a two-tier `Specifications`
+section — a category-tinted highlight row (reuses the existing pastel category-tint/icon-color
+pairing from `category-icons.tsx`, so a car's highlights render blue, a tractor's green, tying
+into the app's existing color language rather than inventing new colors) for the headline specs,
+then a fuller grid mixing the universal facts (KM/Fuel/Transmission/Owner) with whichever
+category-specific fields this listing actually has values for — `getFilledSpecFields()` only
+returns fields with a real value, so an unfilled field never renders as a bare "—" row.
+
+Wired data entry into all three places specs get written: the sell wizard's step 2 (dynamic fields
+per the just-picked category, under a "Technical Specifications (optional)" sub-heading), the
+customer edit-listing form, and the admin queue edit form (both dynamic per the current
+`categorySlug`, re-seeded across every possible key so switching category and back doesn't lose an
+already-entered value) — `buildTechSpecsPayload()` converts the string-keyed form state into the
+properly-typed partial specs object in one shared place per app. Also gave all 7 seed vehicles
+real-world-realistic specs for their actual models (e.g. Royal Enfield Classic 350:
+349cc/20.2bhp/36.5kmpl; Mahindra 575 DI: 47HP/1600kg lifting/40HP PTO/8F+2R) so a fresh seed
+demonstrates the feature immediately.
+
+Verified end-to-end: `tsc`/`eslint` clean across all three apps; a live Puppeteer pass confirms
+the detail page renders correctly for all 5 categories (screenshotted) with zero console errors; a
+full real sell-wizard submission through all 6 steps stored the entered `powerBhp`/`mileageKmpl`
+as real numbers (confirmed via the admin API); the customer edit-listing form correctly pre-filled
+all 6 car-category fields from an existing listing. **One verification gap, noted not hidden**:
+could not get a clean live browser confirmation of the admin edit form's own pre-fill specifically
+— the admin app's typical page-load (queue list + notifications badge fetched concurrently)
+reproducibly 500s against this dev machine's `prisma dev` local Postgres proxy under that request
+pattern (confirmed independently of this feature, by reproducing the identical error on the plain
+Vehicle Queue page with none of this feature's code involved — see the persistent project memory's
+"Environment constraints" notes on `prisma dev`'s known instability). The admin form is
+byte-for-byte the same pattern as the customer edit form and passes
+`tsc`/`eslint` identically, so this is treated as a known environment limitation, not a defect.
+
 ### Phase 2 notes
 
 - **Staff auth** landed here rather than waiting for Phase 4, since the admin review queue
