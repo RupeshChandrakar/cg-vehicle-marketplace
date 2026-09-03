@@ -18,7 +18,13 @@ const PASSWORD_HASH_ROUNDS = 10;
 // Trimmed to 5 (2026-08-30, PO request) — Auto-rickshaws/Pickups/Trucks/Other
 // Vehicles removed; the two sample listings that used to sit under
 // Pickups/Trucks below now use Commercial Vehicles instead.
-const CATEGORIES = ['Cars', 'Bikes', 'Scooters', 'Tractors', 'Commercial Vehicles'];
+const CATEGORIES = [
+  'Cars',
+  'Bikes',
+  'Scooters',
+  'Tractors',
+  'Commercial Vehicles',
+];
 
 // Major Chhattisgarh districts with approximate headquarters coordinates,
 // used for nearest-district detection. The newest districts created in the
@@ -72,6 +78,11 @@ interface SeedVehicle {
   sellerPhone: string;
   sellerName: string;
   status: 'live' | 'submitted';
+  /** Real-world-realistic technical specs for this exact model (2026-09-03)
+   *  — see apps/web's features/vehicles/spec-fields.ts for which of these
+   *  a given category actually displays. Optional: not every seed vehicle
+   *  needs every field. */
+  specs?: Record<string, number | string>;
 }
 
 const SAMPLE_VEHICLES: SeedVehicle[] = [
@@ -89,6 +100,12 @@ const SAMPLE_VEHICLES: SeedVehicle[] = [
     sellerPhone: '+919111100001',
     sellerName: 'Sanjay Verma',
     status: 'live',
+    specs: {
+      engineCc: 2523,
+      powerBhp: 75,
+      seatingCapacity: 7,
+      numberOfGears: '5-speed',
+    },
   },
   {
     categoryName: 'Cars',
@@ -104,6 +121,14 @@ const SAMPLE_VEHICLES: SeedVehicle[] = [
     sellerPhone: '+919111100002',
     sellerName: 'Priya Sahu',
     status: 'live',
+    specs: {
+      powerBhp: 88,
+      mileageKmpl: 21.2,
+      engineCc: 1197,
+      seatingCapacity: 5,
+      groundClearanceMm: 163,
+      fuelTankCapacityL: 37,
+    },
   },
   {
     categoryName: 'Bikes',
@@ -119,6 +144,12 @@ const SAMPLE_VEHICLES: SeedVehicle[] = [
     sellerPhone: '+919111100003',
     sellerName: 'Ankit Yadav',
     status: 'live',
+    specs: {
+      mileageKmpl: 36.5,
+      powerBhp: 20.2,
+      engineCc: 349,
+      fuelTankCapacityL: 13,
+    },
   },
   {
     categoryName: 'Scooters',
@@ -134,6 +165,12 @@ const SAMPLE_VEHICLES: SeedVehicle[] = [
     sellerPhone: '+919111100004',
     sellerName: 'Kavita Devi',
     status: 'live',
+    specs: {
+      engineCc: 109,
+      powerBhp: 7.8,
+      mileageKmpl: 50,
+      fuelTankCapacityL: 5.3,
+    },
   },
   {
     categoryName: 'Tractors',
@@ -149,6 +186,14 @@ const SAMPLE_VEHICLES: SeedVehicle[] = [
     sellerPhone: '+919111100005',
     sellerName: 'Ramesh Patel',
     status: 'live',
+    specs: {
+      powerBhp: 47,
+      liftingCapacityKg: 1600,
+      ptoHp: 40,
+      numberOfCylinders: 3,
+      numberOfGears: '8F + 2R',
+      fuelTankCapacityL: 60,
+    },
   },
   {
     categoryName: 'Commercial Vehicles',
@@ -164,6 +209,13 @@ const SAMPLE_VEHICLES: SeedVehicle[] = [
     sellerPhone: '+919111100006',
     sellerName: 'Dinesh Kumar',
     status: 'live',
+    specs: {
+      loadCapacityKg: 2500,
+      powerBhp: 100,
+      engineCc: 2956,
+      seatingCapacity: 3,
+      numberOfGears: '5-speed',
+    },
   },
   {
     categoryName: 'Cars',
@@ -179,6 +231,14 @@ const SAMPLE_VEHICLES: SeedVehicle[] = [
     sellerPhone: '+919111100007',
     sellerName: 'Neha Agarwal',
     status: 'submitted', // still under review — should not appear in public browse
+    specs: {
+      powerBhp: 83,
+      mileageKmpl: 20.35,
+      engineCc: 1197,
+      seatingCapacity: 5,
+      groundClearanceMm: 170,
+      fuelTankCapacityL: 37,
+    },
   },
 ];
 
@@ -208,8 +268,16 @@ async function seedAdmin(): Promise<{ id: string }> {
 // Dev agent accounts (Phase 3) — same password as the admin for local
 // convenience only; never reuse this pattern outside a throwaway dev seed.
 const SAMPLE_AGENTS = [
-  { email: 'agent1@cgautomarket.local', name: 'Agent Ramesh', phone: '+910000000001' },
-  { email: 'agent2@cgautomarket.local', name: 'Agent Sunita', phone: '+910000000002' },
+  {
+    email: 'agent1@cgautomarket.local',
+    name: 'Agent Ramesh',
+    phone: '+910000000001',
+  },
+  {
+    email: 'agent2@cgautomarket.local',
+    name: 'Agent Sunita',
+    phone: '+910000000002',
+  },
 ];
 
 async function seedAgents(): Promise<void> {
@@ -300,6 +368,7 @@ async function main(): Promise<void> {
         categoryId: category.id,
         locationId: location.id,
         sellerId: seller.id,
+        specs: sample.specs ?? {},
       },
     });
 
