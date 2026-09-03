@@ -1157,6 +1157,119 @@ already established (blue/orange/purple/success/rose) for the same colored-icon-
 rather than inventing new colors for what is really the same "why us" idea in a bigger format.
 Verified live at both viewports: `tsc`/`eslint` clean, zero JS console errors.
 
+### Gap-analysis quick-wins: security, correctness, and DB hardening (2026-08-31)
+
+PO handed over an open-ended brief — "jo bhi chijo ki kmi ho vo sb add kr do" (add whatever this
+app is missing). Ran a 4-lens parallel audit Workflow (web/admin/API/cross-cutting) synthesized
+into 13 `quickWins` + 10 `biggerFeatures`; the security/correctness quick-wins were fixed directly
+(sensitive enough to not delegate), one at a time, each verified live before the next:
+
+- **Admin seller-data leak (the highest-priority fix)**: `ADMIN_VEHICLE_INCLUDE`'s bare `seller:
+  true` pulled the *entire* Prisma `User` row — `passwordHash`, `refreshTokenHash`, `otpHash`,
+  `otpAttempts`, `email`, referral fields — into every `GET /admin/vehicles*` response, since
+  `toAdminVehicle()`'s object spread shipped all of it straight out. Narrowed to `seller: { select:
+  { id, name, phone } }`, matching the shape `apps/admin/src/types/vehicle.ts`'s `Seller` interface
+  (and the existing test mocks) already expected. Verified live: a real admin API call now returns
+  only `id`/`name`/`phone`.
+- **CORS wide open**: `app.enableCors()` (REST) and `EnquiriesGateway`'s `cors: { origin: '*' }`
+  (Socket.IO) both accepted any origin. Added `CORS_ORIGINS` (comma-separated, Joi-validated,
+  defaults to the web/admin apps' own dev ports) behind one shared `config/cors-origins.util.ts` —
+  read via `process.env` directly (not injected `ConfigService`) since the gateway's `cors` option
+  evaluates at module-import time, before Nest's DI container exists; `main.ts` loads
+  `dotenv/config` as its literal first import specifically to guarantee `process.env` is populated
+  by then. Verified live: an allowed origin gets reflected in `Access-Control-Allow-Origin`, an
+  arbitrary one gets nothing.
+- **No rate limiting anywhere**: added `@nestjs/throttler` globally (120 req/min/IP default) via
+  `APP_GUARD`, then tightened `POST /auth/staff/login` (5/15min), `POST
+  /auth/customer/otp/request` (3/5min — each call sends a real SMS, so this is a cost/spam guard as
+  much as a security one), `POST /auth/customer/otp/verify` (10/5min, on top of
+  `CustomerAuthService`'s existing per-account `MAX_OTP_ATTEMPTS` lockout), and `POST
+  /finance-enquiries` (5/10min — unauthenticated, no CAPTCHA). Verified live: the 4th
+  `otp/request` call within the window gets a real 429.
+- **Unbounded string inputs**: added `@MaxLength`/`@Length` everywhere a DTO field had none —
+  vehicle title/brand/model/description, `registrationNumber`/`areaText` in `VehicleSpecsDto`,
+  staff login email/password, `referralCode` (exact `@Length(8, 8)`, matching
+  `UsersService.REFERRAL_CODE_LENGTH`), and the enquiry/finance-enquiry name/message fields —
+  matching whatever bound already existed elsewhere in the codebase for the same kind of field.
+- **`Vehicle.sellerId` had no DB index** despite being a real foreign key and a real query filter
+  (a seller's own "My Listings", the admin Sellers-directory drill-down) — Postgres doesn't index
+  FK columns automatically. Added `@@index([sellerId])`; `prisma migrate dev` applied it
+  non-interactively without issue this time (a plain `CREATE INDEX` isn't one of the changes it
+  warns about, unlike the `add_user_referrals` migration's earlier non-interactive-refusal
+  workaround).
+- **False empty state on a failed fetch**: My Enquiries and Notifications both did
+  `.catch(() => undefined)` on their initial load — a real failure (network error, expired token,
+  500) left the list at its default `[]` with no error recorded, so the page rendered "you have
+  nothing" indistinguishably from actually having nothing. My Listings had the milder version
+  (tracked an error, but still fell through to the empty-state branch underneath it). Fixed by
+  reordering all three pages' render logic to check `error` before `length === 0`; also wrapped
+  Notifications' mark-read/mark-all-read calls in `try/catch` (previously unhandled).
+- **Missing alt text and inline validation**: the edit-listing photo grid hard-coded `alt=""` and
+  the vehicle detail gallery repeated the same alt text for every photo — both now build
+  `"<title> — photo N of M"`. `EnquiryActions`/`FinanceBanner`/the sell wizard/the edit-listing form
+  all either silently disabled their submit control on invalid input (no explanation) or ran zero
+  client-side validation at all; all four now always accept the click and show a specific message
+  under the offending field using `text-danger` (the one semantic error-color token in the palette,
+  previously only used for the rejected-status pill).
+
+Full API/DTO/CSS-token detail for each of these lives in the corresponding commits
+(`fix(api): stop leaking full seller record in admin vehicle responses`, `fix(api): restrict CORS
+to an explicit origin allowlist`, `feat(api): add rate limiting on sensitive and public endpoints`,
+`fix(api): bound every unbounded string input across all DTOs`, `perf(api): add a DB index on
+Vehicle.sellerId`, `fix(web): stop a failed fetch from showing as a false empty state`, `fix(web):
+descriptive photo alt text + real inline form validation`). The remaining 8 quick-wins (CORS is
+done; SEO metadata, price/sort filter wiring, admin pagination, admin token migration, `GET
+/reviews/me`, a CI workflow file) and all 10 `biggerFeatures` are still open — the latter need an
+explicit PO pick before any get built, per the standing rule against building optional features
+without a fresh ask.
+
+### Mobile "app feel" revamp (2026-09-03)
+
+PO said the app still didn't feel like a native app on a phone and authorized a full revamp if
+needed — several prior passes (Ola/Uber colors, bottom-tab nav, CoolCare-referenced density/icon
+work) had already covered *visual* polish without resolving the complaint, so this pass targeted
+the *behavioral*/technical signals that actually distinguish "website" from "app" in a real mobile
+browser — confirmed missing via a live audit (Puppeteer + real device emulation), not assumed:
+
+- **Not installable, no standalone chrome**: zero PWA manifest, no `viewport-fit=cover` (silently
+  making `BottomNav`'s existing `env(safe-area-inset-bottom)` inert the whole time), no
+  `theme-color`, no apple-web-app tags, no generated icons. Added `app/manifest.ts` (`display:
+  'standalone'`), a real `viewport`/`appleWebApp` export in `layout.tsx`, and 4 generated icon
+  routes (`icon.tsx`/`apple-icon.tsx`/`icon-192`/`icon-512`) built from one shared
+  `lib/app-icon.tsx` via `next/og`'s `ImageResponse` — reuses the exact mark already on apps/admin's
+  login screen (a lucide `Car` glyph on a near-black square; Satori can't `import` the lucide
+  component directly, so its path data is copied from `car.mjs`) rather than inventing a new logo.
+  `SiteHeader` gained a matching `.safe-top` class for the same inset at the opposite edge.
+- **Default overscroll + no touch-callout handling**: added `overscroll-behavior-y: contain`
+  (kills the pull-to-refresh/rubber-band chaining to browser chrome) and `-webkit-touch-callout:
+  none` scoped to the `.press*` tactile-feedback classes (iOS's long-press text-selection callout
+  was popping up on icon-only buttons; real content stays selectable).
+- **`SiteHeader` repeated the brand wordmark behind a hard `border-bottom` on every mobile
+  screen** — a website-banner pattern a real app doesn't need once `BottomNav` (already the primary
+  mobile nav) and each page's own heading exist. Mobile now drops the border/blur/shadow (kept a
+  solid background so content scrolling underneath the sticky bar stays legible) and shrinks the
+  wordmark; desktop is untouched (`sm:` variants).
+- **Photo gallery was tap-the-arrow-only** — rewrote `VehicleGallery` around a sliding track (all
+  photos render at once, paging is an instant transform) with real pointer-drag-to-swipe: follows
+  the finger, snaps past a 15%-of-width threshold, damped "rubber band" resistance at the first/
+  last photo. Arrow buttons/counter unchanged. One real implementation snag: the first version
+  scoped drag tracking to `onPointerMove` + `setPointerCapture` on the gallery element and silently
+  dropped almost every move sample under Puppeteer's synthetic mouse input; switched to
+  window-level `pointermove`/`pointerup` listeners attached only while dragging (also the more
+  standard React drag pattern), which fixed it outright.
+- **Route changes swapped instantly with no transition at all** — new
+  `components/page-transition.tsx` (keyed by `usePathname()`) plus a small fade/lift keyframe,
+  wrapping only the per-page content in `layout.tsx` so `SiteHeader`/`BottomNav` stay persistent
+  and never re-animate.
+
+Verified end-to-end: `tsc`/`eslint` clean across the whole app; a live audit confirms the manifest
+and all 4 icon routes fetch as real PNGs, `overscroll-behavior-y` computes to `contain`, a real
+client-side navigation re-triggers the fade-in, and a real drag sequence against an actual 3-photo
+listing (uploaded via the admin media endpoint for this test, removed after) pages
+1→2→3→loops-to-1→back-to-3, a sub-threshold drag correctly snaps back, and `touch-action` resolves
+to `pan-y` (vertical page scroll still works over the gallery) — zero console/page errors
+throughout, full mobile + desktop pass clean.
+
 ### Phase 2 notes
 
 - **Staff auth** landed here rather than waiting for Phase 4, since the admin review queue
