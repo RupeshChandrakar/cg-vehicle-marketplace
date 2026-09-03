@@ -22,6 +22,11 @@ import type {
   UpdateMyVehiclePayload,
   MyVehicleSpecs,
 } from '@/types/vehicle';
+import {
+  buildTechSpecsPayload,
+  getSpecFieldsForCategory,
+  type SpecFieldKey,
+} from '@/features/vehicles/spec-fields';
 
 const FUEL_TYPES = ['petrol', 'diesel', 'electric', 'cng', 'lpg', 'other'];
 const TRANSMISSIONS = ['manual', 'automatic'];
@@ -201,6 +206,41 @@ function EditForm({
   );
   const [areaText, setAreaText] = useState(vehicle.specs.areaText ?? '');
 
+  // Technical specs (engine cc, power, mileage, etc.) — which fields are
+  // relevant depends on the current categorySlug (see spec-fields.ts), so
+  // this stays a single string-keyed object rather than one useState per
+  // field, same pattern the sell wizard uses. Seeded from whichever of
+  // these the vehicle already has a value for, across every possible key
+  // (not just the current category's) so switching category and back
+  // doesn't lose a value the seller already entered.
+  const [techSpecs, setTechSpecs] = useState<Partial<Record<SpecFieldKey, string>>>(() => {
+    const seeded: Partial<Record<SpecFieldKey, string>> = {};
+    const keys: SpecFieldKey[] = [
+      'engineCc',
+      'powerBhp',
+      'mileageKmpl',
+      'seatingCapacity',
+      'groundClearanceMm',
+      'fuelTankCapacityL',
+      'ptoHp',
+      'liftingCapacityKg',
+      'loadCapacityKg',
+      'numberOfCylinders',
+      'numberOfGears',
+    ];
+    for (const key of keys) {
+      const value = vehicle.specs[key];
+      if (value !== undefined && value !== null) seeded[key] = String(value);
+    }
+    return seeded;
+  });
+
+  function updateTechSpec(key: SpecFieldKey, value: string): void {
+    setTechSpecs((prev) => ({ ...prev, [key]: value }));
+  }
+
+  const techSpecFields = getSpecFieldsForCategory(categorySlug);
+
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<EditFormErrors>({});
@@ -244,6 +284,7 @@ function EditForm({
         nonAccident,
         ownerCount: ownerCount ? Number(ownerCount) : undefined,
         areaText: areaText || undefined,
+        ...buildTechSpecsPayload(categorySlug, techSpecs),
       };
       const payload: UpdateMyVehiclePayload = {
         categorySlug,
@@ -447,6 +488,26 @@ function EditForm({
           </label>
         </div>
       </div>
+
+      {techSpecFields.length > 0 && (
+        <div className="border-t border-line pt-4">
+          <h2 className="mb-3 text-sm font-semibold text-foreground">Technical Specifications</h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {techSpecFields.map((field) => (
+              <Field key={field.key} label={field.unit ? `${field.label} (${field.unit})` : field.label}>
+                <input
+                  type={field.inputType === 'number' ? 'number' : 'text'}
+                  min={field.inputType === 'number' ? 0 : undefined}
+                  className={inputClass}
+                  value={techSpecs[field.key] ?? ''}
+                  onChange={(e) => updateTechSpec(field.key, e.target.value)}
+                  placeholder={field.inputType === 'text' ? 'e.g. 8F + 2R' : undefined}
+                />
+              </Field>
+            ))}
+          </div>
+        </div>
+      )}
 
       {error && <p className="text-sm text-foreground">{error}</p>}
       {savedAt && !error && <p className="text-sm text-primary">Save ho gaya.</p>}

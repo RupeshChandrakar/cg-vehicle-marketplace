@@ -8,6 +8,7 @@ import type {
   FuelType,
   Transmission,
   MyVehicle,
+  MyVehicleSpecs,
   UpdateMyVehiclePayload,
 } from '@/types/vehicle';
 
@@ -100,11 +101,10 @@ export async function getVehicleByPublicId(publicId: number): Promise<Vehicle | 
   }
 }
 
-export interface CreateVehicleSpecsPayload {
-  registrationNumber?: string;
-  areaText?: string;
-  preferredContact?: 'call' | 'chat' | 'both';
-}
+// Same shape a seller sees on their own listing (registrationNumber
+// included, plus every technical spec field) — a fresh listing and an
+// edited one send the same kind of specs object.
+export type CreateVehicleSpecsPayload = MyVehicleSpecs;
 
 export interface CreateVehiclePayload {
   categorySlug: string;

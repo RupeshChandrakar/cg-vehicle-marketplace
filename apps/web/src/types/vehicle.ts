@@ -43,6 +43,21 @@ export interface VehicleSpecs {
   ownerCount?: number;
   areaText?: string;
   preferredContact?: 'call' | 'chat' | 'both';
+
+  // Technical specifications — see features/vehicles/spec-fields.ts for
+  // which of these render per category. All optional: not every field
+  // applies to every category, and older listings predate this entirely.
+  engineCc?: number;
+  powerBhp?: number;
+  mileageKmpl?: number;
+  seatingCapacity?: number;
+  groundClearanceMm?: number;
+  fuelTankCapacityL?: number;
+  ptoHp?: number;
+  liftingCapacityKg?: number;
+  loadCapacityKg?: number;
+  numberOfCylinders?: number;
+  numberOfGears?: string;
 }
 
 export interface Vehicle {

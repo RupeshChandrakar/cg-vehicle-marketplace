@@ -21,6 +21,7 @@ import type {
   UpdateVehiclePayload,
   VehicleSpecs,
 } from '@/types/vehicle';
+import { buildTechSpecsPayload, getSpecFieldsForCategory, type SpecFieldKey } from '@/lib/spec-fields';
 
 const FUEL_TYPES = ['petrol', 'diesel', 'electric', 'cng', 'lpg', 'other'];
 const TRANSMISSIONS = ['manual', 'automatic'];
@@ -172,6 +173,38 @@ function EditForm({
   const [areaText, setAreaText] = useState(vehicle.specs?.areaText ?? '');
   const [preferredContact, setPreferredContact] = useState(vehicle.specs?.preferredContact ?? '');
 
+  // See apps/web's edit-listing page for the same pattern/rationale — a
+  // single string-keyed object since which fields apply depends on the
+  // current categorySlug, seeded across every possible key so switching
+  // category and back doesn't lose an already-entered value.
+  const [techSpecs, setTechSpecs] = useState<Partial<Record<SpecFieldKey, string>>>(() => {
+    const seeded: Partial<Record<SpecFieldKey, string>> = {};
+    const keys: SpecFieldKey[] = [
+      'engineCc',
+      'powerBhp',
+      'mileageKmpl',
+      'seatingCapacity',
+      'groundClearanceMm',
+      'fuelTankCapacityL',
+      'ptoHp',
+      'liftingCapacityKg',
+      'loadCapacityKg',
+      'numberOfCylinders',
+      'numberOfGears',
+    ];
+    for (const key of keys) {
+      const value = vehicle.specs?.[key];
+      if (value !== undefined && value !== null) seeded[key] = String(value);
+    }
+    return seeded;
+  });
+
+  function updateTechSpec(key: SpecFieldKey, value: string): void {
+    setTechSpecs((prev) => ({ ...prev, [key]: value }));
+  }
+
+  const techSpecFields = getSpecFieldsForCategory(categorySlug);
+
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<number | null>(null);
@@ -207,6 +240,7 @@ function EditForm({
           preferredContact: preferredContact
             ? (preferredContact as VehicleSpecs['preferredContact'])
             : undefined,
+          ...buildTechSpecsPayload(categorySlug, techSpecs),
         },
       };
       const updated = await updateVehicle(accessToken, vehicle.id, payload);
@@ -409,6 +443,26 @@ function EditForm({
           </label>
         </div>
       </div>
+
+      {techSpecFields.length > 0 && (
+        <div className="border-t border-line pt-4">
+          <h2 className="mb-3 text-sm font-semibold text-foreground">Technical Specifications</h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {techSpecFields.map((field) => (
+              <Field key={field.key} label={field.unit ? `${field.label} (${field.unit})` : field.label}>
+                <input
+                  type={field.inputType === 'number' ? 'number' : 'text'}
+                  min={field.inputType === 'number' ? 0 : undefined}
+                  className={inputClass}
+                  value={techSpecs[field.key] ?? ''}
+                  onChange={(e) => updateTechSpec(field.key, e.target.value)}
+                  placeholder={field.inputType === 'text' ? 'e.g. 8F + 2R' : undefined}
+                />
+              </Field>
+            ))}
+          </div>
+        </div>
+      )}
 
       {error && <p className="text-sm text-foreground">{error}</p>}
       {savedAt && !error && <p className="text-sm text-primary">Saved.</p>}

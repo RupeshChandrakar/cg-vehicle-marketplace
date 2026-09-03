@@ -10,6 +10,11 @@ import {
   getCategoryIconColor,
   getCategoryTint,
 } from '@/features/vehicles/category-icons';
+import {
+  buildTechSpecsPayload,
+  getSpecFieldsForCategory,
+  type SpecFieldKey,
+} from '@/features/vehicles/spec-fields';
 
 const FUEL_TYPES: FuelType[] = ['petrol', 'diesel', 'electric', 'cng', 'lpg', 'other'];
 const TRANSMISSIONS: Transmission[] = ['manual', 'automatic'];
@@ -42,6 +47,12 @@ interface WizardData {
   phoneDigits: string;
   preferredContact: 'call' | 'chat' | 'both';
   message: string;
+  /** Category-specific technical specs (engine cc, power, mileage, etc.)
+   *  — which keys are relevant/shown depends on categorySlug, see
+   *  features/vehicles/spec-fields.ts. Kept as raw strings like every
+   *  other numeric field in this form (year/price/kmDriven above);
+   *  buildTechSpecsPayload converts them at submit time. */
+  techSpecs: Partial<Record<SpecFieldKey, string>>;
 }
 
 const INITIAL_DATA: WizardData = {
@@ -60,6 +71,7 @@ const INITIAL_DATA: WizardData = {
   phoneDigits: '',
   preferredContact: 'both',
   message: '',
+  techSpecs: {},
 };
 
 type SubmitState = { status: 'idle' | 'submitting' } | { status: 'error'; message: string };
@@ -115,6 +127,11 @@ export function SellVehicleWizard({
     setShowErrors(false);
   }
 
+  function updateTechSpec(key: SpecFieldKey, value: string): void {
+    setData((prev) => ({ ...prev, techSpecs: { ...prev.techSpecs, [key]: value } }));
+    setShowErrors(false);
+  }
+
   const stepErrors = showErrors ? getStepErrors(step, data) : {};
 
   function canContinue(): boolean {
@@ -161,6 +178,7 @@ export function SellVehicleWizard({
           registrationNumber: data.registrationNumber || undefined,
           areaText: data.areaText || undefined,
           preferredContact: data.preferredContact,
+          ...buildTechSpecsPayload(data.categorySlug, data.techSpecs),
         },
         sellerName: data.sellerName,
         sellerPhone: `+91${data.phoneDigits}`,
@@ -205,7 +223,14 @@ export function SellVehicleWizard({
             onChange={(slug) => update('categorySlug', slug)}
           />
         )}
-        {step === 2 && <StepVehicleDetails data={data} update={update} errors={stepErrors} />}
+        {step === 2 && (
+          <StepVehicleDetails
+            data={data}
+            update={update}
+            updateTechSpec={updateTechSpec}
+            errors={stepErrors}
+          />
+        )}
         {step === 3 && <StepPhotos photos={photos} setPhotos={setPhotos} />}
         {step === 4 && (
           <StepLocation locations={locations} data={data} update={update} errors={stepErrors} />
@@ -327,12 +352,16 @@ function StepVehicleType({
 function StepVehicleDetails({
   data,
   update,
+  updateTechSpec,
   errors,
 }: {
   data: WizardData;
   update: <K extends keyof WizardData>(key: K, value: WizardData[K]) => void;
+  updateTechSpec: (key: SpecFieldKey, value: string) => void;
   errors: StepErrors;
 }) {
+  const techSpecFields = getSpecFieldsForCategory(data.categorySlug);
+
   return (
     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
       <Field label="Brand *" error={errors.brand}>
@@ -403,6 +432,28 @@ function StepVehicleDetails({
           placeholder="e.g. CG 08 AB 1234"
         />
       </Field>
+
+      {techSpecFields.length > 0 && (
+        <div className="col-span-full space-y-4 border-t border-line pt-4">
+          <p className="text-sm font-medium text-foreground">
+            Technical Specifications{' '}
+            <span className="font-normal text-muted">(pata ho to bharein, optional hai)</span>
+          </p>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            {techSpecFields.map((field) => (
+              <Field key={field.key} label={field.unit ? `${field.label} (${field.unit})` : field.label}>
+                <TextInput
+                  type={field.inputType === 'number' ? 'number' : 'text'}
+                  value={data.techSpecs[field.key] ?? ''}
+                  onChange={(v) => updateTechSpec(field.key, v)}
+                  min={field.inputType === 'number' ? 0 : undefined}
+                  placeholder={field.inputType === 'text' ? 'e.g. 8F + 2R' : undefined}
+                />
+              </Field>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

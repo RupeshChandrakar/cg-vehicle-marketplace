@@ -32,6 +32,20 @@ export interface VehicleSpecs {
   ownerCount?: number;
   areaText?: string;
   preferredContact?: 'call' | 'chat' | 'both';
+
+  // Technical specifications — mirrors apps/web's VehicleSpecs. All
+  // optional: not every field applies to every category.
+  engineCc?: number;
+  powerBhp?: number;
+  mileageKmpl?: number;
+  seatingCapacity?: number;
+  groundClearanceMm?: number;
+  fuelTankCapacityL?: number;
+  ptoHp?: number;
+  liftingCapacityKg?: number;
+  loadCapacityKg?: number;
+  numberOfCylinders?: number;
+  numberOfGears?: string;
 }
 
 export interface AdminVehicle {
