@@ -23,9 +23,21 @@ export function SiteHeader() {
   }, [accessToken]);
 
   return (
-    <header className="sticky top-0 z-20 border-b border-line bg-background/95 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
-        <Link href="/" className="text-lg font-bold tracking-tight text-foreground">
+    // safe-top reserves real device inset space now that layout.tsx's
+    // viewport export sets viewportFit: 'cover' — without it this bar would
+    // sit directly under a notch/Dynamic Island. Border/backdrop-blur are
+    // desktop-only (sm:) below: on mobile a hard divider line under a
+    // repeated brand-name bar is exactly the "website header" pattern a
+    // live audit flagged — real app screens don't re-announce their own
+    // name on every single tab, they rely on the OS chrome (icon, splash)
+    // for that once installed, and BottomNav (already the primary mobile
+    // nav) plus each page's own heading for in-app wayfinding.
+    <header className="safe-top sticky top-0 z-20 bg-background sm:border-b sm:border-line sm:bg-background/95 sm:backdrop-blur">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:py-4">
+        <Link
+          href="/"
+          className="text-sm font-bold tracking-tight text-foreground sm:text-lg"
+        >
           {brand.name}
         </Link>
 

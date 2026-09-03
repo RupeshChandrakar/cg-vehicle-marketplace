@@ -467,6 +467,70 @@ body {
     transition: none;
   }
 }
+
+/* --- Native app chrome (2026-09-03) --------------------------------------
+   The visual design (colors/density/icons) has had several passes already;
+   this is the first pass at the *behavioral* signals that actually read as
+   "website" vs. "app" in a real mobile browser — confirmed missing via a
+   live audit (Puppeteer + real device emulation) rather than assumed:
+   default overscroll-behavior, no safe-area-aware chrome (the bottom nav's
+   own env(safe-area-inset-bottom) was silently inert without
+   viewport-fit=cover — fixed in layout.tsx's viewport export), the iOS
+   long-press callout menu popping up on icon buttons, and no PWA manifest
+   (see app/manifest.ts + app/icon.tsx) for real installability. */
+
+html,
+body {
+  /* Stops a scroll-past-the-end pull-to-refresh/rubber-band gesture from
+     chaining to the browser chrome — the single biggest "this is a webpage
+     in a browser" tell on iOS Safari and Android Chrome alike. */
+  overscroll-behavior-y: contain;
+}
+
+/* iOS shows a text-selection "callout" (Copy/Look Up/Share) on a long-press
+   of anything it considers selectable text — including icon-only buttons,
+   which have no text to select but still trigger it. Scoped to the
+   tactile-feedback classes from the native-app-polish pass (already the
+   canonical "this is a button/icon, not reading content" marker) rather
+   than applied globally, so real content (descriptions, reviews, specs)
+   stays selectable as normal. */
+.press,
+.press-icon,
+.press-card,
+.press-chip,
+.press-text {
+  -webkit-touch-callout: none;
+}
+
+/* Matches BottomNav's existing safe-area-aware bottom padding — reserves
+   the same real device inset at the top for the mobile header, so it never
+   sits under a notch/Dynamic Island/status bar once viewport-fit=cover is
+   in effect. */
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Fades/lifts each page's own content in on navigation — see
+   components/page-transition.tsx. Fast and small on purpose: this should
+   read as "the next screen appeared," not as a loading animation. */
+.page-transition {
+  animation: page-fade-in 220ms ease-out;
+}
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-transition {
+    animation: none;
+  }
+}
 .media-empty {
   display: flex;
   height: 100%;
