@@ -12,11 +12,18 @@ import type {
   UpdateMyVehiclePayload,
 } from '@/types/vehicle';
 
+export type VehicleSortOption = 'newest' | 'price_asc' | 'price_desc';
+
 export interface VehicleFilters {
   q?: string;
   categorySlug?: string;
   locationSlug?: string;
   page?: number;
+  /** Already fully supported server-side (VehicleQueryDto) — this was
+   *  frontend-only wiring, added 2026-09-04. */
+  sort?: VehicleSortOption;
+  minPrice?: number;
+  maxPrice?: number;
 }
 
 export class ApiError extends Error {
@@ -85,6 +92,9 @@ export function getVehicles(filters: VehicleFilters): Promise<PaginatedResult<Ve
   if (filters.categorySlug) params.set('categorySlug', filters.categorySlug);
   if (filters.locationSlug) params.set('locationSlug', filters.locationSlug);
   if (filters.page) params.set('page', String(filters.page));
+  if (filters.sort) params.set('sort', filters.sort);
+  if (filters.minPrice) params.set('minPrice', String(filters.minPrice));
+  if (filters.maxPrice) params.set('maxPrice', String(filters.maxPrice));
 
   const query = params.toString();
   return request<PaginatedResult<Vehicle>>(`/vehicles${query ? `?${query}` : ''}`);

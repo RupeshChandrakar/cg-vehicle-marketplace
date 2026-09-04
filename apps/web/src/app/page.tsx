@@ -3,6 +3,8 @@ import { getCategories, getLocations, getVehicles } from '@/lib/api';
 import { VehicleCard } from '@/features/vehicles/vehicle-card';
 import { CategoryFilter } from '@/features/search/category-filter';
 import { SearchLocationBar } from '@/features/search/search-location-bar';
+import { SortPriceBar } from '@/features/search/sort-price-bar';
+import type { VehicleSortOption } from '@/lib/api';
 import { PromoTicker } from '@/features/home/promo-ticker';
 import { PersonalGreeting } from '@/features/home/personal-greeting';
 import { RotatingHeroCard } from '@/features/home/rotating-hero-card';
@@ -19,17 +21,21 @@ export default async function Home(props: PageProps<'/'>) {
   const categorySlug = firstValue(searchParams.category);
   const districtSlug = firstValue(searchParams.district);
   const page = Number(firstValue(searchParams.page)) || 1;
-  const hasActiveFilters = Boolean(query || categorySlug);
+  const sort = firstValue(searchParams.sort) as VehicleSortOption | undefined;
+  const minPrice = Number(firstValue(searchParams.minPrice)) || undefined;
+  const maxPrice = Number(firstValue(searchParams.maxPrice)) || undefined;
+  const hasActiveFilters = Boolean(query || categorySlug || sort || minPrice || maxPrice);
 
   const [categories, locations] = await Promise.all([getCategories(), getLocations()]);
 
-  let result = await getVehicles({ q: query, categorySlug, locationSlug: districtSlug, page });
+  const baseFilters = { q: query, categorySlug, page, sort, minPrice, maxPrice };
+  let result = await getVehicles({ ...baseFilters, locationSlug: districtSlug });
   let fellBackToAllDistricts = false;
 
   // District → broader Chhattisgarh fallback: a chosen district with zero
   // matches shouldn't leave the customer looking at an empty page.
   if (districtSlug && result.data.length === 0) {
-    result = await getVehicles({ q: query, categorySlug, page });
+    result = await getVehicles(baseFilters);
     fellBackToAllDistricts = true;
   }
 
@@ -52,6 +58,8 @@ export default async function Home(props: PageProps<'/'>) {
         activeCategorySlug={categorySlug}
         activeDistrictSlug={districtSlug}
       />
+
+      <SortPriceBar categories={categories} locations={locations} />
 
       <div className="space-y-5">
         <ResultsHeading
@@ -83,6 +91,9 @@ export default async function Home(props: PageProps<'/'>) {
           query={query}
           categorySlug={categorySlug}
           districtSlug={districtSlug}
+          sort={sort}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
         />
       </div>
 
@@ -180,11 +191,17 @@ function Pagination({
   query,
   categorySlug,
   districtSlug,
+  sort,
+  minPrice,
+  maxPrice,
 }: {
   result: PaginatedResult<Vehicle>;
   query?: string;
   categorySlug?: string;
   districtSlug?: string;
+  sort?: VehicleSortOption;
+  minPrice?: number;
+  maxPrice?: number;
 }) {
   const { page, totalPages } = result.meta;
   if (totalPages <= 1) return null;
@@ -194,6 +211,9 @@ function Pagination({
     if (query) params.set('q', query);
     if (categorySlug) params.set('category', categorySlug);
     if (districtSlug) params.set('district', districtSlug);
+    if (sort) params.set('sort', sort);
+    if (minPrice) params.set('minPrice', String(minPrice));
+    if (maxPrice) params.set('maxPrice', String(maxPrice));
     params.set('page', String(targetPage));
     return `/?${params.toString()}`;
   }
