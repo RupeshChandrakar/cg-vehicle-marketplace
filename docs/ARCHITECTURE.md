@@ -1323,6 +1323,45 @@ Vehicle Queue page with none of this feature's code involved — see the persist
 byte-for-byte the same pattern as the customer edit form and passes
 `tsc`/`eslint` identically, so this is treated as a known environment limitation, not a defect.
 
+### Listing card redesign + Sort/Price Range wiring (2026-09-04)
+
+PO shared a real screenshot of Spinny's (an established Indian used-car marketplace) listing page
+and asked for the product listing to be built "waysa hi" (exactly like that). Adopted what's
+honestly buildable from the reference, declined what would require fabricating data or features
+this marketplace doesn't have — same discipline every other reference-driven pass this project has
+followed (Uber/Ola, khetigaadi.com, CoolCare).
+
+**Adopted**: `VehicleCard` — a wider 16:10 photo, the price pulled up next to a year-prefixed title
+(matching the reference's own title pattern) instead of its own stacked line below, km/fuel/
+transmission re-presented as individual pill chips instead of one middot-joined text line, and a
+divider before the district/ID footer row. New `SortPriceBar` — Sort (Newest/Price Low-High/High-
+Low) and Price Range (preset bands) pills plus a removable active-filter chips row, both wired to
+`VehicleQueryDto`'s `sort`/`minPrice`/`maxPrice`, which already had full backend support but zero
+frontend control — this closes the exact "price/sort filter wiring" quick-win the earlier
+gap-analysis flagged, rather than leaving it as a separately-tracked task. Deliberately did not
+duplicate Category/District into new pills to match the reference's 4-pill row exactly — the
+category tiles and `SearchLocationBar`'s district picker already cover those, and a second
+redundant control would add clutter for visual parity alone, not real value.
+
+**Declined, named not silently dropped**: the reference's discount/price-drop badge (no
+price-history tracking exists on any listing), its EMI line (this project explicitly refuses to
+quote financing terms without a real lender partnership — see "Finance lead capture" above), its
+"Save Filters" affordance (no saved-filter-preferences feature/backend exists), its dealer-network
+footer badges (CG Auto Mart is an individual-seller marketplace, not a dealer chain), and Spinny's
+purple/pink brand palette (a color-identity swap has always been treated as its own, separately-
+confirmed decision in this project — see the Ola/Uber redesign's two-round confirmation).
+
+**Real bug caught mid-edit, not new**: rewriting `VehicleCard` briefly dropped its `'use client'`
+directive, regressing the exact RSC-serialization bug already documented from the native-app-polish
+pass (`MediaImage`'s `emptyIcon={ImageOff}` prop can't cross a Server→Client boundary as a bare
+function reference) — caught immediately via a live Puppeteer console-error check before shipping,
+confirmed via `git show HEAD:...` that the directive was correct in the prior commit, restored it.
+
+Verified live: sorting by price actually reorders results, a selected price band sets `minPrice`/
+`maxPrice` and shows a removable chip, pagination preserves sort/price params, the Favorites page
+(which reuses `VehicleCard`) still renders correctly, and `tsc`/`eslint` are clean with zero
+console errors throughout.
+
 ### Phase 2 notes
 
 - **Staff auth** landed here rather than waiting for Phase 4, since the admin review queue
