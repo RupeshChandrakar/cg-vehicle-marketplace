@@ -41,4 +41,21 @@ async function bootstrap(): Promise<void> {
   Logger.log(`API listening on http://localhost:${port}`, 'Bootstrap');
 }
 
-void bootstrap();
+bootstrap().catch((error: unknown) => {
+  // Without this, a thrown/rejected bootstrap() (e.g. env.validation.ts's
+  // Joi schema failing) becomes an *unhandled promise rejection* instead
+  // of a normal caught error — Node 15+ terminates the process for those
+  // by default, which is what actually happens here, just via a much
+  // less informative path than a deliberate, logged exit.
+  Logger.error(
+    'Fatal error during bootstrap — the app never started listening.',
+    undefined,
+    'Bootstrap',
+  );
+  Logger.error(
+    error instanceof Error ? error.stack : error,
+    undefined,
+    'Bootstrap',
+  );
+  process.exit(1);
+});
