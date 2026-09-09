@@ -1,15 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Heart, Bell } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Heart, Bell, MapPin, ChevronDown, Check } from 'lucide-react';
 import { brand } from '@cg/shared-config';
 import { useCustomerAuth } from '@/lib/customer-auth-context';
-import { getNotifications } from '@/lib/api';
+import { getLocations, getNotifications } from '@/lib/api';
+import type { Location } from '@/types/vehicle';
 
 export function SiteHeader() {
   const { user, accessToken, logout } = useCustomerAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [locations, setLocations] = useState<Location[]>([]);
 
   useEffect(() => {
     if (!accessToken) {
@@ -21,6 +26,25 @@ export function SiteHeader() {
       .then((notifications) => setUnreadCount(notifications.filter((n) => !n.isRead).length))
       .catch(() => undefined);
   }, [accessToken]);
+
+  useEffect(() => {
+    getLocations()
+      .then((data) => setLocations(data))
+      .catch(() => undefined);
+  }, []);
+
+  const activeDistrictSlug = searchParams.get('district') ?? '';
+  const activeDistrict = locations.find((location) => location.slug === activeDistrictSlug);
+
+  function navigateToDistrict(districtSlug: string): void {
+    const params = new URLSearchParams(searchParams.toString());
+    if (districtSlug) {
+      params.set('district', districtSlug);
+    } else {
+      params.delete('district');
+    }
+    router.push(`/?${params.toString()}`);
+  }
 
   return (
     // safe-top reserves real device inset space now that layout.tsx's
@@ -41,13 +65,27 @@ export function SiteHeader() {
           {brand.name}
         </Link>
 
-        {/* Mobile (<sm): logo only — BottomNav is the primary nav there
-            (Home/Favorites/Sell/Enquiries/Account), and Notifications/My
-            Listings/Invite Friends live inside the Account tab's hub
-            instead. Desktop (>=sm): unchanged full nav — no bottom nav
-            renders there, matching Uber's own real split between its
-            top-nav website and bottom-tab native app. */}
+        <div className="relative sm:hidden">
+          <DistrictSelector
+            activeDistrictLabel={activeDistrict?.district ?? 'All CG'}
+            activeDistrictSlug={activeDistrictSlug}
+            locations={locations}
+            onChange={navigateToDistrict}
+            compact
+          />
+        </div>
+
+        {/* Mobile (<sm): compact district switcher sits at the right side,
+            while BottomNav remains the primary nav. Desktop (>=sm): full
+            nav row with district selector + actions. */}
         <div className="hidden items-center gap-4 sm:flex">
+          <DistrictSelector
+            activeDistrictLabel={activeDistrict?.district ?? 'All Chhattisgarh'}
+            activeDistrictSlug={activeDistrictSlug}
+            locations={locations}
+            onChange={navigateToDistrict}
+          />
+
           {user && (
             <>
               <Link
@@ -121,5 +159,100 @@ export function SiteHeader() {
         </div>
       </div>
     </header>
+  );
+}
+
+function DistrictSelector({
+  activeDistrictLabel,
+  activeDistrictSlug,
+  locations,
+  onChange,
+  compact = false,
+}: {
+  activeDistrictLabel: string;
+  activeDistrictSlug: string;
+  locations: Location[];
+  onChange: (districtSlug: string) => void;
+  compact?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent): void {
+      if (!rootRef.current) return;
+      if (!rootRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const options = [
+    { slug: '', label: 'All Chhattisgarh' },
+    ...locations.map((location) => ({ slug: location.slug, label: location.district })),
+  ];
+
+  return (
+    <div
+      ref={rootRef}
+      className={`relative rounded-lg border border-line bg-background text-foreground ${
+        compact ? 'pl-8 pr-7 py-1.5 text-xs' : 'pl-3 pr-8 py-2 text-sm'
+      }`}
+    >
+      <MapPin
+        className={`absolute left-2 top-1/2 -translate-y-1/2 text-primary ${
+          compact ? 'h-3.5 w-3.5' : 'h-4 w-4'
+        }`}
+      />
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="block max-w-28 truncate text-left"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        {activeDistrictLabel}
+      </button>
+      <ChevronDown
+        className={`absolute right-2 top-1/2 -translate-y-1/2 text-muted ${
+          compact ? 'h-3.5 w-3.5' : 'h-4 w-4'
+        } ${open ? 'rotate-180' : ''} transition-transform`}
+      />
+
+      {open && (
+        <div
+          className="absolute right-0 top-full z-30 mt-2 w-56 overflow-hidden rounded-xl border border-line bg-background shadow-card"
+          role="listbox"
+          aria-label="District"
+        >
+          <div className="max-h-72 overflow-auto py-1.5">
+            {options.map((option) => {
+              const isActive = option.slug === activeDistrictSlug;
+              return (
+                <button
+                  key={option.slug || 'all'}
+                  type="button"
+                  onClick={() => {
+                    onChange(option.slug);
+                    setOpen(false);
+                  }}
+                  className="flex w-full items-center justify-between px-3 py-2 text-left text-sm text-foreground transition hover:bg-primary-light"
+                  role="option"
+                  aria-selected={isActive}
+                >
+                  <span className="truncate">{option.label}</span>
+                  {isActive && <Check className="h-4 w-4 text-primary" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

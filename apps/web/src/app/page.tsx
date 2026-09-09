@@ -44,11 +44,7 @@ export default async function Home(props: PageProps<'/'>) {
   return (
     <div className="mx-auto max-w-6xl space-y-10 px-4 py-6 sm:py-10">
       {hasActiveFilters ? (
-        <SearchLocationBar
-          locations={locations}
-          activeDistrictSlug={districtSlug}
-          initialQuery={query}
-        />
+        <SearchLocationBar activeDistrictSlug={districtSlug} initialQuery={query} />
       ) : (
         <HeroBanner locations={locations} activeDistrictSlug={districtSlug} initialQuery={query} />
       )}
@@ -117,7 +113,7 @@ function HeroBanner({
         <PersonalGreeting />
         <PromoTicker />
         <h1 className="mt-3 max-w-lg text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
-          Sahi Gaadi, <span className="text-primary">Sahi Daam</span>
+          Jai <span className="text-primary">Johar. 🙏</span>
         </h1>
         <p className="mt-2 max-w-md text-sm text-muted">
           Verified vehicles, best condition, best deals — Chhattisgarh ke local experts ke saath.
@@ -135,7 +131,6 @@ function HeroBanner({
           than living inside it as a plain form field. */}
       <div className="relative z-10 -mt-7 px-4 sm:px-8">
         <SearchLocationBar
-          locations={locations}
           activeDistrictSlug={activeDistrictSlug}
           initialQuery={initialQuery}
           variant="floating"

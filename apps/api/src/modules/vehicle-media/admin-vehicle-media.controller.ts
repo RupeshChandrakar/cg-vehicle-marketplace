@@ -21,7 +21,6 @@ import {
   UploadedMediaResult,
 } from './vehicle-media.service';
 import {
-  ALLOWED_MIME_TYPE_PATTERN,
   MAX_FILES_PER_VEHICLE,
   MAX_FILE_SIZE_BYTES,
 } from './vehicle-media.constants';
@@ -49,7 +48,6 @@ export class AdminVehicleMediaController {
     @Param('id') id: string,
     @UploadedFiles(
       new ParseFilePipeBuilder()
-        .addFileTypeValidator({ fileType: ALLOWED_MIME_TYPE_PATTERN })
         .addMaxSizeValidator({ maxSize: MAX_FILE_SIZE_BYTES })
         .build(),
     )

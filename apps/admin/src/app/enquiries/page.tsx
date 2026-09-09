@@ -67,12 +67,13 @@ export default function EnquiriesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap gap-2">
+      <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+        <div className="flex w-max gap-2 sm:w-auto sm:flex-wrap">
         {STATUS_FILTERS.map((filter) => (
           <button
             key={filter}
             onClick={() => setStatus(filter)}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+            className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${
               status === filter
                 ? 'bg-primary text-white shadow-btn'
                 : 'bg-background text-foreground shadow-card hover:shadow-card-hover'
@@ -81,6 +82,7 @@ export default function EnquiriesPage() {
             {filter.replace('_', ' ')}
           </button>
         ))}
+        </div>
       </div>
 
       {error && (
@@ -110,11 +112,11 @@ function EnquiryRow({ enquiry }: { enquiry: AdminEnquiry }) {
       href={`/enquiries/${enquiry.id}`}
       className="block rounded-2xl bg-background p-4 shadow-card transition hover:shadow-card-hover"
     >
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <h3 className="font-medium text-foreground">{enquiry.vehicle.title}</h3>
           <p className="text-sm text-muted">
-            {enquiry.customer.name ?? 'Unknown'} &middot; {enquiry.customer.phone} &middot;{' '}
+            {enquiry.customer.name ?? 'Unknown'} · {enquiry.customer.phone} ·{' '}
             {enquiry.channel}
           </p>
           <p className="text-sm text-muted">
@@ -122,7 +124,7 @@ function EnquiryRow({ enquiry }: { enquiry: AdminEnquiry }) {
           </p>
         </div>
         <span
-          className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${STATUS_PILL[enquiry.status]}`}
+          className={`self-start rounded-full px-2.5 py-1 text-xs font-medium capitalize ${STATUS_PILL[enquiry.status]}`}
         >
           {enquiry.status.replace('_', ' ')}
         </span>

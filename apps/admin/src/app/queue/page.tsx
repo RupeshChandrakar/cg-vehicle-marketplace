@@ -167,7 +167,7 @@ function QueueContent() {
       )}
 
       {selectedIds.size > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-between gap-3 border-t border-line bg-background px-6 py-4 shadow-card-hover sm:left-64">
+        <div className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-between gap-3 border-t border-line bg-background px-4 py-4 shadow-card-hover sm:px-6 lg:left-64">
           <p className="text-sm font-medium text-foreground">
             {selectedIds.size} listing{selectedIds.size === 1 ? '' : 's'} selected
           </p>

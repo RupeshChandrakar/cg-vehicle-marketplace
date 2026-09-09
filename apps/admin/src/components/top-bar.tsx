@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Bell } from 'lucide-react';
+import { Bell, Menu } from 'lucide-react';
 import { useUnreadNotifications } from '@/lib/use-unread-notifications';
 
 const PAGE_TITLES: Record<string, string> = {
@@ -15,7 +15,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/notifications': 'Notifications',
 };
 
-export function TopBar() {
+export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const pathname = usePathname();
   const unreadCount = useUnreadNotifications();
 
@@ -23,9 +23,19 @@ export function TopBar() {
     PAGE_TITLES[pathname] ?? (pathname.startsWith('/enquiries/') ? 'Enquiry Details' : 'Admin');
 
   return (
-    <header className="flex items-center justify-between border-b border-line bg-background px-6 py-4">
-      <h1 className="text-lg font-semibold text-foreground">{title}</h1>
-      <Link href="/notifications" aria-label="Notifications" className="relative text-foreground">
+    <header className="sticky top-0 z-20 flex items-center justify-between border-b border-line bg-background/95 px-4 py-4 backdrop-blur sm:px-6">
+      <div className="flex min-w-0 items-center gap-3">
+        <button
+          type="button"
+          onClick={onMenuClick}
+          className="rounded-xl border border-line p-2 text-foreground lg:hidden"
+          aria-label="Open menu"
+        >
+          <Menu className="h-5 w-5" strokeWidth={1.75} />
+        </button>
+        <h1 className="truncate text-base font-semibold text-foreground sm:text-lg">{title}</h1>
+      </div>
+      <Link href="/notifications" aria-label="Notifications" className="relative shrink-0 text-foreground">
         <Bell className="h-5 w-5" strokeWidth={1.75} />
         {unreadCount > 0 && (
           <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-white">

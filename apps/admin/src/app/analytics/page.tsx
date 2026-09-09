@@ -111,7 +111,34 @@ function MostViewedVehiclesTable({ vehicles }: { vehicles: MostViewedVehicle[] }
           No vehicle views recorded yet — this fills in as customers browse listings.
         </p>
       ) : (
-        <div className="overflow-x-auto">
+        <>
+          <div className="space-y-3 sm:hidden">
+            {vehicles.map((vehicle) => (
+              <div key={vehicle.vehicleId} className="rounded-xl border border-line p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground">{vehicle.title}</p>
+                    <p className="text-xs text-muted">
+                      {vehicle.publicId ? `ID: ${vehicle.publicId}` : 'Draft'}
+                    </p>
+                  </div>
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
+                      VEHICLE_STATUS_PILL[vehicle.status] ?? 'bg-line/60 text-muted'
+                    }`}
+                  >
+                    {vehicle.status.replace('_', ' ')}
+                  </span>
+                </div>
+                <div className="mt-3 flex items-center justify-between text-sm">
+                  <span className="text-muted">Unique viewers</span>
+                  <span className="font-semibold text-foreground">{vehicle.uniqueViewers}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden overflow-x-auto sm:block">
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="text-xs text-muted">
@@ -143,7 +170,8 @@ function MostViewedVehiclesTable({ vehicles }: { vehicles: MostViewedVehicle[] }
               ))}
             </tbody>
           </table>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );

@@ -76,7 +76,7 @@ export default function SellersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="rounded-2xl bg-background px-5 py-4 shadow-card">
           <p className="text-xs text-muted">Total sellers/dealers</p>
           <p className="text-2xl font-semibold text-foreground">{total}</p>
@@ -115,18 +115,18 @@ function SellerCard({ seller }: { seller: AdminSeller }) {
 
   return (
     <div className="rounded-2xl bg-background p-4 shadow-card">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <h3 className="font-medium text-foreground">{seller.name ?? 'Unnamed seller'}</h3>
           <p className="text-sm text-muted">{seller.phone}</p>
           <p className="text-xs text-muted">
-            Member since {new Date(seller.createdAt).toLocaleDateString('en-IN')} &middot; Last
+            Member since {new Date(seller.createdAt).toLocaleDateString('en-IN')} · Last
             active: {formatLastActive(seller.lastLoginAt)}
           </p>
         </div>
         <Link
           href={`/queue?sellerId=${seller.id}`}
-          className="shrink-0 rounded-full border border-line px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-primary-light"
+          className="self-start shrink-0 rounded-full border border-line px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-primary-light"
         >
           View listings
         </Link>

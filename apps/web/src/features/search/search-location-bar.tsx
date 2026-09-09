@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { MapPin, ChevronDown, Search } from 'lucide-react';
-import type { Location } from '@/types/vehicle';
+import { Search } from 'lucide-react';
 import { detectLocation } from '@/lib/api';
 
 // Once we've either resolved a location or the user has made a manual
@@ -11,7 +10,6 @@ import { detectLocation } from '@/lib/api';
 const LOCATION_SETUP_DONE_KEY = 'locationSetupDone';
 
 interface SearchLocationBarProps {
-  locations: Location[];
   activeDistrictSlug?: string;
   initialQuery?: string;
   /** 'floating' sits over the hero panel and carries the stronger elevated
@@ -26,7 +24,6 @@ interface SearchLocationBarProps {
 // ones) so the location segment and the search segment always read as one
 // considered control, not two separate boxes.
 export function SearchLocationBar({
-  locations,
   activeDistrictSlug,
   initialQuery,
   variant = 'inline',
@@ -90,40 +87,12 @@ export function SearchLocationBar({
     router.push(`/?${params.toString()}`);
   }
 
-  const activeDistrict = locations.find((location) => location.slug === activeDistrictSlug);
-
   return (
     <div
       className={`flex items-stretch overflow-hidden rounded-full border border-line bg-background ${
         variant === 'floating' ? 'shadow-float' : 'shadow-card'
       }`}
     >
-      <div className="relative flex shrink-0 items-center gap-2 py-2.5 pr-4 pl-5">
-        <MapPin className="h-4 w-4 shrink-0 text-primary" />
-        <div className="min-w-0 leading-tight">
-          <p className="truncate text-sm font-semibold text-foreground">
-            {activeDistrict?.district ?? 'All Chhattisgarh'}
-          </p>
-          <p className="text-xs text-muted">Chhattisgarh</p>
-        </div>
-        <ChevronDown className="h-4 w-4 shrink-0 text-muted" />
-        <select
-          aria-label="District"
-          value={activeDistrictSlug ?? ''}
-          onChange={(event) => navigateToDistrict(event.target.value)}
-          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-        >
-          <option value="">All Chhattisgarh</option>
-          {locations.map((location) => (
-            <option key={location.id} value={location.slug}>
-              {location.district}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <span className="my-2 w-px shrink-0 bg-line" aria-hidden="true" />
-
       <form onSubmit={handleSubmit} className="relative flex flex-1 items-center">
         <Search className="pointer-events-none absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-muted" />
         <input

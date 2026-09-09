@@ -122,7 +122,7 @@ export default function DashboardPage() {
         <p className="text-sm text-muted">Loading…</p>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {stats.map((stat) => (
               <StatCard key={stat.label} {...stat} />
             ))}
@@ -187,7 +187,30 @@ function RecentVehiclesTable({ vehicles }: { vehicles: AdminVehicle[] }) {
       {vehicles.length === 0 ? (
         <p className="text-sm text-muted">No vehicles yet.</p>
       ) : (
-        <div className="overflow-x-auto">
+        <>
+          <div className="space-y-3 sm:hidden">
+            {vehicles.map((vehicle) => (
+              <div key={vehicle.id} className="rounded-xl border border-line p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground">{vehicle.title}</p>
+                    <p className="text-xs text-muted">
+                      {vehicle.publicId ? `ID: ${vehicle.publicId}` : 'Draft'} · {vehicle.location.district}
+                    </p>
+                  </div>
+                  <StatusPill status={vehicle.status} />
+                </div>
+                <div className="mt-3 flex items-center justify-between gap-3 text-sm">
+                  <span className="truncate text-muted">{vehicle.seller.name ?? 'Unknown'}</span>
+                  <span className="font-mono text-foreground">
+                    ₹{Number(vehicle.price).toLocaleString('en-IN')}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden overflow-x-auto sm:block">
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="text-xs text-muted">
@@ -218,7 +241,8 @@ function RecentVehiclesTable({ vehicles }: { vehicles: AdminVehicle[] }) {
               ))}
             </tbody>
           </table>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );
@@ -236,7 +260,30 @@ function RecentEnquiriesTable({ enquiries }: { enquiries: AdminEnquiry[] }) {
       {enquiries.length === 0 ? (
         <p className="text-sm text-muted">No enquiries yet.</p>
       ) : (
-        <div className="overflow-x-auto">
+        <>
+          <div className="space-y-3 sm:hidden">
+            {enquiries.map((enquiry) => (
+              <div key={enquiry.id} className="rounded-xl border border-line p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground">
+                      {enquiry.customer.name ?? 'Unknown'}
+                    </p>
+                    <p className="text-xs text-muted">{enquiry.customer.phone}</p>
+                  </div>
+                  <span className="rounded-full bg-primary-light px-2.5 py-1 text-xs font-medium text-primary">
+                    {ENQUIRY_STATUS_META[enquiry.status].label}
+                  </span>
+                </div>
+                <div className="mt-3 space-y-1 text-sm">
+                  <p className="text-foreground">{enquiry.vehicle.title}</p>
+                  <p className="capitalize text-muted">{enquiry.channel}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden overflow-x-auto sm:block">
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="text-xs text-muted">
@@ -266,7 +313,8 @@ function RecentEnquiriesTable({ enquiries }: { enquiries: AdminEnquiry[] }) {
               ))}
             </tbody>
           </table>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );
@@ -297,7 +345,7 @@ function EnquiriesDonut({
   return (
     <div className="rounded-2xl bg-background p-5 shadow-card">
       <h2 className="mb-4 text-sm font-semibold text-foreground">Enquiries Overview</h2>
-      <div className="flex items-center gap-6">
+      <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
         <div
           className="relative h-28 w-28 shrink-0 rounded-full"
           style={{ background: gradient }}
@@ -355,7 +403,7 @@ function QuickActions() {
   return (
     <div className="rounded-2xl bg-background p-5 shadow-card">
       <h2 className="mb-4 text-sm font-semibold text-foreground">Quick Actions</h2>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {actions.map((action) => {
           const Icon = action.icon;
           return (

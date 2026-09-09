@@ -8,6 +8,7 @@ import { PrismaService } from '../../infra/prisma/prisma.service';
 import { StorageService } from '../../infra/storage/storage.service';
 import { SELLER_EDITABLE_STATUSES } from '../vehicles/vehicle-lifecycle.constants';
 import {
+  ALLOWED_MIME_TYPES,
   MAX_FILES_PER_VEHICLE,
   MIME_EXTENSIONS,
 } from './vehicle-media.constants';
@@ -144,7 +145,12 @@ export class VehicleMediaService {
 
     const results: UploadedMediaResult[] = [];
     for (const [index, file] of files.entries()) {
-      const extension = MIME_EXTENSIONS[file.mimetype] ?? 'bin';
+      const extension = MIME_EXTENSIONS[file.mimetype];
+      if (!extension) {
+        throw new BadRequestException(
+          `Unsupported image type "${file.mimetype}". Allowed types: ${ALLOWED_MIME_TYPES.join(', ')}`,
+        );
+      }
       const storageKey = `vehicles/${vehicleId}/${randomUUID()}.${extension}`;
       await this.storage.upload(storageKey, file.buffer, file.mimetype);
 

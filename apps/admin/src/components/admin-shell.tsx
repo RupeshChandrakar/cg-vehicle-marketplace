@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { Sidebar } from './sidebar';
@@ -12,6 +12,11 @@ import { TopBar } from './top-bar';
 export function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { user } = useAuth();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [pathname]);
 
   if (pathname === '/login' || !user) {
     return <>{children}</>;
@@ -19,10 +24,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar />
+      <Sidebar isOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
       <div className="flex flex-1 flex-col">
-        <TopBar />
-        <main className="flex-1 p-6">{children}</main>
+        <TopBar onMenuClick={() => setMobileNavOpen(true)} />
+        <main className="flex-1 p-4 pb-24 sm:p-6 lg:pb-6">{children}</main>
       </div>
     </div>
   );

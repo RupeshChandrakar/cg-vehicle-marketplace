@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from 'next';
+import { Suspense } from 'react';
 import { Inter, Geist_Mono } from 'next/font/google';
 import { brand } from '@cg/shared-config';
 import { SiteHeader } from '@/components/site-header';
 import { BottomNav } from '@/components/bottom-nav';
+import { DesktopSideMenu } from '@/components/desktop-side-menu';
 import { PageTransition } from '@/components/page-transition';
 import { AnalyticsTracker } from '@/components/analytics-tracker';
 import { ReferralCapture } from '@/components/referral-capture';
@@ -65,13 +67,21 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
         <CustomerAuthProvider>
           <AnalyticsTracker />
           <ReferralCapture />
-          <SiteHeader />
+          <Suspense fallback={null}>
+            <SiteHeader />
+          </Suspense>
           {/* pb-24 clears the fixed mobile BottomNav, which floats with its
               own bottom margin now (not flush to the edge) — sm:hidden
-              itself, so this bottom padding is likewise dropped at sm, no
-              dead space on desktop where the header is the only nav. */}
-          <div className="flex flex-1 flex-col pb-24 sm:pb-0">
-            <PageTransition>{children}</PageTransition>
+              itself, so this bottom padding is likewise dropped at sm. On
+              desktop, the content now sits beside a dedicated left-side
+              marketplace nav rather than stretching edge-to-edge. */}
+          <div className="mx-auto flex w-full max-w-[88rem] flex-1 gap-6 px-4 pb-24 lg:px-6 sm:pb-0">
+            <Suspense fallback={null}>
+              <DesktopSideMenu />
+            </Suspense>
+            <div className="min-w-0 flex-1">
+              <PageTransition>{children}</PageTransition>
+            </div>
           </div>
           <BottomNav />
         </CustomerAuthProvider>
