@@ -95,19 +95,30 @@ export class AuthService {
    *  rotates the session. Public — CustomerAuthService reuses this exact
    *  logic for OTP login rather than duplicating token issuance. */
   async issueTokens(userId: string, role: UserRole): Promise<TokenPair> {
+    const accessTtlConfigKey =
+      role === UserRole.customer
+        ? 'JWT_ACCESS_TOKEN_TTL'
+        : 'JWT_STAFF_ACCESS_TOKEN_TTL';
+    const accessTtlDefault = role === UserRole.customer ? '15m' : '1h';
+    const refreshTtlConfigKey =
+      role === UserRole.customer
+        ? 'JWT_REFRESH_TOKEN_TTL'
+        : 'JWT_STAFF_REFRESH_TOKEN_TTL';
+    const refreshTtlDefault = role === UserRole.customer ? '30d' : '365d';
+
     const accessToken = await this.signToken(
       userId,
       role,
       'access',
-      'JWT_ACCESS_TOKEN_TTL',
-      '15m',
+      accessTtlConfigKey,
+      accessTtlDefault,
     );
     const refreshToken = await this.signToken(
       userId,
       role,
       'refresh',
-      'JWT_REFRESH_TOKEN_TTL',
-      '30d',
+      refreshTtlConfigKey,
+      refreshTtlDefault,
     );
 
     const refreshTokenHash = await bcrypt.hash(

@@ -1,4 +1,6 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+import { brand } from '@cg/shared-config';
 import { getCategories, getLocations, getVehicles } from '@/lib/api';
 import { VehicleCard } from '@/features/vehicles/vehicle-card';
 import { CategoryFilter } from '@/features/search/category-filter';
@@ -9,10 +11,62 @@ import { PromoTicker } from '@/features/home/promo-ticker';
 import { PersonalGreeting } from '@/features/home/personal-greeting';
 import { RotatingHeroCard } from '@/features/home/rotating-hero-card';
 import { WhyChooseUs } from '@/features/home/why-choose-us';
-import type { Category, Location, PaginatedResult, Vehicle } from '@/types/vehicle';
+import { TopSearches } from '@/features/home/top-searches';
+import type { Category, PaginatedResult, Vehicle } from '@/types/vehicle';
+
+const INDEXABLE_CATEGORY_SLUGS = new Set(['cars', 'bikes', 'tractors']);
 
 function firstValue(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
+}
+
+export async function generateMetadata(props: PageProps<'/'>): Promise<Metadata> {
+  const searchParams = await props.searchParams;
+  const query = firstValue(searchParams.q);
+  const categorySlug = firstValue(searchParams.category);
+  const districtSlug = firstValue(searchParams.district);
+  const page = Number(firstValue(searchParams.page)) || 1;
+  const sort = firstValue(searchParams.sort);
+  const minPrice = Number(firstValue(searchParams.minPrice)) || undefined;
+  const maxPrice = Number(firstValue(searchParams.maxPrice)) || undefined;
+  const hasRefinementParams = Boolean(query || sort || minPrice || maxPrice || page > 1);
+
+  const [categories, locations] = await Promise.all([getCategories(), getLocations()]);
+  const activeCategory = categories.find((category) => category.slug === categorySlug);
+  const activeLocation = locations.find((location) => location.slug === districtSlug);
+
+  const canonical = getCanonicalPath(categorySlug, districtSlug, hasRefinementParams);
+  const title = buildBrowseTitle(activeCategory?.name, activeLocation?.district);
+  const description = buildBrowseDescription(activeCategory?.name, activeLocation?.district);
+
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: {
+      title,
+      description,
+      url: canonical,
+      siteName: brand.name,
+      locale: 'en_IN',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+    },
+    robots: hasRefinementParams
+      ? {
+          index: false,
+          follow: true,
+          googleBot: { index: false, follow: true },
+        }
+      : {
+          index: true,
+          follow: true,
+        },
+  };
 }
 
 export default async function Home(props: PageProps<'/'>) {
@@ -46,7 +100,7 @@ export default async function Home(props: PageProps<'/'>) {
       {hasActiveFilters ? (
         <SearchLocationBar activeDistrictSlug={districtSlug} initialQuery={query} />
       ) : (
-        <HeroBanner locations={locations} activeDistrictSlug={districtSlug} initialQuery={query} />
+        <HeroBanner activeDistrictSlug={districtSlug} initialQuery={query} />
       )}
 
       <CategoryFilter
@@ -94,16 +148,16 @@ export default async function Home(props: PageProps<'/'>) {
       </div>
 
       <WhyChooseUs />
+
+      <TopSearches />
     </div>
   );
 }
 
 function HeroBanner({
-  locations,
   activeDistrictSlug,
   initialQuery,
 }: {
-  locations: Location[];
   activeDistrictSlug?: string;
   initialQuery?: string;
 }) {
@@ -236,4 +290,59 @@ function Pagination({
       )}
     </nav>
   );
+}
+
+function getCanonicalPath(
+  categorySlug?: string,
+  districtSlug?: string,
+  hasRefinementParams?: boolean,
+): string {
+  if (
+    !hasRefinementParams &&
+    categorySlug &&
+    districtSlug &&
+    INDEXABLE_CATEGORY_SLUGS.has(categorySlug)
+  ) {
+    return `/used-${categorySlug}-in-${districtSlug}`;
+  }
+
+  if (!hasRefinementParams && categorySlug && districtSlug) {
+    return `/?category=${categorySlug}&district=${districtSlug}`;
+  }
+
+  if (!hasRefinementParams && categorySlug) {
+    return `/?category=${categorySlug}`;
+  }
+
+  if (!hasRefinementParams && districtSlug) {
+    return `/?district=${districtSlug}`;
+  }
+
+  return '/';
+}
+
+function buildBrowseTitle(categoryName?: string, districtName?: string): string {
+  if (categoryName && districtName) {
+    return `Used & Second Hand ${categoryName} in ${districtName} | ${brand.name}`;
+  }
+  if (categoryName) {
+    return `Used ${categoryName} in Chhattisgarh | ${brand.name}`;
+  }
+  if (districtName) {
+    return `Used Vehicles in ${districtName}, Chhattisgarh | ${brand.name}`;
+  }
+  return `${brand.name} | Buy & Sell Used Vehicles in Chhattisgarh`;
+}
+
+function buildBrowseDescription(categoryName?: string, districtName?: string): string {
+  if (categoryName && districtName) {
+    return `Browse verified used and second hand ${categoryName.toLowerCase()} in ${districtName}, Chhattisgarh. Compare price, year, and condition on ${brand.name}.`;
+  }
+  if (categoryName) {
+    return `Explore verified used ${categoryName.toLowerCase()} across Chhattisgarh with quick contact support and trusted listings on ${brand.name}.`;
+  }
+  if (districtName) {
+    return `Find verified used vehicles in ${districtName}, Chhattisgarh. Compare cars, bikes, tractors, and more on ${brand.name}.`;
+  }
+  return 'Buy and sell verified used cars, bikes, scooters, tractors, and commercial vehicles across Chhattisgarh.';
 }

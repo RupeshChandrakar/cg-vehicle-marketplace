@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { StaffUser } from './api';
+import { getAdminAuthEventName } from './api';
 
 // localStorage (not an httpOnly cookie) is a deliberate simplification for
 // this internal-only admin tool — revisit if this panel ever becomes
@@ -26,21 +27,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    function syncFromStorage(): void {
+      const storedToken = localStorage.getItem(ACCESS_TOKEN_KEY);
+      const storedUser = localStorage.getItem(USER_KEY);
+      if (storedToken && storedUser) {
+        try {
+          setUser(JSON.parse(storedUser) as StaffUser);
+          setAccessToken(storedToken);
+          return;
+        } catch {
+          // Corrupted storage — fall through to logged-out state below.
+        }
+      }
+
+      setUser(null);
+      setAccessToken(null);
+    }
+
     // localStorage isn't available during Next.js's server render, so
     // hydrating auth state has to happen post-mount in an effect — the
     // isLoading flag covers the one frame this takes.
-    const storedToken = localStorage.getItem(ACCESS_TOKEN_KEY);
-    const storedUser = localStorage.getItem(USER_KEY);
-    if (storedToken && storedUser) {
-      try {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setUser(JSON.parse(storedUser) as StaffUser);
-        setAccessToken(storedToken);
-      } catch {
-        // Corrupted storage — treat as logged out.
-      }
-    }
+    syncFromStorage();
+
+    const authEventName = getAdminAuthEventName();
+    window.addEventListener('storage', syncFromStorage);
+    window.addEventListener(authEventName, syncFromStorage);
+    // Marks the one-frame post-mount hydration (see the comment above) as
+    // done — genuinely synchronizing with localStorage, an external system,
+    // not a plain derived value.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoading(false);
+
+    return () => {
+      window.removeEventListener('storage', syncFromStorage);
+      window.removeEventListener(authEventName, syncFromStorage);
+    };
   }, []);
 
   function login(newUser: StaffUser, newAccessToken: string, refreshToken: string): void {

@@ -32,6 +32,26 @@ export function SearchLocationBar({
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(initialQuery ?? '');
 
+  function navigateToDistrict(districtSlug: string): void {
+    const params = new URLSearchParams(searchParams.toString());
+    if (districtSlug) {
+      params.set('district', districtSlug);
+    } else {
+      params.delete('district');
+    }
+    router.push(`/?${params.toString()}`);
+  }
+
+  async function resolveDistrict(latitude: number, longitude: number): Promise<void> {
+    localStorage.setItem(LOCATION_SETUP_DONE_KEY, 'true');
+    try {
+      const result = await detectLocation(latitude, longitude);
+      navigateToDistrict(result.matched.slug);
+    } catch {
+      // Detection failed — the manual selector is always available as a fallback.
+    }
+  }
+
   useEffect(() => {
     if (activeDistrictSlug || localStorage.getItem(LOCATION_SETUP_DONE_KEY)) {
       return;
@@ -55,26 +75,6 @@ export function SearchLocationBar({
     // Only run once per page load; navigating manually afterward shouldn't re-trigger this.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  async function resolveDistrict(latitude: number, longitude: number): Promise<void> {
-    localStorage.setItem(LOCATION_SETUP_DONE_KEY, 'true');
-    try {
-      const result = await detectLocation(latitude, longitude);
-      navigateToDistrict(result.matched.slug);
-    } catch {
-      // Detection failed — the manual selector is always available as a fallback.
-    }
-  }
-
-  function navigateToDistrict(districtSlug: string): void {
-    const params = new URLSearchParams(searchParams.toString());
-    if (districtSlug) {
-      params.set('district', districtSlug);
-    } else {
-      params.delete('district');
-    }
-    router.push(`/?${params.toString()}`);
-  }
 
   function handleSubmit(event: React.FormEvent): void {
     event.preventDefault();

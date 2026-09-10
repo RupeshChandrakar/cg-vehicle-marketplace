@@ -4,7 +4,6 @@ import { useState, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { requestOtp, verifyOtp, ApiError } from '@/lib/api';
 import { useCustomerAuth } from '@/lib/customer-auth-context';
-import { getStoredReferralCode } from '@/lib/referral';
 
 type Step = 'phone' | 'otp';
 const INDIAN_MOBILE_PATTERN = /^[6-9]\d{9}$/;
@@ -28,7 +27,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
     setError(null);
     try {
-      await requestOtp(phone, getStoredReferralCode());
+      await requestOtp(phone);
       setStep('otp');
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Kuch gadbad ho gayi. Dobara try karein.');

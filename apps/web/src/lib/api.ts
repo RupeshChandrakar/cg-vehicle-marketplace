@@ -166,23 +166,6 @@ export function createEnquiry(payload: CreateEnquiryPayload): Promise<CreateEnqu
   });
 }
 
-export interface FinanceEnquiryPayload {
-  name: string;
-  phone: string;
-  message?: string;
-  vehiclePublicId?: number;
-}
-
-/** Pure lead capture — no loan application, no bank integration behind
- *  this. See FinanceEnquiriesService on the API. */
-export function submitFinanceEnquiry(payload: FinanceEnquiryPayload): Promise<void> {
-  return request('/finance-enquiries', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-}
-
 export interface EnquiryMessage {
   id: string;
   conversationId: string;
@@ -271,14 +254,11 @@ export interface TokenPair {
   refreshToken: string;
 }
 
-export function requestOtp(
-  phone: string,
-  referralCode?: string,
-): Promise<{ message: string }> {
+export function requestOtp(phone: string): Promise<{ message: string }> {
   return request('/auth/customer/otp/request', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ phone, referralCode }),
+    body: JSON.stringify({ phone }),
   });
 }
 
@@ -367,15 +347,6 @@ export interface AppNotification {
 
 export function getNotifications(accessToken: string): Promise<AppNotification[]> {
   return request('/notifications', { headers: authHeader(accessToken) });
-}
-
-export interface ReferralInfo {
-  referralCode: string;
-  totalReferred: number;
-}
-
-export function getReferralInfo(accessToken: string): Promise<ReferralInfo> {
-  return request('/users/me/referral', { headers: authHeader(accessToken) });
 }
 
 export function markNotificationRead(

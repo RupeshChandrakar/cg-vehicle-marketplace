@@ -21,6 +21,13 @@ import type { AnalyticsSummary } from '@/types/analytics';
 import type { AdminFinanceEnquiry, FinanceEnquiryStatus } from '@/types/finance-enquiry';
 import type { AdminSeller } from '@/types/seller';
 
+const ACCESS_TOKEN_KEY = 'cg_admin_access_token';
+const REFRESH_TOKEN_KEY = 'cg_admin_refresh_token';
+const USER_KEY = 'cg_admin_user';
+const AUTH_EVENT_NAME = 'cg-admin-auth-changed';
+
+let refreshPromise: Promise<string | null> | null = null;
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -30,17 +37,104 @@ export class ApiError extends Error {
   }
 }
 
+function isBrowser(): boolean {
+  return typeof window !== 'undefined';
+}
+
+function readStoredAccessToken(): string | null {
+  return isBrowser() ? localStorage.getItem(ACCESS_TOKEN_KEY) : null;
+}
+
+function readStoredRefreshToken(): string | null {
+  return isBrowser() ? localStorage.getItem(REFRESH_TOKEN_KEY) : null;
+}
+
+function dispatchAuthChanged(): void {
+  if (!isBrowser()) return;
+  window.dispatchEvent(new Event(AUTH_EVENT_NAME));
+}
+
+function clearStoredSession(): void {
+  if (!isBrowser()) return;
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+  dispatchAuthChanged();
+}
+
+async function refreshAccessToken(): Promise<string | null> {
+  if (!isBrowser()) {
+    return null;
+  }
+
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+
+  refreshPromise = (async () => {
+    const refreshToken = readStoredRefreshToken();
+    if (!refreshToken) {
+      clearStoredSession();
+      return null;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!response.ok) {
+      clearStoredSession();
+      return null;
+    }
+
+    const tokens = (await response.json()) as TokenPair;
+    localStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
+    localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
+    dispatchAuthChanged();
+    return tokens.accessToken;
+  })();
+
+  try {
+    return await refreshPromise;
+  } finally {
+    refreshPromise = null;
+  }
+}
+
 async function request<T>(
   path: string,
   accessToken: string | null,
   init?: RequestInit,
 ): Promise<T> {
+  const latestStoredAccessToken = readStoredAccessToken();
+  const effectiveAccessToken = latestStoredAccessToken ?? accessToken;
+
   const headers = new Headers(init?.headers);
-  if (accessToken) {
-    headers.set('Authorization', `Bearer ${accessToken}`);
+  if (effectiveAccessToken) {
+    headers.set('Authorization', `Bearer ${effectiveAccessToken}`);
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, { cache: 'no-store', ...init, headers });
+  let response = await fetch(`${API_BASE_URL}${path}`, {
+    cache: 'no-store',
+    ...init,
+    headers,
+  });
+
+  if (response.status === 401 && effectiveAccessToken) {
+    const refreshedAccessToken = await refreshAccessToken();
+    if (refreshedAccessToken) {
+      const retryHeaders = new Headers(init?.headers);
+      retryHeaders.set('Authorization', `Bearer ${refreshedAccessToken}`);
+      response = await fetch(`${API_BASE_URL}${path}`, {
+        cache: 'no-store',
+        ...init,
+        headers: retryHeaders,
+      });
+    }
+  }
 
   if (!response.ok) {
     throw new ApiError(await extractErrorMessage(response), response.status);
@@ -74,6 +168,10 @@ export interface StaffUser {
 export interface TokenPair {
   accessToken: string;
   refreshToken: string;
+}
+
+export function getAdminAuthEventName(): string {
+  return AUTH_EVENT_NAME;
 }
 
 export function staffLogin(

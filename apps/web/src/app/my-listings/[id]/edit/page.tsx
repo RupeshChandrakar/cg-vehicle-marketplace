@@ -216,12 +216,7 @@ function EditForm({
   const [techSpecs, setTechSpecs] = useState<Partial<Record<SpecFieldKey, string>>>(() => {
     const seeded: Partial<Record<SpecFieldKey, string>> = {};
     const keys: SpecFieldKey[] = [
-      'engineCc',
-      'powerBhp',
-      'mileageKmpl',
       'seatingCapacity',
-      'groundClearanceMm',
-      'fuelTankCapacityL',
       'ptoHp',
       'liftingCapacityKg',
       'loadCapacityKg',

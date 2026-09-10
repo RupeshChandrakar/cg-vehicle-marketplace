@@ -7,9 +7,11 @@ import { BottomNav } from '@/components/bottom-nav';
 import { DesktopSideMenu } from '@/components/desktop-side-menu';
 import { PageTransition } from '@/components/page-transition';
 import { AnalyticsTracker } from '@/components/analytics-tracker';
-import { ReferralCapture } from '@/components/referral-capture';
+import { SeoFooterLinks } from '@/components/seo-footer-links';
 import { CustomerAuthProvider } from '@/lib/customer-auth-context';
 import './globals.css';
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
 // Inter (2026-08-31): swapped from Plus Jakarta Sans — the PO pointed at a
 // sibling reference app (see docs/ARCHITECTURE.md "Mobile 'real app' polish")
@@ -30,8 +32,50 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: brand.name,
-  description: brand.tagline,
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: `${brand.name} | Buy & Sell Used Vehicles in Chhattisgarh`,
+    template: `%s | ${brand.name}`,
+  },
+  description:
+    'Buy and sell verified used cars, bikes, scooters, tractors, and commercial vehicles across Chhattisgarh.',
+  applicationName: brand.name,
+  keywords: [
+    'used cars chhattisgarh',
+    'second hand bikes chhattisgarh',
+    'used tractors chhattisgarh',
+    'commercial vehicles chhattisgarh',
+    'cg auto mart',
+  ],
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_IN',
+    url: '/',
+    siteName: brand.name,
+    title: `${brand.name} | Buy & Sell Used Vehicles in Chhattisgarh`,
+    description:
+      'Buy and sell verified used vehicles across Chhattisgarh with trusted listings and quick support.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `${brand.name} | Buy & Sell Used Vehicles in Chhattisgarh`,
+    description:
+      'Discover verified used vehicles in Chhattisgarh and connect quickly for purchase or sale.',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
   // Real installability — see app/manifest.ts + app/icon.tsx. Next.js links
   // manifest.webmanifest automatically once that file exists; appleWebApp
   // covers the iOS-specific "add to home screen, hide Safari chrome" tags
@@ -57,6 +101,19 @@ export const viewport: Viewport = {
   themeColor: '#ffffff',
 };
 
+const organizationStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: brand.name,
+  url: SITE_URL,
+  logo: `${SITE_URL}/icon-512`,
+  description: brand.tagline,
+  areaServed: {
+    '@type': 'State',
+    name: 'Chhattisgarh',
+  },
+};
+
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     <html
@@ -64,18 +121,20 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
       className={`${displaySans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationStructuredData) }}
+        />
         <CustomerAuthProvider>
           <AnalyticsTracker />
-          <ReferralCapture />
           <Suspense fallback={null}>
             <SiteHeader />
           </Suspense>
           {/* pb-24 clears the fixed mobile BottomNav, which floats with its
-              own bottom margin now (not flush to the edge) — sm:hidden
-              itself, so this bottom padding is likewise dropped at sm. On
-              desktop, the content now sits beside a dedicated left-side
-              marketplace nav rather than stretching edge-to-edge. */}
-          <div className="mx-auto flex w-full max-w-[88rem] flex-1 gap-6 px-4 pb-24 lg:px-6 sm:pb-0">
+              own bottom margin now (not flush to the edge). Desktop no longer
+              reserves a dedicated left rail, so the content can use the full
+              width of the shell. */}
+          <div className="mx-auto flex w-full max-w-[88rem] flex-1 flex-col gap-4 px-4 pb-24 lg:px-6 sm:pb-0">
             <Suspense fallback={null}>
               <DesktopSideMenu />
             </Suspense>
@@ -83,6 +142,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
               <PageTransition>{children}</PageTransition>
             </div>
           </div>
+          <SeoFooterLinks />
           <BottomNav />
         </CustomerAuthProvider>
       </body>

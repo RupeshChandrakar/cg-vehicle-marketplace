@@ -15,6 +15,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
+    // Close the mobile nav overlay whenever the route actually changes —
+    // synchronizing UI state with the router, not a plain derived value.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMobileNavOpen(false);
   }, [pathname]);
 

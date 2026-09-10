@@ -101,8 +101,6 @@ const SAMPLE_VEHICLES: SeedVehicle[] = [
     sellerName: 'Sanjay Verma',
     status: 'live',
     specs: {
-      engineCc: 2523,
-      powerBhp: 75,
       seatingCapacity: 7,
       numberOfGears: '5-speed',
     },
@@ -122,12 +120,7 @@ const SAMPLE_VEHICLES: SeedVehicle[] = [
     sellerName: 'Priya Sahu',
     status: 'live',
     specs: {
-      powerBhp: 88,
-      mileageKmpl: 21.2,
-      engineCc: 1197,
       seatingCapacity: 5,
-      groundClearanceMm: 163,
-      fuelTankCapacityL: 37,
     },
   },
   {
@@ -144,12 +137,7 @@ const SAMPLE_VEHICLES: SeedVehicle[] = [
     sellerPhone: '+919111100003',
     sellerName: 'Ankit Yadav',
     status: 'live',
-    specs: {
-      mileageKmpl: 36.5,
-      powerBhp: 20.2,
-      engineCc: 349,
-      fuelTankCapacityL: 13,
-    },
+    specs: {},
   },
   {
     categoryName: 'Scooters',
@@ -165,12 +153,7 @@ const SAMPLE_VEHICLES: SeedVehicle[] = [
     sellerPhone: '+919111100004',
     sellerName: 'Kavita Devi',
     status: 'live',
-    specs: {
-      engineCc: 109,
-      powerBhp: 7.8,
-      mileageKmpl: 50,
-      fuelTankCapacityL: 5.3,
-    },
+    specs: {},
   },
   {
     categoryName: 'Tractors',
@@ -187,12 +170,10 @@ const SAMPLE_VEHICLES: SeedVehicle[] = [
     sellerName: 'Ramesh Patel',
     status: 'live',
     specs: {
-      powerBhp: 47,
       liftingCapacityKg: 1600,
       ptoHp: 40,
       numberOfCylinders: 3,
       numberOfGears: '8F + 2R',
-      fuelTankCapacityL: 60,
     },
   },
   {
@@ -211,8 +192,6 @@ const SAMPLE_VEHICLES: SeedVehicle[] = [
     status: 'live',
     specs: {
       loadCapacityKg: 2500,
-      powerBhp: 100,
-      engineCc: 2956,
       seatingCapacity: 3,
       numberOfGears: '5-speed',
     },
@@ -232,12 +211,7 @@ const SAMPLE_VEHICLES: SeedVehicle[] = [
     sellerName: 'Neha Agarwal',
     status: 'submitted', // still under review — should not appear in public browse
     specs: {
-      powerBhp: 83,
-      mileageKmpl: 20.35,
-      engineCc: 1197,
       seatingCapacity: 5,
-      groundClearanceMm: 170,
-      fuelTankCapacityL: 37,
     },
   },
 ];

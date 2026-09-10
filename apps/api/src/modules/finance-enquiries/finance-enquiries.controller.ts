@@ -3,8 +3,8 @@ import { Throttle } from '@nestjs/throttler';
 import { FinanceEnquiriesService } from './finance-enquiries.service';
 import { CreateFinanceEnquiryDto } from './dto/create-finance-enquiry.dto';
 
-/** Public — the "Financing Available" banner on the vehicle detail page
- *  submits here, no authentication required. See FinanceEnquiriesService. */
+/** Public finance lead-capture endpoint, no authentication required.
+ *  See FinanceEnquiriesService. */
 @Controller('finance-enquiries')
 export class FinanceEnquiriesController {
   constructor(

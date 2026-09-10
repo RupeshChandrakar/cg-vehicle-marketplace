@@ -66,77 +66,91 @@ export function EnquiryActions({ vehiclePublicId }: { vehiclePublicId: number })
 
   if (activeChannel) {
     return (
-      <div className="space-y-3 rounded-2xl bg-primary-light p-4 shadow-card">
-        <p className="text-sm font-medium text-foreground">
-          {activeChannel === 'chat'
-            ? 'Chat shuru karne ke liye apni details bharein'
-            : 'Call ke liye apni details bharein'}
-        </p>
-        <div>
-          <input
-            value={name}
-            onChange={(e) => {
-              setName(e.target.value);
-              setNameError(null);
-            }}
-            placeholder="Aapka Naam"
-            className="w-full rounded-lg border border-line bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
-          />
-          {nameError && <p className="mt-1 text-xs text-danger">{nameError}</p>}
-        </div>
-        <div>
-          <div className="flex items-center overflow-hidden rounded-lg border border-line bg-background focus-within:border-primary">
-            <span className="px-3 text-sm text-muted">+91</span>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/45 p-4">
+        <div className="w-full max-w-md space-y-3 rounded-2xl bg-primary-light p-4 shadow-card">
+          <p className="text-sm font-medium text-foreground">
+            {activeChannel === 'chat'
+              ? 'Chat shuru karne ke liye apni details bharein'
+              : 'Contact ke liye apni details bharein'}
+          </p>
+          <div>
             <input
-              type="tel"
-              inputMode="numeric"
-              value={phoneDigits}
+              value={name}
               onChange={(e) => {
-                setPhoneDigits(e.target.value.replace(/\D/g, '').slice(0, 10));
+                setName(e.target.value);
+                setNameError(null);
+              }}
+              placeholder="Aapka Naam"
+              className="w-full rounded-lg border border-line bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
+            />
+            {nameError && <p className="mt-1 text-xs text-danger">{nameError}</p>}
+          </div>
+          <div>
+            <div className="flex items-center overflow-hidden rounded-lg border border-line bg-background focus-within:border-primary">
+              <span className="px-3 text-sm text-muted">+91</span>
+              <input
+                type="tel"
+                inputMode="numeric"
+                value={phoneDigits}
+                onChange={(e) => {
+                  setPhoneDigits(e.target.value.replace(/\D/g, '').slice(0, 10));
+                  setPhoneError(null);
+                }}
+                placeholder="98765 43210"
+                className="w-full border-l border-line px-3 py-2.5 text-sm text-foreground focus:outline-none"
+              />
+            </div>
+            {phoneError && <p className="mt-1 text-xs text-danger">{phoneError}</p>}
+          </div>
+          {activeChannel === 'chat' && (
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              rows={2}
+              placeholder="Apna sawaal likhein (optional)"
+              className="w-full rounded-lg border border-line bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
+            />
+          )}
+          {activeChannel === 'call' && (
+            <div className="space-y-2 rounded-xl bg-background px-3 py-3 text-center">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted">OR</p>
+              <a
+                href="tel:+917000144638"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-line px-3 py-1.5 text-sm font-semibold text-foreground transition hover:bg-primary-light"
+              >
+                <Phone className="h-4 w-4" />
+                7000144638
+              </a>
+            </div>
+          )}
+          {error && <p className="text-sm text-foreground">{error}</p>}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => void handleSubmit(activeChannel)}
+              disabled={isSubmitting}
+              className={`flex-1 rounded-2xl px-4 py-2.5 text-sm font-semibold text-white shadow-btn transition active:scale-[0.97] disabled:opacity-50 disabled:active:scale-100 ${
+                activeChannel === 'chat' ? 'bg-primary hover:bg-primary-dark' : 'bg-foreground'
+              }`}
+            >
+              {isSubmitting
+                ? 'Bhej rahe hain…'
+                : activeChannel === 'chat'
+                  ? 'Chat Shuru Karein'
+                  : 'Contact Request Bhejein'}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveChannel(null);
+                setNameError(null);
                 setPhoneError(null);
               }}
-              placeholder="98765 43210"
-              className="w-full border-l border-line px-3 py-2.5 text-sm text-foreground focus:outline-none"
-            />
+              className="press rounded-lg border border-line px-4 py-2.5 text-sm text-foreground transition hover:bg-primary-light"
+            >
+              Cancel
+            </button>
           </div>
-          {phoneError && <p className="mt-1 text-xs text-danger">{phoneError}</p>}
-        </div>
-        {activeChannel === 'chat' && (
-          <textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            rows={2}
-            placeholder="Apna sawaal likhein (optional)"
-            className="w-full rounded-lg border border-line bg-background px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
-          />
-        )}
-        {error && <p className="text-sm text-foreground">{error}</p>}
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => void handleSubmit(activeChannel)}
-            disabled={isSubmitting}
-            className={`flex-1 rounded-2xl px-4 py-2.5 text-sm font-semibold text-white shadow-btn transition active:scale-[0.97] disabled:opacity-50 disabled:active:scale-100 ${
-              activeChannel === 'chat' ? 'bg-primary hover:bg-primary-dark' : 'bg-foreground'
-            }`}
-          >
-            {isSubmitting
-              ? 'Bhej rahe hain…'
-              : activeChannel === 'chat'
-                ? 'Chat Shuru Karein'
-                : 'Call Request Bhejein'}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setActiveChannel(null);
-              setNameError(null);
-              setPhoneError(null);
-            }}
-            className="press rounded-lg border border-line px-4 py-2.5 text-sm text-foreground transition hover:bg-primary-light"
-          >
-            Cancel
-          </button>
         </div>
       </div>
     );
@@ -158,7 +172,7 @@ export function EnquiryActions({ vehiclePublicId }: { vehiclePublicId: number })
         className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-foreground px-4 py-3 text-sm font-semibold text-white shadow-btn transition active:scale-[0.97]"
       >
         <Phone className="h-4 w-4" />
-        Call Now
+        Contact
       </button>
     </div>
   );

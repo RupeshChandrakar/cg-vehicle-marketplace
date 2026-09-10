@@ -1,4 +1,12 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Req,
+} from '@nestjs/common';
+import type { Request } from 'express';
 import { AnalyticsService } from './analytics.service';
 import { TrackPageViewDto } from './dto/track-page-view.dto';
 
@@ -10,7 +18,10 @@ export class AnalyticsController {
 
   @Post('page-view')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async trackPageView(@Body() dto: TrackPageViewDto): Promise<void> {
-    await this.analyticsService.trackPageView(dto);
+  async trackPageView(
+    @Body() dto: TrackPageViewDto,
+    @Req() request: Request,
+  ): Promise<void> {
+    await this.analyticsService.trackPageView(dto, request);
   }
 }

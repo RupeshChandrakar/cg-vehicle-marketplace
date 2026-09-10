@@ -1,4 +1,4 @@
-import { ShieldCheck, MapPin, MessageCircle, CirclePlus, Wallet, type LucideIcon } from 'lucide-react';
+import { ShieldCheck, MapPin, MessageCircle, CirclePlus, type LucideIcon } from 'lucide-react';
 
 interface Reason {
   icon: LucideIcon;
@@ -44,13 +44,6 @@ const REASONS: Reason[] = [
     iconColor: 'text-purple-600',
     title: 'Aasan Selling Process',
     description: 'Apni gaadi sirf 6 simple steps mein list karein, bina kisi jhanjhat ke.',
-  },
-  {
-    icon: Wallet,
-    tint: 'bg-rose-50',
-    iconColor: 'text-rose-600',
-    title: 'Financing Sahayata',
-    description: 'Finance options ke baare mein jaanne ke liye seedhe enquiry karein.',
   },
 ];
 

@@ -16,8 +16,11 @@ import { AdminVehicleQueryDto } from './dto/admin-vehicle-query.dto';
 import { PaginatedResult } from '../../common/types/paginated-result.type';
 import { slugify } from '../../common/utils/slug.util';
 import {
+  Category,
+  Location,
   NotificationType,
   Prisma,
+  VehicleVerification,
   Vehicle,
   VehicleMedia,
   VehicleStatus,
@@ -30,21 +33,10 @@ const PUBLIC_VEHICLE_INCLUDE = {
   verification: true,
 } satisfies Prisma.VehicleInclude;
 
-const ADMIN_VEHICLE_INCLUDE = {
-  ...PUBLIC_VEHICLE_INCLUDE,
-  // `select`, not `true` — the bare relation would pull the full User row
-  // (passwordHash, refreshTokenHash, otpHash, otpAttempts, email, referral
-  // fields, ...) into every admin vehicle response. Admins only ever need
-  // to identify/contact the seller, so narrow it to that.
-  seller: { select: { id: true, name: true, phone: true } },
-} satisfies Prisma.VehicleInclude;
-
 type VehicleWithPublicInclude = Prisma.VehicleGetPayload<{
   include: typeof PUBLIC_VEHICLE_INCLUDE;
 }>;
-type VehicleWithAdminInclude = Prisma.VehicleGetPayload<{
-  include: typeof ADMIN_VEHICLE_INCLUDE;
-}>;
+type SellerPreview = { id: string; name: string | null; phone: string };
 
 export interface PublicVehicleMedia {
   id: string;
@@ -55,7 +47,8 @@ export interface PublicVehicleMedia {
 export type PublicVehicle = Omit<VehicleWithPublicInclude, 'media'> & {
   media: PublicVehicleMedia[];
 };
-export type AdminVehicle = Omit<VehicleWithAdminInclude, 'media'> & {
+export type AdminVehicle = Omit<VehicleWithPublicInclude, 'media'> & {
+  seller: SellerPreview;
   media: PublicVehicleMedia[];
 };
 /** A seller's view of their own listing — same fields as PublicVehicle
@@ -244,24 +237,103 @@ export class VehiclesService {
   async findForAdmin(
     query: AdminVehicleQueryDto,
   ): Promise<PaginatedResult<AdminVehicle>> {
-    const where: Prisma.VehicleWhereInput = {
-      status: query.status,
-      sellerId: query.sellerId,
-    };
+    const where: Prisma.VehicleWhereInput = {};
+    if (query.status) {
+      where.status = query.status;
+    }
+    if (query.sellerId) {
+      where.sellerId = query.sellerId;
+    }
 
-    const [data, total] = await Promise.all([
-      this.prisma.vehicle.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        include: ADMIN_VEHICLE_INCLUDE,
-        skip: (query.page - 1) * query.pageSize,
-        take: query.pageSize,
-      }),
-      this.prisma.vehicle.count({ where }),
-    ]);
+    const total = await this.prisma.vehicle.count({ where });
+    const data = await this.prisma.vehicle.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip: (query.page - 1) * query.pageSize,
+      take: query.pageSize,
+    });
+
+    const vehicleIds = data.map((vehicle) => vehicle.id);
+    const categoryIds = [...new Set(data.map((vehicle) => vehicle.categoryId))];
+    const locationIds = [...new Set(data.map((vehicle) => vehicle.locationId))];
+
+    const [sellerById, categories, locations, media, verifications] =
+      await Promise.all([
+        this.getSellerMap(data.map((vehicle) => vehicle.sellerId)),
+        categoryIds.length
+          ? this.prisma.category.findMany({
+              where: { id: { in: categoryIds } },
+            })
+          : Promise.resolve([] as Category[]),
+        locationIds.length
+          ? this.prisma.location.findMany({
+              where: { id: { in: locationIds } },
+            })
+          : Promise.resolve([] as Location[]),
+        vehicleIds.length
+          ? this.prisma.vehicleMedia.findMany({
+              where: { vehicleId: { in: vehicleIds } },
+              orderBy: { sortOrder: 'asc' },
+            })
+          : Promise.resolve([] as VehicleMedia[]),
+        vehicleIds.length
+          ? this.prisma.vehicleVerification.findMany({
+              where: { vehicleId: { in: vehicleIds } },
+            })
+          : Promise.resolve([] as VehicleVerification[]),
+      ]);
+
+    const categoryById = new Map(
+      categories.map((category) => [category.id, category]),
+    );
+    const locationById = new Map(
+      locations.map((location) => [location.id, location]),
+    );
+    const verificationByVehicleId = new Map(
+      verifications.map((verification) => [
+        verification.vehicleId,
+        verification,
+      ]),
+    );
+    const mediaByVehicleId = new Map<string, VehicleMedia[]>();
+    for (const item of media) {
+      const list = mediaByVehicleId.get(item.vehicleId);
+      if (list) {
+        list.push(item);
+      } else {
+        mediaByVehicleId.set(item.vehicleId, [item]);
+      }
+    }
 
     return {
-      data: data.map((vehicle) => this.toAdminVehicle(vehicle)),
+      data: data.map((vehicle) => {
+        const category = categoryById.get(vehicle.categoryId);
+        const location = locationById.get(vehicle.locationId);
+
+        if (!category) {
+          throw new NotFoundException(
+            `Category ${vehicle.categoryId} not found`,
+          );
+        }
+        if (!location) {
+          throw new NotFoundException(
+            `Location ${vehicle.locationId} not found`,
+          );
+        }
+
+        return {
+          ...vehicle,
+          category,
+          location,
+          verification: verificationByVehicleId.get(vehicle.id) ?? null,
+          seller: sellerById.get(vehicle.sellerId) ?? {
+            id: vehicle.sellerId,
+            name: null,
+            phone: '',
+          },
+          media: this.toPublicMedia(mediaByVehicleId.get(vehicle.id) ?? []),
+        };
+      }),
       meta: {
         total,
         page: query.page,
@@ -274,12 +346,20 @@ export class VehiclesService {
   async findByIdForAdmin(id: string): Promise<AdminVehicle> {
     const vehicle = await this.prisma.vehicle.findUnique({
       where: { id },
-      include: ADMIN_VEHICLE_INCLUDE,
+      include: PUBLIC_VEHICLE_INCLUDE,
     });
     if (!vehicle) {
       throw new NotFoundException(`Vehicle ${id} not found`);
     }
-    return this.toAdminVehicle(vehicle);
+    const sellerById = await this.getSellerMap([vehicle.sellerId]);
+    return this.toAdminVehicle(
+      vehicle,
+      sellerById.get(vehicle.sellerId) ?? {
+        id: vehicle.sellerId,
+        name: null,
+        phone: '',
+      },
+    );
   }
 
   /**
@@ -296,9 +376,17 @@ export class VehiclesService {
     const updated = await this.applyVehicleUpdate(
       vehicle,
       dto,
-      ADMIN_VEHICLE_INCLUDE,
+      PUBLIC_VEHICLE_INCLUDE,
     );
-    return this.toAdminVehicle(updated);
+    const sellerById = await this.getSellerMap([updated.sellerId]);
+    return this.toAdminVehicle(
+      updated,
+      sellerById.get(updated.sellerId) ?? {
+        id: updated.sellerId,
+        name: null,
+        phone: '',
+      },
+    );
   }
 
   /**
@@ -475,9 +563,25 @@ export class VehiclesService {
     };
   }
 
-  private toAdminVehicle(vehicle: VehicleWithAdminInclude): AdminVehicle {
+  private toAdminVehicle(
+    vehicle: VehicleWithPublicInclude,
+    seller: SellerPreview,
+  ): AdminVehicle {
     // Admins see the raw specs, registration number included.
-    return { ...vehicle, media: this.toPublicMedia(vehicle.media) };
+    return { ...vehicle, seller, media: this.toPublicMedia(vehicle.media) };
+  }
+
+  private async getSellerMap(
+    sellerIds: string[],
+  ): Promise<Map<string, SellerPreview>> {
+    const uniqueSellerIds = [...new Set(sellerIds)];
+    if (uniqueSellerIds.length === 0) return new Map();
+
+    const sellers = await this.prisma.user.findMany({
+      where: { id: { in: uniqueSellerIds } },
+      select: { id: true, name: true, phone: true },
+    });
+    return new Map(sellers.map((seller) => [seller.id, seller]));
   }
 
   private toSellerVehicle(vehicle: VehicleWithPublicInclude): SellerVehicle {

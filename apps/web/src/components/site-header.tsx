@@ -2,19 +2,40 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Heart, Bell, MapPin, ChevronDown, Check } from 'lucide-react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { Heart, Bell, MapPin, ChevronDown, Check, Menu, X } from 'lucide-react';
 import { brand } from '@cg/shared-config';
 import { useCustomerAuth } from '@/lib/customer-auth-context';
 import { getLocations, getNotifications } from '@/lib/api';
 import type { Location } from '@/types/vehicle';
 
+const MOBILE_MENU_ITEMS: Array<{ label: string; href: string }> = [
+  { label: 'Home', href: '/' },
+  { label: 'Browse Vehicles', href: '/?sort=newest' },
+  { label: 'Sell Your Vehicle', href: '/sell' },
+  { label: 'Favorites', href: '/favorites' },
+  { label: 'My Enquiries', href: '/my-enquiries' },
+  { label: 'My Listings', href: '/my-listings' },
+  { label: 'My Account', href: '/account' },
+];
+
 export function SiteHeader() {
   const { user, accessToken, logout } = useCustomerAuth();
+  const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [isMounted, setIsMounted] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [locations, setLocations] = useState<Location[]>([]);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    // Classic SSR-safe "mounted" flag — delays client-only rendering until
+    // after hydration so the server-rendered and first-client-rendered
+    // markup match; there's no external system to synchronize with here.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!accessToken) {
@@ -46,6 +67,13 @@ export function SiteHeader() {
     router.push(`/?${params.toString()}`);
   }
 
+  useEffect(() => {
+    // Close the mobile menu overlay whenever the route actually changes —
+    // synchronizing UI state with the router, not a plain derived value.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMobileMenuOpen(false);
+  }, [pathname, searchParams]);
+
   return (
     // safe-top reserves real device inset space now that layout.tsx's
     // viewport export sets viewportFit: 'cover' — without it this bar would
@@ -58,12 +86,22 @@ export function SiteHeader() {
     // nav) plus each page's own heading for in-app wayfinding.
     <header className="safe-top sticky top-0 z-20 bg-background sm:border-b sm:border-line sm:bg-background/95 sm:backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:py-4">
-        <Link
-          href="/"
-          className="text-sm font-bold tracking-tight text-foreground sm:text-lg"
-        >
-          {brand.name}
-        </Link>
+        <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(true)}
+            className="rounded-xl border border-line p-2 text-foreground sm:hidden"
+            aria-label="Open menu"
+          >
+            <Menu className="h-4.5 w-4.5" strokeWidth={1.85} />
+          </button>
+          <Link
+            href="/"
+            className="truncate text-sm font-bold tracking-tight text-foreground sm:text-lg"
+          >
+            {brand.name}
+          </Link>
+        </div>
 
         <div className="relative sm:hidden">
           <DistrictSelector
@@ -86,7 +124,7 @@ export function SiteHeader() {
             onChange={navigateToDistrict}
           />
 
-          {user && (
+          {isMounted && user && (
             <>
               <Link
                 href="/favorites"
@@ -125,12 +163,6 @@ export function SiteHeader() {
               >
                 My Enquiries
               </Link>
-              <Link
-                href="/refer"
-                className="press-text hidden text-sm font-medium text-foreground sm:inline"
-              >
-                Invite Friends
-              </Link>
             </>
           )}
 
@@ -141,7 +173,7 @@ export function SiteHeader() {
             Sell Your Vehicle
           </Link>
 
-          {user ? (
+          {isMounted && user ? (
             <button
               onClick={logout}
               className="press rounded-lg border border-line px-3 py-2 text-sm text-foreground transition hover:bg-primary-light"
@@ -158,6 +190,45 @@ export function SiteHeader() {
           )}
         </div>
       </div>
+
+      <button
+        type="button"
+        aria-label="Close menu overlay"
+        onClick={() => setMobileMenuOpen(false)}
+        className={`fixed inset-0 z-30 bg-black/40 transition sm:hidden ${
+          mobileMenuOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
+        }`}
+      />
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 flex w-[82vw] max-w-xs flex-col border-r border-line bg-background transition-transform duration-200 ease-out sm:hidden ${
+          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+        aria-label="Mobile sidebar"
+      >
+        <div className="flex items-center justify-between border-b border-line px-4 py-4">
+          <p className="text-sm font-semibold tracking-tight text-foreground">{brand.name}</p>
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(false)}
+            className="rounded-lg p-1.5 text-foreground"
+            aria-label="Close menu"
+          >
+            <X className="h-4.5 w-4.5" strokeWidth={1.85} />
+          </button>
+        </div>
+        <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+          {MOBILE_MENU_ITEMS.map((item) => (
+            <Link
+              key={item.label}
+              href={item.href}
+              className="block rounded-xl px-3 py-2.5 text-sm font-medium text-foreground transition hover:bg-primary-light"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+      </aside>
     </header>
   );
 }

@@ -33,10 +33,69 @@ export function trackPageView(path: string, vehiclePublicId?: number): void {
   const sessionId = getOrCreateSessionId();
   if (!sessionId) return;
 
+  const search = typeof window !== 'undefined' ? window.location.search : '';
+  const pageUrl = typeof window !== 'undefined' ? new URL(window.location.href) : null;
+  const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : undefined;
+  const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : undefined;
+  const colorScheme =
+    typeof window !== 'undefined' &&
+    'matchMedia' in window &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light';
+  const reducedMotion =
+    typeof window !== 'undefined' &&
+    'matchMedia' in window &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const touchPoints = typeof navigator !== 'undefined' ? navigator.maxTouchPoints : undefined;
+  const deviceMemory =
+    typeof navigator !== 'undefined' && 'deviceMemory' in navigator
+      ? Number((navigator as Navigator & { deviceMemory?: number }).deviceMemory)
+      : undefined;
+  const hardwareConcurrency =
+    typeof navigator !== 'undefined' && 'hardwareConcurrency' in navigator
+      ? navigator.hardwareConcurrency
+      : undefined;
+  const connectionType =
+    typeof navigator !== 'undefined' && 'connection' in navigator
+      ? (navigator as Navigator & { connection?: { effectiveType?: string } }).connection
+          ?.effectiveType
+      : undefined;
+  const utmSource = pageUrl?.searchParams.get('utm_source') ?? undefined;
+  const utmMedium = pageUrl?.searchParams.get('utm_medium') ?? undefined;
+  const utmCampaign = pageUrl?.searchParams.get('utm_campaign') ?? undefined;
+  const language = typeof navigator !== 'undefined' ? navigator.language : undefined;
+  const timezone =
+    typeof Intl !== 'undefined'
+      ? Intl.DateTimeFormat().resolvedOptions().timeZone || undefined
+      : undefined;
+  const screenWidth = typeof window !== 'undefined' ? window.screen.width : undefined;
+  const screenHeight = typeof window !== 'undefined' ? window.screen.height : undefined;
+
   void fetch(`${API_BASE_URL}/analytics/page-view`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sessionId, path, vehiclePublicId }),
+    body: JSON.stringify({
+      sessionId,
+      path: `${path}${search}`,
+      referrer: typeof document !== 'undefined' ? document.referrer || undefined : undefined,
+      utmSource,
+      utmMedium,
+      utmCampaign,
+      language,
+      timezone,
+      screenWidth,
+      screenHeight,
+        viewportWidth,
+        viewportHeight,
+        colorScheme,
+        reducedMotion,
+        touchPoints,
+        deviceMemory,
+        hardwareConcurrency,
+        connectionType,
+      vehiclePublicId,
+    }),
     keepalive: true,
   }).catch(() => undefined);
 }

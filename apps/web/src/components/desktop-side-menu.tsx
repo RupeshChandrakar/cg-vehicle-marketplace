@@ -79,11 +79,11 @@ export function DesktopSideMenu() {
 
   return (
     <aside
-      className={`hidden shrink-0 transition-[width] duration-200 ease-out lg:block ${
-        collapsed ? 'w-24' : 'w-64'
+      className={`w-full transition-[width] duration-200 ease-out lg:hidden ${
+        collapsed ? 'max-w-20' : 'max-w-none'
       }`}
     >
-      <div className="sticky top-24 rounded-[28px] border border-line bg-background p-4 shadow-card">
+      <div className="rounded-[28px] border border-line bg-background p-4 shadow-card">
         <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between gap-3'}`}>
           {!collapsed && (
             <p className="px-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted">
@@ -104,14 +104,14 @@ export function DesktopSideMenu() {
             )}
           </button>
         </div>
-        <nav className="mt-3 space-y-1" aria-label="Desktop sidebar">
+        <nav className="mt-3 flex gap-2 overflow-x-auto pb-1" aria-label="Mobile marketplace menu">
           {MENU_ITEMS.map((item) => {
             const isActive = item.match(pathname);
             return (
               <Link
                 key={item.label}
                 href={item.href}
-                className={`press flex items-center rounded-2xl px-3 py-3 text-sm transition ${
+                className={`press flex shrink-0 items-center rounded-2xl px-3 py-3 text-sm transition ${
                   collapsed ? 'justify-center' : 'gap-3'
                 } ${
                   isActive

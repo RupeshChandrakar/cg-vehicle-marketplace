@@ -15,9 +15,8 @@ import { MediaImage } from '@/components/media-image';
  * instead of one middot-joined text line, plus a divider before the
  * footer. Deliberately did NOT copy the reference's discount badge, EMI
  * line, "Save Filters," or dealer-network footer badge — this
- * marketplace has no price-history tracking, no real financing terms to
- * quote (see FinanceBanner's own honest-lead-capture framing), and no
- * dealer chain to badge, so those would all be fabricated. Kept
+ * marketplace has no price-history tracking and no dealer chain to
+ * badge, so those would be fabricated. Kept
  * CG Auto Mart's own palette rather than Spinny's purple/pink — a color
  * swap is a bigger, separately-confirmed decision every other time this
  * project has made one (see the Ola/Uber redesign).

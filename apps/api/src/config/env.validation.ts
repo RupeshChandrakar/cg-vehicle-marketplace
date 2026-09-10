@@ -24,7 +24,9 @@ export const envValidationSchema = Joi.object({
 
   JWT_SECRET: Joi.string().min(16).required(),
   JWT_ACCESS_TOKEN_TTL: Joi.string().default('15m'),
+  JWT_STAFF_ACCESS_TOKEN_TTL: Joi.string().default('1h'),
   JWT_REFRESH_TOKEN_TTL: Joi.string().default('30d'),
+  JWT_STAFF_REFRESH_TOKEN_TTL: Joi.string().default('365d'),
 
   // tlds disabled: this is a local dev placeholder address (e.g. "*.local"),
   // not a real inbox — Joi's default email check rejects non-IANA TLDs.

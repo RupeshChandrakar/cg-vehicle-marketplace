@@ -69,32 +69,6 @@ export class VehicleSpecsDto {
   // bounds (defense against garbage input), not a claim every value in
   // range is realistic for every category.
 
-  /** Engine displacement — cars, bikes, scooters, commercial vehicles. */
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(0)
-  @Max(10000)
-  engineCc?: number;
-
-  /** Max power. Labeled "BHP" for cars/bikes/commercial, "HP" for
-   *  tractors on the frontend — same underlying number, different
-   *  conventional unit name by category. */
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Min(0)
-  @Max(2000)
-  powerBhp?: number;
-
-  /** Fuel efficiency — cars, bikes, scooters. */
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Min(0)
-  @Max(500)
-  mileageKmpl?: number;
-
   /** Cars, commercial vehicles (passenger variants). */
   @IsOptional()
   @Type(() => Number)
@@ -102,22 +76,6 @@ export class VehicleSpecsDto {
   @Min(1)
   @Max(100)
   seatingCapacity?: number;
-
-  /** Cars. */
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(0)
-  @Max(1000)
-  groundClearanceMm?: number;
-
-  /** Cars, bikes, scooters, tractors, commercial vehicles. */
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Min(0)
-  @Max(1000)
-  fuelTankCapacityL?: number;
 
   /** PTO (power take-off) horsepower — tractors only. */
   @IsOptional()

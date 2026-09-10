@@ -61,6 +61,13 @@ function buildService() {
     location: {
       findUnique: jest.fn().mockResolvedValue({ id: 'loc-1', slug: 'raipur' }),
     },
+    // findByIdForAdmin()/update() batch-resolve seller name/phone via this
+    // rather than a Prisma `include` (see the admin seller-data-leak fix) —
+    // defaults empty; tests exercising those paths override with the
+    // specific seller row(s) they need.
+    user: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
     vehicle: vehicleTable,
     vehicleVerification: vehicleVerificationTable,
     $queryRaw: queryRaw,
@@ -215,13 +222,16 @@ describe('VehiclesService', () => {
     const { service, prisma } = buildService();
     prisma.vehicle.findUnique.mockResolvedValue({
       id: 'vehicle-1',
+      sellerId: 'user-1',
       specs: { registrationNumber: 'CG 08 AB 1234', rcAvailable: true },
       media: [],
       category: {},
       location: {},
       verification: null,
-      seller: { id: 'user-1', name: 'Rahul', phone: '+919876543210' },
     });
+    prisma.user.findMany.mockResolvedValueOnce([
+      { id: 'user-1', name: 'Rahul', phone: '+919876543210' },
+    ]);
 
     const result = await service.findByIdForAdmin('vehicle-1');
 

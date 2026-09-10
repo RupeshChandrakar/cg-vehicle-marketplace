@@ -1,4 +1,4 @@
-import { Cog, Cylinder, Droplets, Ruler, Settings2, TrendingUp, Users, Weight, Zap } from 'lucide-react';
+import { Cylinder, Settings2, Users, Weight, Zap } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { VehicleSpecs } from '@/types/vehicle';
 
@@ -18,12 +18,7 @@ import type { VehicleSpecs } from '@/types/vehicle';
  */
 
 export type SpecFieldKey =
-  | 'engineCc'
-  | 'powerBhp'
-  | 'mileageKmpl'
   | 'seatingCapacity'
-  | 'groundClearanceMm'
-  | 'fuelTankCapacityL'
   | 'ptoHp'
   | 'liftingCapacityKg'
   | 'loadCapacityKg'
@@ -49,12 +44,7 @@ interface FieldDef {
 }
 
 const FIELD_DEFS: Record<SpecFieldKey, FieldDef> = {
-  engineCc: { label: 'Engine', unit: 'cc', icon: Cog, inputType: 'number' },
-  powerBhp: { label: 'Power', unit: 'BHP', icon: Zap, inputType: 'number' },
-  mileageKmpl: { label: 'Mileage', unit: 'km/l', icon: TrendingUp, inputType: 'number' },
   seatingCapacity: { label: 'Seating', unit: 'seats', icon: Users, inputType: 'number' },
-  groundClearanceMm: { label: 'Ground Clearance', unit: 'mm', icon: Ruler, inputType: 'number' },
-  fuelTankCapacityL: { label: 'Fuel Tank', unit: 'L', icon: Droplets, inputType: 'number' },
   ptoHp: { label: 'PTO Power', unit: 'HP', icon: Zap, inputType: 'number' },
   liftingCapacityKg: { label: 'Lifting Capacity', unit: 'kg', icon: Weight, inputType: 'number' },
   loadCapacityKg: { label: 'Load Capacity', unit: 'kg', icon: Weight, inputType: 'number' },
@@ -71,37 +61,18 @@ interface CategoryFieldEntry {
 
 const CATEGORY_SPECS: Record<string, CategoryFieldEntry[]> = {
   cars: [
-    { key: 'powerBhp', highlight: true },
-    { key: 'mileageKmpl', highlight: true },
-    { key: 'engineCc' },
     { key: 'seatingCapacity' },
-    { key: 'groundClearanceMm' },
-    { key: 'fuelTankCapacityL' },
   ],
-  bikes: [
-    { key: 'mileageKmpl', highlight: true },
-    { key: 'powerBhp', highlight: true },
-    { key: 'engineCc' },
-    { key: 'fuelTankCapacityL' },
-  ],
-  scooters: [
-    { key: 'mileageKmpl', highlight: true },
-    { key: 'powerBhp', highlight: true },
-    { key: 'engineCc' },
-    { key: 'fuelTankCapacityL' },
-  ],
+  bikes: [],
+  scooters: [],
   tractors: [
-    { key: 'powerBhp', highlight: true, unitOverride: 'HP' },
     { key: 'liftingCapacityKg', highlight: true },
     { key: 'ptoHp' },
     { key: 'numberOfCylinders' },
     { key: 'numberOfGears' },
-    { key: 'fuelTankCapacityL' },
   ],
   'commercial-vehicles': [
     { key: 'loadCapacityKg', highlight: true },
-    { key: 'powerBhp', highlight: true },
-    { key: 'engineCc' },
     { key: 'seatingCapacity' },
     { key: 'numberOfGears' },
   ],

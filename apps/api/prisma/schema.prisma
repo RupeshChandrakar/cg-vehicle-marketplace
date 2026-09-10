@@ -548,6 +548,26 @@ model PageView {
 
   sessionId String @map("session_id")
   path      String
+  referrer  String?
+
+  referrerHost String? @map("referrer_host")
+  utmSource    String? @map("utm_source")
+  utmMedium    String? @map("utm_medium")
+  utmCampaign  String? @map("utm_campaign")
+
+  language     String?
+  timezone     String?
+  screenWidth  Int?    @map("screen_width")
+  screenHeight Int?    @map("screen_height")
+
+  ipHash     String? @map("ip_hash")
+  userAgent  String? @map("user_agent")
+  browser    String?
+  os         String?
+  deviceType String? @map("device_type")
+  country    String?
+  region     String?
+  city       String?
 
   vehicleId String?  @map("vehicle_id")
   vehicle   Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
@@ -557,5 +577,8 @@ model PageView {
   @@index([sessionId])
   @@index([vehicleId])
   @@index([createdAt])
+  @@index([deviceType])
+  @@index([country])
+  @@index([utmSource])
   @@map("page_views")
 }

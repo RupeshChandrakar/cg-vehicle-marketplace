@@ -9,10 +9,12 @@ import { VehicleGallery } from '@/features/vehicles/vehicle-gallery';
 import { VehicleViewTracker } from '@/features/vehicles/vehicle-view-tracker';
 import { WhatsAppShareButton } from '@/features/vehicles/whatsapp-share-button';
 import { EnquiryActions } from '@/features/enquiries/enquiry-actions';
-import { FinanceBanner } from '@/features/vehicles/finance-banner';
 import { FavoriteButton } from '@/features/favorites/favorite-button';
 import { getCategoryIconColor, getCategoryTint } from '@/features/vehicles/category-icons';
 import { getFilledSpecFields } from '@/features/vehicles/spec-fields';
+import { TractorInspectionChecklist } from '@/features/vehicles/tractor-inspection-checklist';
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
 async function loadVehicle(publicIdParam: string): Promise<Vehicle | null> {
   const publicId = Number(publicIdParam);
@@ -35,6 +37,25 @@ export async function generateMetadata(
       vehicle.fuelType,
     )}, in ${vehicle.location.district}. Vehicle ID ${vehicle.publicId}.`,
     alternates: { canonical: `/vehicle/${vehicle.publicId}/${vehicle.slug}` },
+    openGraph: {
+      title: `${vehicle.title} — ${formatPrice(vehicle.price)} | ${brand.name}`,
+      description: `${vehicle.year} ${vehicle.title}, ${formatKm(vehicle.kmDriven)}, ${formatFuelType(
+        vehicle.fuelType,
+      )}, in ${vehicle.location.district}. Vehicle ID ${vehicle.publicId}.`,
+      url: `/vehicle/${vehicle.publicId}/${vehicle.slug}`,
+      siteName: brand.name,
+      locale: 'en_IN',
+      type: 'website',
+      images: vehicle.media[0]?.url ? [{ url: vehicle.media[0].url }] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${vehicle.title} — ${formatPrice(vehicle.price)} | ${brand.name}`,
+      description: `${vehicle.year} ${vehicle.title}, ${formatKm(vehicle.kmDriven)}, ${formatFuelType(
+        vehicle.fuelType,
+      )}, in ${vehicle.location.district}. Vehicle ID ${vehicle.publicId}.`,
+      images: vehicle.media[0]?.url ? [vehicle.media[0].url] : undefined,
+    },
   };
 }
 
@@ -49,9 +70,22 @@ export default async function VehiclePage(props: PageProps<'/vehicle/[publicId]/
   const reviewSummary = await getVehicleReviews(vehicle.publicId).catch(
     (): VehicleReviewSummary => ({ reviews: [], average: null, count: 0 }),
   );
+  const structuredData = buildVehicleStructuredData(vehicle, reviewSummary);
+  const breadcrumbStructuredData = buildBreadcrumbStructuredData(vehicle);
+  const priceValue = Number(vehicle.price);
+  const markedPrice = Number.isFinite(priceValue) ? Math.round(priceValue * 1.2) : 0;
+  const monthlyEmi = Number.isFinite(priceValue) ? Math.max(1, Math.round(priceValue * 0.0214)) : 0;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:py-10">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbStructuredData) }}
+      />
       <VehicleViewTracker vehiclePublicId={vehicle.publicId} />
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
         <div className="lg:col-span-3">
@@ -60,29 +94,63 @@ export default async function VehiclePage(props: PageProps<'/vehicle/[publicId]/
 
         <div className="space-y-6 lg:col-span-2">
           <div className="space-y-2">
-            <div className="flex items-start justify-between gap-2">
-              <h1 className="text-xl font-extrabold tracking-tight text-foreground">
-                {vehicle.title}
-              </h1>
-              <div className="flex shrink-0 items-center gap-2">
-                {vehicle.verification && (
-                  <span className="flex items-center gap-1 rounded-full bg-success/15 px-2.5 py-1 text-xs font-medium text-success">
-                    <ShieldCheck className="h-3.5 w-3.5" />
-                    Verified
-                  </span>
-                )}
-                <WhatsAppShareButton title={vehicle.title} price={formatPrice(vehicle.price)} />
-                <FavoriteButton vehiclePublicId={vehicle.publicId} checkInitialState />
+            <div className="space-y-3 rounded-3xl border border-line bg-background p-4 shadow-card sm:p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted">
+                    UID - {vehicle.publicId}
+                  </p>
+                  <h1 className="max-w-3xl text-lg font-extrabold leading-snug tracking-tight text-foreground sm:text-2xl lg:text-[2rem]">
+                    {vehicle.year} {vehicle.title} In {vehicle.location.district}, {vehicle.location.state}
+                  </h1>
+                  <button className="inline-flex items-center gap-1 text-sm font-medium text-primary transition hover:text-primary-dark">
+                    <span className="text-base leading-none">✎</span>
+                    Change {vehicle.category.slug === 'tractors' ? 'Tractor' : vehicle.category.name}
+                  </button>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  {vehicle.verification && (
+                    <span className="rounded-full bg-success/15 px-2.5 py-1 text-xs font-medium text-success">
+                      CERTIFIED
+                    </span>
+                  )}
+                  <WhatsAppShareButton title={vehicle.title} price={formatPrice(vehicle.price)} />
+                  <FavoriteButton vehiclePublicId={vehicle.publicId} checkInitialState />
+                </div>
               </div>
+
+              <div className="flex flex-wrap items-end gap-3">
+                <p className="font-mono text-2xl font-semibold tabular-nums text-foreground sm:text-[2.1rem]">
+                  {formatPrice(vehicle.price)}
+                </p>
+                <p className="font-mono text-lg font-medium tabular-nums text-muted line-through decoration-2 decoration-muted/70">
+                  {formatPrice(markedPrice)}
+                </p>
+                <span className="rounded-full bg-error/15 px-3 py-1 text-xs font-semibold text-error">
+                  20% OFF
+                </span>
+              </div>
+
+              <p className="text-sm text-muted">
+                EMI starts at{' '}
+                <span className="font-semibold text-primary">
+                  {formatPrice(monthlyEmi)}/month
+                </span>
+              </p>
+
+              <p className="text-sm text-muted">
+                {vehicle.location.district}
+                {vehicle.specs.areaText ? `, ${vehicle.specs.areaText}` : ''},{' '}
+                {vehicle.location.state} &middot; Vehicle ID {vehicle.publicId}
+              </p>
+
+              {vehicle.verification && (
+                <div className="flex items-center gap-2 rounded-2xl bg-success/10 px-3 py-2 text-sm font-medium text-foreground">
+                  <ShieldCheck className="h-4 w-4 text-success" />
+                  Most Demanded! To be sold out soon
+                </div>
+              )}
             </div>
-            <p className="font-mono text-2xl font-semibold tabular-nums text-foreground">
-              {formatPrice(vehicle.price)}
-            </p>
-            <p className="text-sm text-muted">
-              {vehicle.location.district}
-              {vehicle.specs.areaText ? `, ${vehicle.specs.areaText}` : ''},{' '}
-              {vehicle.location.state} &middot; Vehicle ID {vehicle.publicId}
-            </p>
             {reviewSummary.count > 0 && reviewSummary.average !== null && (
               <div className="flex items-center gap-1 text-sm text-foreground">
                 <Star className="h-4 w-4 fill-gold text-gold" />
@@ -100,8 +168,6 @@ export default async function VehiclePage(props: PageProps<'/vehicle/[publicId]/
 
           <EnquiryActions vehiclePublicId={vehicle.publicId} />
 
-          <FinanceBanner vehiclePublicId={vehicle.publicId} />
-
           {vehicle.description && (
             <div className="space-y-1 border-t border-line pt-5">
               <h2 className="text-sm font-semibold text-foreground">Description</h2>
@@ -109,11 +175,15 @@ export default async function VehiclePage(props: PageProps<'/vehicle/[publicId]/
             </div>
           )}
 
-          <Overview vehicle={vehicle} />
-
           <Reviews summary={reviewSummary} />
         </div>
       </div>
+
+      {vehicle.category.slug === 'tractors' && (
+        <div className="mt-8">
+          <TractorInspectionChecklist />
+        </div>
+      )}
     </div>
   );
 }
@@ -232,30 +302,6 @@ function Highlights({ vehicle }: { vehicle: Vehicle }) {
   );
 }
 
-function Overview({ vehicle }: { vehicle: Vehicle }) {
-  const rows: Array<[string, string]> = [
-    ['Category', vehicle.category.name],
-    ['Year', String(vehicle.year)],
-  ];
-  if (vehicle.specs.insuranceValidUntil) {
-    rows.push(['Insurance Valid Up To', formatDate(vehicle.specs.insuranceValidUntil)]);
-  }
-
-  return (
-    <div className="space-y-2 border-t border-line pt-5">
-      <h2 className="text-sm font-semibold text-foreground">Overview</h2>
-      <dl className="space-y-1.5 text-sm">
-        {rows.map(([label, value]) => (
-          <div key={label} className="flex justify-between gap-4">
-            <dt className="text-muted">{label}</dt>
-            <dd className="text-foreground">{value}</dd>
-          </div>
-        ))}
-      </dl>
-    </div>
-  );
-}
-
 function Reviews({ summary }: { summary: VehicleReviewSummary }) {
   if (summary.reviews.length === 0) return null;
 
@@ -289,10 +335,105 @@ function ordinal(n: number): string {
   return `${n}th Owner`;
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
+function buildVehicleStructuredData(vehicle: Vehicle, reviewSummary: VehicleReviewSummary) {
+  const url = `${SITE_URL}/vehicle/${vehicle.publicId}/${vehicle.slug}`;
+  const imageUrls = vehicle.media.map((item) => item.url);
+  const techSpecs = getFilledSpecFields(vehicle.category.slug, vehicle.specs);
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: `${vehicle.year} ${vehicle.title}`,
+    description:
+      vehicle.description ??
+      `${vehicle.year} ${vehicle.title} in ${vehicle.location.district}, ${vehicle.location.state}.`,
+    category: vehicle.category.name,
+    brand: {
+      '@type': 'Brand',
+      name: vehicle.brand,
+    },
+    sku: String(vehicle.publicId),
+    image: imageUrls.length > 0 ? imageUrls : undefined,
+    url,
+    itemCondition: 'https://schema.org/UsedCondition',
+    additionalProperty: [
+      {
+        '@type': 'PropertyValue',
+        name: 'Fuel Type',
+        value: formatFuelType(vehicle.fuelType),
+      },
+      {
+        '@type': 'PropertyValue',
+        name: 'Transmission',
+        value: formatTransmission(vehicle.transmission),
+      },
+      {
+        '@type': 'PropertyValue',
+        name: 'KM Driven',
+        value: String(vehicle.kmDriven),
+        unitText: 'km',
+      },
+      {
+        '@type': 'PropertyValue',
+        name: 'Location',
+        value: `${vehicle.location.district}, ${vehicle.location.state}`,
+      },
+      ...techSpecs.map((spec) => ({
+        '@type': 'PropertyValue',
+        name: spec.label,
+        value: String(spec.value),
+        unitText: spec.unit,
+      })),
+    ],
+    offers: {
+      '@type': 'Offer',
+      priceCurrency: 'INR',
+      price: Number(vehicle.price),
+      availability: 'https://schema.org/InStock',
+      url,
+      seller: {
+        '@type': 'Organization',
+        name: brand.name,
+      },
+      areaServed: {
+        '@type': 'State',
+        name: vehicle.location.state,
+      },
+    },
+    aggregateRating:
+      reviewSummary.count > 0 && reviewSummary.average !== null
+        ? {
+            '@type': 'AggregateRating',
+            ratingValue: reviewSummary.average,
+            reviewCount: reviewSummary.count,
+          }
+        : undefined,
+  };
+}
+
+function buildBreadcrumbStructuredData(vehicle: Vehicle) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: SITE_URL,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: `${vehicle.category.name} in ${vehicle.location.district}`,
+        item: `${SITE_URL}/used-${vehicle.category.slug}-in-${vehicle.location.slug}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: vehicle.title,
+        item: `${SITE_URL}/vehicle/${vehicle.publicId}/${vehicle.slug}`,
+      },
+    ],
+  };
 }

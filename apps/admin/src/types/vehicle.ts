@@ -35,12 +35,7 @@ export interface VehicleSpecs {
 
   // Technical specifications — mirrors apps/web's VehicleSpecs. All
   // optional: not every field applies to every category.
-  engineCc?: number;
-  powerBhp?: number;
-  mileageKmpl?: number;
   seatingCapacity?: number;
-  groundClearanceMm?: number;
-  fuelTankCapacityL?: number;
   ptoHp?: number;
   liftingCapacityKg?: number;
   loadCapacityKg?: number;
