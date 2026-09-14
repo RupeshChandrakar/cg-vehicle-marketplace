@@ -84,6 +84,33 @@ export class CustomerAuthService {
     return { message: 'OTP sent' };
   }
 
+  async loginWithPhone(
+    phone: string,
+    name?: string,
+  ): Promise<{ user: AuthenticatedCustomer; tokens: TokenPair }> {
+    const user = await this.usersService.findOrCreateByPhone(phone, name);
+
+    const updated = await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        // Keep the same name-guard behavior as the OTP path: never overwrite
+        // an existing profile name with something typed during a later quick login.
+        name: user.name ?? name ?? null,
+      },
+    });
+
+    const tokens = await this.authService.issueTokens(updated.id, updated.role);
+    return {
+      user: {
+        id: updated.id,
+        name: updated.name,
+        phone: updated.phone,
+        role: updated.role,
+      },
+      tokens,
+    };
+  }
+
   async verifyOtp(
     phone: string,
     otp: string,

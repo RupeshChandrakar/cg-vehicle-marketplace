@@ -49,6 +49,17 @@ export class AuthController {
     return this.customerAuthService.requestOtp(dto.phone, dto.referralCode);
   }
 
+  // Temporary dev shortcut: accept a valid phone number and log the user in
+  // immediately, without an OTP. This keeps the customer flow working while
+  // the real SMS-backed flow is still being wired up in production.
+  @Throttle({ default: { limit: 20, ttl: 300_000 } })
+  @Post('customer/login')
+  loginWithPhone(
+    @Body() dto: RequestOtpDto,
+  ): Promise<{ user: AuthenticatedCustomer; tokens: TokenPair }> {
+    return this.customerAuthService.loginWithPhone(dto.phone, dto.referralCode);
+  }
+
   // 10 / 5 min per IP -- CustomerAuthService already locks out a single
   // account after MAX_OTP_ATTEMPTS wrong codes; this adds an IP-level
   // backstop against guessing across many different phone numbers from

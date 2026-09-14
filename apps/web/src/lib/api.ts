@@ -266,6 +266,17 @@ export function requestOtp(phone: string): Promise<{ message: string }> {
   });
 }
 
+export function loginWithPhone(
+  phone: string,
+  name?: string,
+): Promise<{ user: CustomerUser; tokens: TokenPair }> {
+  return request('/auth/customer/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone, name }),
+  });
+}
+
 export function verifyOtp(
   phone: string,
   otp: string,
