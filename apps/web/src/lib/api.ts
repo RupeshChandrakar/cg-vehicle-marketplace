@@ -24,6 +24,8 @@ export interface VehicleFilters {
   sort?: VehicleSortOption;
   minPrice?: number;
   maxPrice?: number;
+  hpMin?: number;
+  hpMax?: number;
 }
 
 export class ApiError extends Error {
@@ -95,6 +97,8 @@ export function getVehicles(filters: VehicleFilters): Promise<PaginatedResult<Ve
   if (filters.sort) params.set('sort', filters.sort);
   if (filters.minPrice) params.set('minPrice', String(filters.minPrice));
   if (filters.maxPrice) params.set('maxPrice', String(filters.maxPrice));
+  if (filters.hpMin !== undefined) params.set('hpMin', String(filters.hpMin));
+  if (filters.hpMax !== undefined) params.set('hpMax', String(filters.hpMax));
 
   const query = params.toString();
   return request<PaginatedResult<Vehicle>>(`/vehicles${query ? `?${query}` : ''}`);

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Navigation, X } from 'lucide-react';
+import { AlertTriangle, Navigation, X } from 'lucide-react';
 import type { Category, Location, FuelType, Transmission } from '@/types/vehicle';
 import { createVehicle, uploadVehicleMedia, detectLocation, ApiError } from '@/lib/api';
 import {
@@ -19,6 +19,9 @@ import {
 const FUEL_TYPES: FuelType[] = ['petrol', 'diesel', 'electric', 'cng', 'lpg', 'other'];
 const TRANSMISSIONS: Transmission[] = ['manual', 'automatic'];
 const MAX_PHOTOS = 10;
+const MAX_PHOTO_EDGE = 1600;
+const PHOTO_CANVAS_RATIO = 4 / 3;
+const PHOTO_JPEG_QUALITY = 0.82;
 const TOTAL_STEPS = 6;
 const INDIAN_MOBILE_PATTERN = /^[6-9]\d{9}$/;
 
@@ -55,6 +58,11 @@ interface WizardData {
   techSpecs: Partial<Record<SpecFieldKey, string>>;
 }
 
+interface PreparedPhoto {
+  file: File;
+  qualityWarning?: string;
+}
+
 const INITIAL_DATA: WizardData = {
   categorySlug: '',
   brand: '',
@@ -75,6 +83,9 @@ const INITIAL_DATA: WizardData = {
 };
 
 type SubmitState = { status: 'idle' | 'submitting' } | { status: 'error'; message: string };
+type UploadState =
+  | { status: 'idle' }
+  | { status: 'uploading'; total: number; uploaded: number; failed: number };
 
 type StepErrors = Partial<Record<keyof WizardData, string>>;
 
@@ -117,8 +128,12 @@ export function SellVehicleWizard({
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [data, setData] = useState<WizardData>(INITIAL_DATA);
-  const [photos, setPhotos] = useState<File[]>([]);
+  const [photos, setPhotos] = useState<PreparedPhoto[]>([]);
   const [submitState, setSubmitState] = useState<SubmitState>({ status: 'idle' });
+  const [uploadState, setUploadState] = useState<UploadState>({ status: 'idle' });
+  const [uploadSummary, setUploadSummary] = useState<{ uploaded: number; failed: number } | null>(
+    null,
+  );
   const [submitted, setSubmitted] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
 
@@ -161,6 +176,7 @@ export function SellVehicleWizard({
 
   async function handleSubmit(): Promise<void> {
     setSubmitState({ status: 'submitting' });
+    setUploadSummary(null);
     try {
       const vehicle = await createVehicle({
         categorySlug: data.categorySlug,
@@ -184,13 +200,43 @@ export function SellVehicleWizard({
         sellerPhone: `+91${data.phoneDigits}`,
       });
 
+      let failedUploads = 0;
       if (photos.length > 0) {
-        await uploadVehicleMedia(vehicle.id, photos);
+        const total = photos.length;
+        let uploaded = 0;
+        let failed = 0;
+        setUploadState({ status: 'uploading', total, uploaded: 0, failed: 0 });
+
+        for (const photo of photos) {
+          let ok = false;
+          for (let attempt = 1; attempt <= 2; attempt += 1) {
+            try {
+              await uploadVehicleMedia(vehicle.id, [photo.file]);
+              ok = true;
+              uploaded += 1;
+              setUploadState({ status: 'uploading', total, uploaded, failed });
+              break;
+            } catch {
+              if (attempt === 2) {
+                failed += 1;
+                setUploadState({ status: 'uploading', total, uploaded, failed });
+              }
+            }
+          }
+          if (!ok) {
+            // Non-blocking: listing is already created, seller can add missing photos later from edit flow.
+            failedUploads += 1;
+          }
+        }
+
+        setUploadSummary({ uploaded, failed });
+        setUploadState({ status: 'idle' });
       }
 
       setSubmitted(true);
-      setTimeout(() => router.push('/'), 2500);
+      setTimeout(() => router.push('/'), failedUploads > 0 ? 4500 : 2500);
     } catch (error) {
+      setUploadState({ status: 'idle' });
       const message =
         error instanceof ApiError ? error.message : 'Kuch gadbad ho gayi. Dobara try karein.';
       setSubmitState({ status: 'error', message });
@@ -207,6 +253,12 @@ export function SellVehicleWizard({
           Hamari team jald hi review karegi. Approve hone par hum aapke diye gaye number par contact
           karenge.
         </p>
+        {uploadSummary && uploadSummary.failed > 0 && (
+          <p className="mt-3 rounded-xl bg-warning/15 px-3 py-2 text-sm text-foreground">
+            Listing submit ho gayi, lekin {uploadSummary.failed} photo upload nahi ho saki.
+            My Listings me जाकर edit se dobara add kar sakte hain.
+          </p>
+        )}
       </div>
     );
   }
@@ -252,6 +304,13 @@ export function SellVehicleWizard({
         </p>
       )}
 
+      {uploadState.status === 'uploading' && (
+        <p className="rounded-xl bg-primary-light px-4 py-3 text-sm text-foreground">
+          Photos upload ho rahi hain: {uploadState.uploaded}/{uploadState.total}
+          {uploadState.failed > 0 ? ` (failed: ${uploadState.failed})` : ''}
+        </p>
+      )}
+
       <div className="flex gap-3">
         {step > 1 && (
           <button
@@ -287,7 +346,11 @@ export function SellVehicleWizard({
             onClick={handleSubmit}
             className="press flex-1 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark hover:shadow-btn-hover-primary disabled:opacity-60 disabled:shadow-none"
           >
-            {submitState.status === 'submitting' ? 'Submitting…' : 'Submit Listing'}
+            {submitState.status === 'submitting'
+              ? uploadState.status === 'uploading'
+                ? `Uploading ${uploadState.uploaded}/${uploadState.total}…`
+                : 'Submitting…'
+              : 'Submit Listing'}
           </button>
         )}
       </div>
@@ -462,17 +525,62 @@ function StepPhotos({
   photos,
   setPhotos,
 }: {
-  photos: File[];
-  setPhotos: (photos: File[]) => void;
+  photos: PreparedPhoto[];
+  setPhotos: (photos: PreparedPhoto[]) => void;
 }) {
-  function handleAdd(event: React.ChangeEvent<HTMLInputElement>): void {
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+
+  const previewUrls = useMemo(() => photos.map((photo) => URL.createObjectURL(photo.file)), [photos]);
+
+  useEffect(() => {
+    return () => {
+      previewUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [previewUrls]);
+
+  async function handleAdd(event: React.ChangeEvent<HTMLInputElement>): Promise<void> {
     const selected = Array.from(event.target.files ?? []);
-    setPhotos([...photos, ...selected].slice(0, MAX_PHOTOS));
     event.target.value = '';
+    setPhotoError(null);
+    if (selected.length === 0) return;
+
+    const remainingSlots = Math.max(0, MAX_PHOTOS - photos.length);
+    if (remainingSlots === 0) {
+      setPhotoError(`Aap maximum ${MAX_PHOTOS} photos hi add kar sakte hain.`);
+      return;
+    }
+
+    const toProcess = selected.slice(0, remainingSlots);
+    setIsProcessing(true);
+    try {
+      const processed: PreparedPhoto[] = [];
+      for (const file of toProcess) {
+        // Sequential processing avoids CPU spikes on low-end mobile devices.
+        processed.push(await optimizeListingPhoto(file));
+      }
+      setPhotos([...photos, ...processed]);
+      if (selected.length > remainingSlots) {
+        setPhotoError(`Sirf ${remainingSlots} aur photos add hui. Max ${MAX_PHOTOS} allowed hain.`);
+      }
+    } catch {
+      setPhotoError('Kuch photos process nahi ho payi. Dobara try karein.');
+    } finally {
+      setIsProcessing(false);
+    }
   }
 
   function removeAt(index: number): void {
     setPhotos(photos.filter((_, i) => i !== index));
+  }
+
+  function movePhoto(index: number, direction: -1 | 1): void {
+    const target = index + direction;
+    if (target < 0 || target >= photos.length) return;
+    const next = [...photos];
+    const [item] = next.splice(index, 1);
+    next.splice(target, 0, item);
+    setPhotos(next);
   }
 
   return (
@@ -481,14 +589,25 @@ function StepPhotos({
         Kam se kam 6 photos add karein — gaadi ke alag-alag angle se
       </p>
       <div className="grid grid-cols-3 gap-3">
-        {photos.map((file, index) => (
-          <div key={`${file.name}-${index}`} className="relative aspect-square overflow-hidden rounded-xl shadow-card">
+        {photos.map((photo, index) => (
+          <div key={`${photo.file.name}-${index}`} className="relative aspect-square overflow-hidden rounded-xl shadow-card">
             {/* eslint-disable-next-line @next/next/no-img-element -- transient local file preview, never persisted */}
             <img
-              src={URL.createObjectURL(file)}
+              src={previewUrls[index]}
               alt={`Photo ${index + 1}`}
-              className="h-full w-full object-cover"
+              className="h-full w-full bg-white object-contain"
             />
+            {index === 0 && (
+              <span className="absolute left-1.5 top-1.5 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-white">
+                Cover
+              </span>
+            )}
+            {photo.qualityWarning && (
+              <span className="absolute left-1.5 bottom-1.5 inline-flex items-center gap-1 rounded-full bg-warning/90 px-2 py-0.5 text-[10px] font-medium text-white">
+                <AlertTriangle className="h-3 w-3" />
+                {photo.qualityWarning}
+              </span>
+            )}
             <button
               type="button"
               onClick={() => removeAt(index)}
@@ -497,6 +616,26 @@ function StepPhotos({
             >
               <X className="h-3 w-3 text-white" />
             </button>
+            <div className="absolute right-1.5 bottom-1.5 flex gap-1">
+              <button
+                type="button"
+                onClick={() => movePhoto(index, -1)}
+                disabled={index === 0}
+                aria-label="Move photo left"
+                className="rounded-full bg-background/85 px-1.5 py-0.5 text-xs text-foreground disabled:opacity-40"
+              >
+                ←
+              </button>
+              <button
+                type="button"
+                onClick={() => movePhoto(index, 1)}
+                disabled={index === photos.length - 1}
+                aria-label="Move photo right"
+                className="rounded-full bg-background/85 px-1.5 py-0.5 text-xs text-foreground disabled:opacity-40"
+              >
+                →
+              </button>
+            </div>
           </div>
         ))}
         {photos.length < MAX_PHOTOS && (
@@ -506,17 +645,130 @@ function StepPhotos({
               type="file"
               accept="image/jpeg,image/png,image/webp"
               multiple
-              onChange={handleAdd}
+              onChange={(event) => {
+                void handleAdd(event);
+              }}
+              disabled={isProcessing}
               className="hidden"
             />
           </label>
         )}
       </div>
+      {isProcessing && <p className="text-xs text-muted">Photos optimize ki ja rahi hain…</p>}
+      {photoError && <p className="text-xs text-danger">{photoError}</p>}
+      <p className="text-xs text-muted">First photo cover banegi. Arrows se order change kar sakte hain.</p>
       <p className="text-xs text-muted">
         ({photos.length}/{MAX_PHOTOS})
       </p>
     </div>
   );
+}
+
+function toJpegName(name: string): string {
+  const lastDot = name.lastIndexOf('.');
+  const base = lastDot > 0 ? name.slice(0, lastDot) : name;
+  return `${base}.jpg`;
+}
+
+function canvasToJpegBlob(canvas: HTMLCanvasElement, quality: number): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error('Unable to encode image'));
+          return;
+        }
+        resolve(blob);
+      },
+      'image/jpeg',
+      quality,
+    );
+  });
+}
+
+async function optimizeListingPhoto(file: File): Promise<PreparedPhoto> {
+  const bitmap = await createImageBitmap(file);
+  try {
+    const rawW = bitmap.width;
+    const rawH = bitmap.height;
+    const scale = Math.min(1, MAX_PHOTO_EDGE / Math.max(rawW, rawH));
+    const drawW = Math.max(1, Math.round(rawW * scale));
+    const drawH = Math.max(1, Math.round(rawH * scale));
+
+    const sourceRatio = drawW / drawH;
+    const canvasW =
+      sourceRatio >= PHOTO_CANVAS_RATIO
+        ? drawW
+        : Math.max(1, Math.round(drawH * PHOTO_CANVAS_RATIO));
+    const canvasH =
+      sourceRatio >= PHOTO_CANVAS_RATIO
+        ? Math.max(1, Math.round(drawW / PHOTO_CANVAS_RATIO))
+        : drawH;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = canvasW;
+    canvas.height = canvasH;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas unavailable');
+
+    // Uniform white base gives every listing image a consistent background frame.
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvasW, canvasH);
+
+    const dx = Math.round((canvasW - drawW) / 2);
+    const dy = Math.round((canvasH - drawH) / 2);
+    ctx.drawImage(bitmap, dx, dy, drawW, drawH);
+
+    const blob = await canvasToJpegBlob(canvas, PHOTO_JPEG_QUALITY);
+    const optimizedFile = new File([blob], toJpegName(file.name), {
+      type: 'image/jpeg',
+      lastModified: Date.now(),
+    });
+
+    const sharpness = estimateSharpness(bitmap);
+    const qualityWarning = sharpness < 9 ? 'Photo blur lag rahi hai' : undefined;
+
+    return {
+      file: optimizedFile,
+      qualityWarning,
+    };
+  } finally {
+    bitmap.close();
+  }
+}
+
+function estimateSharpness(bitmap: ImageBitmap): number {
+  const sampleW = 120;
+  const sampleH = Math.max(1, Math.round((bitmap.height / bitmap.width) * sampleW));
+  const canvas = document.createElement('canvas');
+  canvas.width = sampleW;
+  canvas.height = sampleH;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return 100;
+
+  ctx.drawImage(bitmap, 0, 0, sampleW, sampleH);
+  const { data } = ctx.getImageData(0, 0, sampleW, sampleH);
+
+  let edgeSum = 0;
+  let samples = 0;
+  for (let y = 0; y < sampleH - 1; y += 1) {
+    for (let x = 0; x < sampleW - 1; x += 1) {
+      const i = (y * sampleW + x) * 4;
+      const right = i + 4;
+      const down = i + sampleW * 4;
+
+      const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+      const lumR =
+        0.299 * data[right] + 0.587 * data[right + 1] + 0.114 * data[right + 2];
+      const lumD =
+        0.299 * data[down] + 0.587 * data[down + 1] + 0.114 * data[down + 2];
+
+      edgeSum += Math.abs(lum - lumR) + Math.abs(lum - lumD);
+      samples += 2;
+    }
+  }
+
+  return samples === 0 ? 100 : edgeSum / samples;
 }
 
 function StepLocation({

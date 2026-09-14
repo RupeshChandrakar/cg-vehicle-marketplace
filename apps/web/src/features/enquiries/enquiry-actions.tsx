@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { MessageCircle, Phone } from 'lucide-react';
 import { createEnquiry, ApiError } from '@/lib/api';
@@ -12,7 +12,13 @@ type Channel = 'chat' | 'call';
 // Replaces the old disabled Chat/Call placeholders now that Phase 3's
 // enquiry pipeline exists. The customer never gets the seller's contact —
 // this always creates an Enquiry routed to an assigned agent instead.
-export function EnquiryActions({ vehiclePublicId }: { vehiclePublicId: number }) {
+export function EnquiryActions({
+  vehiclePublicId,
+  autoOpenAfterMs,
+}: {
+  vehiclePublicId: number;
+  autoOpenAfterMs?: number;
+}) {
   const router = useRouter();
   const [activeChannel, setActiveChannel] = useState<Channel | null>(null);
   const [name, setName] = useState('');
@@ -23,6 +29,21 @@ export function EnquiryActions({ vehiclePublicId }: { vehiclePublicId: number })
   const [callConfirmed, setCallConfirmed] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [hasAutoPrompted, setHasAutoPrompted] = useState(false);
+
+  useEffect(() => {
+    if (!autoOpenAfterMs || autoOpenAfterMs <= 0) return;
+    if (hasAutoPrompted || activeChannel || callConfirmed) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setActiveChannel('call');
+      setHasAutoPrompted(true);
+    }, autoOpenAfterMs);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [autoOpenAfterMs, hasAutoPrompted, activeChannel, callConfirmed]);
 
   async function handleSubmit(channel: Channel): Promise<void> {
     const nameInvalid = name.trim().length === 0;

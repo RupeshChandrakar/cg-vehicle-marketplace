@@ -77,7 +77,7 @@ export default async function VehiclePage(props: PageProps<'/vehicle/[publicId]/
   const monthlyEmi = Number.isFinite(priceValue) ? Math.max(1, Math.round(priceValue * 0.0214)) : 0;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:py-10">
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
@@ -87,36 +87,36 @@ export default async function VehiclePage(props: PageProps<'/vehicle/[publicId]/
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbStructuredData) }}
       />
       <VehicleViewTracker vehiclePublicId={vehicle.publicId} />
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
-        <div className="lg:col-span-3">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+        <div className="lg:col-span-6">
           <VehicleGallery media={vehicle.media} title={vehicle.title} />
         </div>
 
-        <div className="space-y-6 lg:col-span-2">
+        <div className="space-y-6 lg:col-span-6">
           <div className="space-y-2">
             <div className="space-y-3 rounded-3xl border border-line bg-background p-4 shadow-card sm:p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div className="space-y-1.5">
+              <div className="min-w-0 space-y-1.5">
+                <div className="flex items-start justify-between gap-3">
                   <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted">
                     UID - {vehicle.publicId}
                   </p>
-                  <h1 className="max-w-3xl text-lg font-extrabold leading-snug tracking-tight text-foreground sm:text-2xl lg:text-[2rem]">
-                    {vehicle.year} {vehicle.title} In {vehicle.location.district}, {vehicle.location.state}
-                  </h1>
-                  <button className="inline-flex items-center gap-1 text-sm font-medium text-primary transition hover:text-primary-dark">
-                    <span className="text-base leading-none">✎</span>
-                    Change {vehicle.category.slug === 'tractors' ? 'Tractor' : vehicle.category.name}
-                  </button>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {vehicle.verification && (
+                      <span className="rounded-full bg-success/15 px-2.5 py-1 text-xs font-medium text-success">
+                        CERTIFIED
+                      </span>
+                    )}
+                    <WhatsAppShareButton title={vehicle.title} price={formatPrice(vehicle.price)} />
+                    <FavoriteButton vehiclePublicId={vehicle.publicId} checkInitialState />
+                  </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  {vehicle.verification && (
-                    <span className="rounded-full bg-success/15 px-2.5 py-1 text-xs font-medium text-success">
-                      CERTIFIED
-                    </span>
-                  )}
-                  <WhatsAppShareButton title={vehicle.title} price={formatPrice(vehicle.price)} />
-                  <FavoriteButton vehiclePublicId={vehicle.publicId} checkInitialState />
-                </div>
+                <h1 className="max-w-full truncate whitespace-nowrap text-lg font-extrabold leading-tight tracking-tight text-foreground sm:text-xl lg:text-2xl">
+                  {vehicle.year} {vehicle.title} In {vehicle.location.district}, {vehicle.location.state}
+                </h1>
+                <button className="inline-flex items-center gap-1 text-sm font-medium text-primary transition hover:text-primary-dark">
+                  <span className="text-base leading-none">✎</span>
+                  Change {vehicle.category.slug === 'tractors' ? 'Tractor' : vehicle.category.name}
+                </button>
               </div>
 
               <div className="flex flex-wrap items-end gap-3">
@@ -166,7 +166,7 @@ export default async function VehiclePage(props: PageProps<'/vehicle/[publicId]/
 
           <Highlights vehicle={vehicle} />
 
-          <EnquiryActions vehiclePublicId={vehicle.publicId} />
+          <EnquiryActions vehiclePublicId={vehicle.publicId} autoOpenAfterMs={7000} />
 
           {vehicle.description && (
             <div className="space-y-1 border-t border-line pt-5">

@@ -25,6 +25,19 @@ export function CategoryFilter({
   activeCategorySlug,
   activeDistrictSlug,
 }: CategoryFilterProps) {
+  const orderedCategories = [...categories].sort((a, b) => {
+    const order: Record<string, number> = {
+      cars: 1,
+      tractors: 2,
+      bikes: 3,
+      scooters: 4,
+      'commercial-vehicles': 5,
+    };
+    const aOrder = order[a.slug] ?? Number.MAX_SAFE_INTEGER;
+    const bOrder = order[b.slug] ?? Number.MAX_SAFE_INTEGER;
+    return aOrder - bOrder;
+  });
+
   return (
     <div className="space-y-3">
       <h2 className="text-base font-semibold text-foreground">Categories</h2>
@@ -32,11 +45,12 @@ export function CategoryFilter({
         className="grid grid-cols-4 gap-3 sm:grid-cols-6 lg:grid-cols-9"
         aria-label="Vehicle categories"
       >
-        {categories.map((category) => {
+        {orderedCategories.map((category) => {
           const Icon = getCategoryIcon(category.slug);
           const tint = getCategoryTint(category.slug);
           const iconColor = getCategoryIconColor(category.slug);
           const active = activeCategorySlug === category.slug;
+          const label = category.slug === 'scooters' ? 'Scooty' : category.name;
           return (
             <Link
               key={category.id}
@@ -56,7 +70,7 @@ export function CategoryFilter({
               >
                 <Icon className={`h-6 w-6 ${active ? 'text-white' : iconColor}`} strokeWidth={1.75} />
               </span>
-              <span className="text-xs font-medium text-foreground">{category.name}</span>
+              <span className="text-xs font-medium text-foreground">{label}</span>
             </Link>
           );
         })}

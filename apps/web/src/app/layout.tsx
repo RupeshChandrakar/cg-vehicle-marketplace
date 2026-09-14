@@ -4,10 +4,10 @@ import { Inter, Geist_Mono } from 'next/font/google';
 import { brand } from '@cg/shared-config';
 import { SiteHeader } from '@/components/site-header';
 import { BottomNav } from '@/components/bottom-nav';
-import { DesktopSideMenu } from '@/components/desktop-side-menu';
 import { PageTransition } from '@/components/page-transition';
 import { AnalyticsTracker } from '@/components/analytics-tracker';
 import { SeoFooterLinks } from '@/components/seo-footer-links';
+import { WhatsAppChannelFab } from '@/components/whatsapp-channel-fab';
 import { CustomerAuthProvider } from '@/lib/customer-auth-context';
 import './globals.css';
 
@@ -135,14 +135,12 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
               reserves a dedicated left rail, so the content can use the full
               width of the shell. */}
           <div className="mx-auto flex w-full max-w-[88rem] flex-1 flex-col gap-4 px-4 pb-24 lg:px-6 sm:pb-0">
-            <Suspense fallback={null}>
-              <DesktopSideMenu />
-            </Suspense>
             <div className="min-w-0 flex-1">
               <PageTransition>{children}</PageTransition>
             </div>
           </div>
           <SeoFooterLinks />
+          <WhatsAppChannelFab />
           <BottomNav />
         </CustomerAuthProvider>
       </body>

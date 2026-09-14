@@ -29,7 +29,11 @@ export async function generateMetadata(props: PageProps<'/'>): Promise<Metadata>
   const sort = firstValue(searchParams.sort);
   const minPrice = Number(firstValue(searchParams.minPrice)) || undefined;
   const maxPrice = Number(firstValue(searchParams.maxPrice)) || undefined;
-  const hasRefinementParams = Boolean(query || sort || minPrice || maxPrice || page > 1);
+  const hpMin = Number(firstValue(searchParams.hpMin)) || undefined;
+  const hpMax = Number(firstValue(searchParams.hpMax)) || undefined;
+  const hasRefinementParams = Boolean(
+    query || sort || minPrice || maxPrice || hpMin || hpMax || page > 1,
+  );
 
   const [categories, locations] = await Promise.all([getCategories(), getLocations()]);
   const activeCategory = categories.find((category) => category.slug === categorySlug);
@@ -78,11 +82,24 @@ export default async function Home(props: PageProps<'/'>) {
   const sort = firstValue(searchParams.sort) as VehicleSortOption | undefined;
   const minPrice = Number(firstValue(searchParams.minPrice)) || undefined;
   const maxPrice = Number(firstValue(searchParams.maxPrice)) || undefined;
-  const hasActiveFilters = Boolean(query || categorySlug || sort || minPrice || maxPrice);
+  const hpMin = Number(firstValue(searchParams.hpMin)) || undefined;
+  const hpMax = Number(firstValue(searchParams.hpMax)) || undefined;
+  const hasActiveFilters = Boolean(
+    query || categorySlug || sort || minPrice || maxPrice || hpMin || hpMax,
+  );
 
   const [categories, locations] = await Promise.all([getCategories(), getLocations()]);
 
-  const baseFilters = { q: query, categorySlug, page, sort, minPrice, maxPrice };
+  const baseFilters = {
+    q: query,
+    categorySlug,
+    page,
+    sort,
+    minPrice,
+    maxPrice,
+    hpMin,
+    hpMax,
+  };
   let result = await getVehicles({ ...baseFilters, locationSlug: districtSlug });
   let fellBackToAllDistricts = false;
 
@@ -144,12 +161,150 @@ export default async function Home(props: PageProps<'/'>) {
           sort={sort}
           minPrice={minPrice}
           maxPrice={maxPrice}
+          hpMin={hpMin}
+          hpMax={hpMax}
         />
+
+        {categorySlug === 'tractors' && (
+          <TractorQuickExplore
+            activeDistrictSlug={districtSlug}
+            activeQuery={query}
+            activeHpMin={hpMin}
+            activeHpMax={hpMax}
+          />
+        )}
       </div>
 
       <WhyChooseUs />
 
       <TopSearches />
+    </div>
+  );
+}
+
+const TRACTOR_BRAND_LINKS = [
+  'Mahindra',
+  'Swaraj',
+  'John Deere',
+  'Massey Ferguson',
+  'Eicher',
+  'New Holland',
+  'Sonalika',
+  'Farmtrac',
+] as const;
+
+const TRACTOR_HP_LINKS: Array<{ label: string; hpMin?: number; hpMax?: number }> = [
+  { label: 'Under 30 HP', hpMax: 29 },
+  { label: '30 to 40 HP', hpMin: 30, hpMax: 40 },
+  { label: '40 to 50 HP', hpMin: 40, hpMax: 50 },
+  { label: '50 to 60 HP', hpMin: 50, hpMax: 60 },
+  { label: 'Above 60 HP', hpMin: 61 },
+];
+
+function TractorQuickExplore({
+  activeDistrictSlug,
+  activeQuery,
+  activeHpMin,
+  activeHpMax,
+}: {
+  activeDistrictSlug?: string;
+  activeQuery?: string;
+  activeHpMin?: number;
+  activeHpMax?: number;
+}) {
+  function hrefFor(q: string): string {
+    const params = new URLSearchParams();
+    params.set('category', 'tractors');
+    params.set('q', q);
+    if (activeDistrictSlug) {
+      params.set('district', activeDistrictSlug);
+    }
+    return `/?${params.toString()}`;
+  }
+
+  function hrefForHpRange(hpMin?: number, hpMax?: number): string {
+    const params = new URLSearchParams();
+    params.set('category', 'tractors');
+    if (hpMin !== undefined) {
+      params.set('hpMin', String(hpMin));
+    }
+    if (hpMax !== undefined) {
+      params.set('hpMax', String(hpMax));
+    }
+    if (activeDistrictSlug) {
+      params.set('district', activeDistrictSlug);
+    }
+    return `/?${params.toString()}`;
+  }
+
+  function isActiveHpRange(hpMin?: number, hpMax?: number): boolean {
+    return activeHpMin === hpMin && activeHpMax === hpMax;
+  }
+
+  function isActiveBrand(brandName: string): boolean {
+    return (activeQuery ?? '').trim().toLowerCase() === brandName.toLowerCase();
+  }
+
+  function hrefClearHp(): string {
+    const params = new URLSearchParams();
+    params.set('category', 'tractors');
+    if (activeDistrictSlug) {
+      params.set('district', activeDistrictSlug);
+    }
+    if (activeQuery) {
+      params.set('q', activeQuery);
+    }
+    return `/?${params.toString()}`;
+  }
+
+  return (
+    <div className="space-y-5 rounded-2xl bg-primary-light/40 p-4 sm:p-5">
+      <section className="space-y-3 rounded-xl bg-background p-4 shadow-card">
+        <h3 className="text-base font-semibold text-foreground">Tractors By Brand</h3>
+        <div className="flex flex-wrap gap-2.5">
+          {TRACTOR_BRAND_LINKS.map((brandName) => (
+            <Link
+              key={brandName}
+              href={hrefFor(brandName)}
+              className={`rounded-md border px-4 py-2 text-sm font-medium transition ${
+                isActiveBrand(brandName)
+                  ? 'border-primary bg-primary text-white'
+                  : 'border-primary text-primary hover:bg-primary-light'
+              }`}
+            >
+              {brandName}
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-3 rounded-xl bg-background p-4 shadow-card">
+        <h3 className="text-base font-semibold text-foreground">Tractors By HP</h3>
+        <div className="flex flex-wrap gap-2.5">
+          {TRACTOR_HP_LINKS.map((item) => (
+            <Link
+              key={item.label}
+              href={hrefForHpRange(item.hpMin, item.hpMax)}
+              className={`rounded-md border px-4 py-2 text-sm font-medium transition ${
+                isActiveHpRange(item.hpMin, item.hpMax)
+                  ? 'border-primary bg-primary text-white'
+                  : 'border-primary text-primary hover:bg-primary-light'
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
+
+          {(activeHpMin !== undefined || activeHpMax !== undefined) && (
+            <Link
+              href={hrefClearHp()}
+              className="rounded-md border border-muted px-4 py-2 text-sm font-medium text-muted transition hover:border-primary hover:text-primary"
+            >
+              Clear HP Filter
+            </Link>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
@@ -243,6 +398,8 @@ function Pagination({
   sort,
   minPrice,
   maxPrice,
+  hpMin,
+  hpMax,
 }: {
   result: PaginatedResult<Vehicle>;
   query?: string;
@@ -251,6 +408,8 @@ function Pagination({
   sort?: VehicleSortOption;
   minPrice?: number;
   maxPrice?: number;
+  hpMin?: number;
+  hpMax?: number;
 }) {
   const { page, totalPages } = result.meta;
   if (totalPages <= 1) return null;
@@ -263,6 +422,8 @@ function Pagination({
     if (sort) params.set('sort', sort);
     if (minPrice) params.set('minPrice', String(minPrice));
     if (maxPrice) params.set('maxPrice', String(maxPrice));
+    if (hpMin !== undefined) params.set('hpMin', String(hpMin));
+    if (hpMax !== undefined) params.set('hpMax', String(hpMax));
     params.set('page', String(targetPage));
     return `/?${params.toString()}`;
   }

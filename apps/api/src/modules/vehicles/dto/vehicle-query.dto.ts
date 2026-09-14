@@ -40,6 +40,18 @@ export class VehicleQueryDto extends PaginationQueryDto {
   maxPrice?: number;
 
   @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  hpMin?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  hpMax?: number;
+
+  @IsOptional()
   @IsIn(SORT_OPTIONS)
   sort: VehicleSortOption = 'newest';
 }

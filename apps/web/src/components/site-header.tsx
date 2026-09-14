@@ -3,15 +3,13 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Heart, Bell, MapPin, ChevronDown, Check, Menu, X } from 'lucide-react';
+import { Bell, MapPin, ChevronDown, Check, Menu, X } from 'lucide-react';
 import { brand } from '@cg/shared-config';
 import { useCustomerAuth } from '@/lib/customer-auth-context';
 import { getLocations, getNotifications } from '@/lib/api';
 import type { Location } from '@/types/vehicle';
 
-const MOBILE_MENU_ITEMS: Array<{ label: string; href: string }> = [
-  { label: 'Home', href: '/' },
-  { label: 'Browse Vehicles', href: '/?sort=newest' },
+const SHARED_MENU_ITEMS: Array<{ label: string; href: string }> = [
   { label: 'Sell Your Vehicle', href: '/sell' },
   { label: 'Favorites', href: '/favorites' },
   { label: 'My Enquiries', href: '/my-enquiries' },
@@ -68,8 +66,7 @@ export function SiteHeader() {
   }
 
   useEffect(() => {
-    // Close the mobile menu overlay whenever the route actually changes —
-    // synchronizing UI state with the router, not a plain derived value.
+    // Keep the drawer state in sync with navigation so it closes after a tap.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMobileMenuOpen(false);
   }, [pathname, searchParams]);
@@ -116,7 +113,7 @@ export function SiteHeader() {
         {/* Mobile (<sm): compact district switcher sits at the right side,
             while BottomNav remains the primary nav. Desktop (>=sm): full
             nav row with district selector + actions. */}
-        <div className="hidden items-center gap-4 sm:flex">
+        <div className="hidden items-center gap-3 sm:flex">
           <DistrictSelector
             activeDistrictLabel={activeDistrict?.district ?? 'All Chhattisgarh'}
             activeDistrictSlug={activeDistrictSlug}
@@ -124,15 +121,30 @@ export function SiteHeader() {
             onChange={navigateToDistrict}
           />
 
+          <nav className="hidden items-center gap-1 lg:flex" aria-label="Desktop menu">
+            {SHARED_MENU_ITEMS.map((item) => {
+              const isActive =
+                item.href === '/'
+                  ? pathname === '/'
+                  : pathname.startsWith(item.href.split('?')[0]);
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={`rounded-lg px-2.5 py-1.5 text-sm font-medium transition ${
+                    isActive
+                      ? 'bg-primary-light text-primary-dark'
+                      : 'text-foreground hover:bg-primary-light'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+
           {isMounted && user && (
             <>
-              <Link
-                href="/favorites"
-                aria-label="Favorites"
-                className="press-icon text-foreground"
-              >
-                <Heart className="h-5 w-5" strokeWidth={1.75} />
-              </Link>
               <Link
                 href="/notifications"
                 aria-label="Notifications"
@@ -145,33 +157,8 @@ export function SiteHeader() {
                   </span>
                 )}
               </Link>
-              <Link
-                href="/account"
-                className="press-text hidden text-sm font-medium text-foreground sm:inline"
-              >
-                My Account
-              </Link>
-              <Link
-                href="/my-listings"
-                className="press-text hidden text-sm font-medium text-foreground sm:inline"
-              >
-                My Listings
-              </Link>
-              <Link
-                href="/my-enquiries"
-                className="press-text hidden text-sm font-medium text-foreground sm:inline"
-              >
-                My Enquiries
-              </Link>
             </>
           )}
-
-          <Link
-            href="/sell"
-            className="rounded-2xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark hover:shadow-btn-hover-primary active:scale-[0.97]"
-          >
-            Sell Your Vehicle
-          </Link>
 
           {isMounted && user ? (
             <button
@@ -207,7 +194,7 @@ export function SiteHeader() {
         aria-label="Mobile sidebar"
       >
         <div className="flex items-center justify-between border-b border-line px-4 py-4">
-          <p className="text-sm font-semibold tracking-tight text-foreground">{brand.name}</p>
+          <p className="text-sm font-semibold tracking-tight text-foreground">Menu</p>
           <button
             type="button"
             onClick={() => setMobileMenuOpen(false)}
@@ -217,16 +204,26 @@ export function SiteHeader() {
             <X className="h-4.5 w-4.5" strokeWidth={1.85} />
           </button>
         </div>
-        <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-          {MOBILE_MENU_ITEMS.map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              className="block rounded-xl px-3 py-2.5 text-sm font-medium text-foreground transition hover:bg-primary-light"
-            >
-              {item.label}
-            </Link>
-          ))}
+        <nav className="flex-1 space-y-1 overflow-y-auto p-3" aria-label="Mobile menu">
+          {SHARED_MENU_ITEMS.map((item) => {
+            const isActive =
+              item.href === '/'
+                ? pathname === '/'
+                : pathname.startsWith(item.href.split('?')[0]);
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
+                className={`block rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                  isActive
+                    ? 'bg-primary-light text-primary-dark'
+                    : 'text-foreground hover:bg-primary-light'
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
       </aside>
     </header>

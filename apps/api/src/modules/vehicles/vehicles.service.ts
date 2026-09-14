@@ -117,11 +117,36 @@ export class VehiclesService {
   async findPublished(
     query: VehicleQueryDto,
   ): Promise<PaginatedResult<PublicVehicle>> {
+    if (
+      query.hpMin !== undefined &&
+      query.hpMax !== undefined &&
+      query.hpMin > query.hpMax
+    ) {
+      throw new BadRequestException('hpMin cannot be greater than hpMax');
+    }
+
+    const hpVehicleIds = await this.findVehicleIdsByPtoHp(
+      query.hpMin,
+      query.hpMax,
+    );
+    if (hpVehicleIds && hpVehicleIds.length === 0) {
+      return {
+        data: [],
+        meta: {
+          total: 0,
+          page: query.page,
+          pageSize: query.pageSize,
+          totalPages: 0,
+        },
+      };
+    }
+
     const where: Prisma.VehicleWhereInput = {
       status: VehicleStatus.live,
       category: query.categorySlug ? { slug: query.categorySlug } : undefined,
       location: query.locationSlug ? { slug: query.locationSlug } : undefined,
       price: { gte: query.minPrice, lte: query.maxPrice },
+      id: hpVehicleIds ? { in: hpVehicleIds } : undefined,
       OR: query.q
         ? [
             { title: { contains: query.q, mode: 'insensitive' } },
@@ -158,6 +183,33 @@ export class VehiclesService {
         totalPages: Math.ceil(total / query.pageSize),
       },
     };
+  }
+
+  private async findVehicleIdsByPtoHp(
+    hpMin?: number,
+    hpMax?: number,
+  ): Promise<string[] | undefined> {
+    if (hpMin === undefined && hpMax === undefined) {
+      return undefined;
+    }
+
+    const clauses: Prisma.Sql[] = [
+      Prisma.sql`jsonb_typeof(v.specs) = 'object'`,
+      Prisma.sql`(v.specs ? 'ptoHp')`,
+      Prisma.sql`NULLIF(v.specs->>'ptoHp', '') IS NOT NULL`,
+      Prisma.sql`(v.specs->>'ptoHp') ~ '^[0-9]+(\\.[0-9]+)?$'`,
+    ];
+    if (hpMin !== undefined) {
+      clauses.push(Prisma.sql`(v.specs->>'ptoHp')::numeric >= ${hpMin}`);
+    }
+    if (hpMax !== undefined) {
+      clauses.push(Prisma.sql`(v.specs->>'ptoHp')::numeric <= ${hpMax}`);
+    }
+
+    const rows = await this.prisma.$queryRaw<Array<{ id: string }>>(
+      Prisma.sql`SELECT v.id FROM vehicles v WHERE ${Prisma.join(clauses, ' AND ')}`,
+    );
+    return rows.map((row) => row.id);
   }
 
   async findByPublicId(publicId: number): Promise<PublicVehicle> {
