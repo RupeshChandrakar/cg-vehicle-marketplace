@@ -110,7 +110,7 @@ function QueueContent() {
           <span>Showing listings from one seller only.</span>
           <button
             onClick={() => router.push('/queue')}
-            className="flex items-center gap-1 rounded-full border border-line bg-background px-2.5 py-1 text-xs font-medium text-foreground transition hover:bg-line/40"
+            className="press-chip flex items-center gap-1 rounded-full border border-line bg-background px-2.5 py-1 text-xs font-medium text-foreground transition hover:bg-line/40"
           >
             <X className="h-3.5 w-3.5" strokeWidth={1.75} />
             Clear filter
@@ -123,7 +123,7 @@ function QueueContent() {
           <button
             key={filter}
             onClick={() => setStatus(filter)}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+            className={`press-chip rounded-full px-4 py-2 text-sm font-medium transition ${
               status === filter
                 ? 'bg-primary text-white shadow-btn'
                 : 'bg-background text-foreground shadow-card hover:shadow-card-hover'
@@ -179,13 +179,13 @@ function QueueContent() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setSelectedIds(new Set())}
-              className="rounded-full px-3 py-2 text-sm text-muted"
+              className="press-text rounded-full px-3 py-2 text-sm text-muted"
             >
               Clear
             </button>
             <button
               onClick={handleCreateDigest}
-              className="flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a]"
+              className="press flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a]"
             >
               <Share2 className="h-4 w-4" strokeWidth={1.75} />
               Create WhatsApp Digest
@@ -282,7 +282,7 @@ function VehicleReviewCard({
           </span>
           <Link
             href={`/queue/${vehicle.id}/edit`}
-            className="rounded-full border border-line px-3 py-1 text-xs font-medium text-foreground transition hover:bg-primary-light"
+            className="press rounded-full border border-line px-3 py-1 text-xs font-medium text-foreground transition hover:bg-primary-light"
           >
             Edit
           </Link>
@@ -315,13 +315,13 @@ function VehicleReviewCard({
                 <button
                   onClick={() => void handleReject()}
                   disabled={isSubmitting}
-                  className="rounded-lg border border-line px-3 py-1.5 text-sm text-foreground transition hover:bg-primary-light disabled:opacity-60"
+                  className="press rounded-lg border border-line px-3 py-1.5 text-sm text-foreground transition hover:bg-primary-light disabled:opacity-60"
                 >
                   Confirm reject
                 </button>
                 <button
                   onClick={() => setIsRejecting(false)}
-                  className="px-3 py-1.5 text-sm text-muted"
+                  className="press-text px-3 py-1.5 text-sm text-muted"
                 >
                   Cancel
                 </button>
@@ -332,14 +332,14 @@ function VehicleReviewCard({
               <button
                 onClick={() => void handleApprove()}
                 disabled={isSubmitting}
-                className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] disabled:opacity-60"
+                className="press rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] disabled:opacity-60"
               >
                 Approve
               </button>
               <button
                 onClick={() => setIsRejecting(true)}
                 disabled={isSubmitting}
-                className="rounded-full border border-line px-4 py-2 text-sm text-foreground transition hover:bg-primary-light disabled:opacity-60"
+                className="press rounded-full border border-line px-4 py-2 text-sm text-foreground transition hover:bg-primary-light disabled:opacity-60"
               >
                 Reject
               </button>

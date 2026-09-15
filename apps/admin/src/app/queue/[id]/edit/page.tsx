@@ -465,7 +465,7 @@ function EditForm({
       <button
         type="submit"
         disabled={isSaving}
-        className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] disabled:opacity-60"
+        className="press rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] disabled:opacity-60"
       >
         {isSaving ? 'Saving…' : 'Save changes'}
       </button>
@@ -546,7 +546,7 @@ function PhotoManager({
           Photos ({photos.length}/{MAX_PHOTOS})
         </h2>
         <label
-          className={`cursor-pointer rounded-full border border-line px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-primary-light ${
+          className={`press cursor-pointer rounded-full border border-line px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-primary-light ${
             isUploading || photos.length >= MAX_PHOTOS ? 'pointer-events-none opacity-50' : ''
           }`}
         >
@@ -577,7 +577,7 @@ function PhotoManager({
                   type="button"
                   onClick={() => void handleMove(index, -1)}
                   disabled={index === 0 || busyMediaId !== null}
-                  className="rounded px-1.5 py-0.5 text-xs text-white disabled:opacity-30"
+                  className="press-icon rounded px-1.5 py-0.5 text-xs text-white disabled:opacity-30"
                 >
                   ↑
                 </button>
@@ -585,7 +585,7 @@ function PhotoManager({
                   type="button"
                   onClick={() => void handleMove(index, 1)}
                   disabled={index === photos.length - 1 || busyMediaId !== null}
-                  className="rounded px-1.5 py-0.5 text-xs text-white disabled:opacity-30"
+                  className="press-icon rounded px-1.5 py-0.5 text-xs text-white disabled:opacity-30"
                 >
                   ↓
                 </button>
@@ -593,7 +593,7 @@ function PhotoManager({
                   type="button"
                   onClick={() => void handleRemove(photo.id)}
                   disabled={busyMediaId !== null}
-                  className="rounded px-1.5 py-0.5 text-xs text-white transition hover:text-red-300 disabled:opacity-30"
+                  className="press-icon rounded px-1.5 py-0.5 text-xs text-white transition hover:text-red-300 disabled:opacity-30"
                 >
                   Remove
                 </button>

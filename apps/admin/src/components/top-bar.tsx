@@ -28,14 +28,18 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
         <button
           type="button"
           onClick={onMenuClick}
-          className="rounded-xl border border-line p-2 text-foreground lg:hidden"
+          className="press-icon rounded-xl border border-line p-2 text-foreground lg:hidden"
           aria-label="Open menu"
         >
           <Menu className="h-5 w-5" strokeWidth={1.75} />
         </button>
         <h1 className="truncate text-base font-semibold text-foreground sm:text-lg">{title}</h1>
       </div>
-      <Link href="/notifications" aria-label="Notifications" className="relative shrink-0 text-foreground">
+      <Link
+        href="/notifications"
+        aria-label="Notifications"
+        className="press-icon relative shrink-0 text-foreground"
+      >
         <Bell className="h-5 w-5" strokeWidth={1.75} />
         {unreadCount > 0 && (
           <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-white">

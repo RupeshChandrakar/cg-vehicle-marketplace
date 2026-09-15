@@ -78,7 +78,7 @@ export function VehicleDocumentsChecklistTabs() {
               key={tab.key}
               type="button"
               onClick={() => setActiveTab(tab.key)}
-              className={`rounded-md border px-5 py-2 text-sm font-medium transition ${
+              className={`press-chip rounded-md border px-5 py-2 text-sm font-medium transition ${
                 active
                   ? 'border-foreground bg-background text-primary'
                   : 'border-line bg-background/80 text-foreground hover:bg-background'

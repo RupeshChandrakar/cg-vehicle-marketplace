@@ -85,7 +85,7 @@ export function Sidebar({
         <button
           type="button"
           onClick={onClose}
-          className="rounded-xl p-2 text-white/70 transition hover:bg-white/10 hover:text-white lg:hidden"
+          className="press-icon rounded-xl p-2 text-white/70 transition hover:bg-white/10 hover:text-white lg:hidden"
           aria-label="Close menu"
         >
           <X className="h-5 w-5" strokeWidth={1.75} />
@@ -102,7 +102,7 @@ export function Sidebar({
               key={item.href}
               href={item.href}
               onClick={onClose}
-              className={`flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+              className={`press flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition ${
                 active ? 'bg-primary text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'
               }`}
             >
@@ -135,7 +135,7 @@ export function Sidebar({
             onClose();
             logout();
           }}
-          className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-white/70 transition hover:bg-white/10 hover:text-white"
+          className="press flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-white/70 transition hover:bg-white/10 hover:text-white"
         >
           <LogOut className="h-4 w-4" strokeWidth={1.75} />
           Log out

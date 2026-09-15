@@ -66,7 +66,7 @@ export default function NotificationsPage() {
         {hasUnread && (
           <button
             onClick={() => void handleMarkAllRead()}
-            className="ml-auto text-sm font-medium text-primary"
+            className="press-text ml-auto text-sm font-medium text-primary"
           >
             Mark all as read
           </button>
@@ -93,7 +93,7 @@ export default function NotificationsPage() {
               key={notification.id}
               type="button"
               onClick={() => !notification.isRead && void handleMarkRead(notification.id)}
-              className={`block w-full rounded-2xl p-4 text-left text-sm shadow-card transition ${
+              className={`press-card block w-full rounded-2xl p-4 text-left text-sm shadow-card transition ${
                 notification.isRead ? 'bg-background' : 'bg-primary-light'
               }`}
             >

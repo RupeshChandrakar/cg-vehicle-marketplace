@@ -76,7 +76,7 @@ export default function ReelsPage() {
       <button
         type="button"
         onClick={() => setShowCreateForm((s) => !s)}
-        className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a]"
+        className="press rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a]"
       >
         {showCreateForm ? 'Cancel' : '+ Create New Reel'}
       </button>
@@ -178,7 +178,7 @@ function CreateReelForm({
       <button
         type="submit"
         disabled={!vehicleId || isSubmitting}
-        className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] disabled:opacity-50"
+        className="press rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] disabled:opacity-50"
       >
         {isSubmitting ? 'Starting…' : 'Generate Reel'}
       </button>

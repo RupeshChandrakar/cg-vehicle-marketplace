@@ -130,7 +130,7 @@ function SellerCard({ seller }: { seller: AdminSeller }) {
         </div>
         <Link
           href={`/queue?sellerId=${seller.id}`}
-          className="self-start shrink-0 rounded-full border border-line px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-primary-light"
+          className="press self-start shrink-0 rounded-full border border-line px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-primary-light"
         >
           View listings
         </Link>

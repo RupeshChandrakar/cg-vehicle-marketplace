@@ -613,7 +613,7 @@ function StepPhotos({
               </span>
             )}
             {photo.qualityWarning && (
-              <span className="absolute left-1.5 bottom-1.5 inline-flex items-center gap-1 rounded-full bg-warning/90 px-2 py-0.5 text-[10px] font-medium text-white">
+              <span className="absolute left-1.5 bottom-1.5 inline-flex items-center gap-1 rounded-full bg-danger/90 px-2 py-0.5 text-[10px] font-medium text-white">
                 <AlertTriangle className="h-3 w-3" />
                 {photo.qualityWarning}
               </span>
@@ -632,7 +632,7 @@ function StepPhotos({
                 onClick={() => movePhoto(index, -1)}
                 disabled={index === 0}
                 aria-label="Move photo left"
-                className="rounded-full bg-background/85 px-1.5 py-0.5 text-xs text-foreground disabled:opacity-40"
+                className="press-icon rounded-full bg-background/85 px-1.5 py-0.5 text-xs text-foreground disabled:opacity-40"
               >
                 ←
               </button>
@@ -641,7 +641,7 @@ function StepPhotos({
                 onClick={() => movePhoto(index, 1)}
                 disabled={index === photos.length - 1}
                 aria-label="Move photo right"
-                className="rounded-full bg-background/85 px-1.5 py-0.5 text-xs text-foreground disabled:opacity-40"
+                className="press-icon rounded-full bg-background/85 px-1.5 py-0.5 text-xs text-foreground disabled:opacity-40"
               >
                 →
               </button>

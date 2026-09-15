@@ -74,7 +74,7 @@ export default function EnquiriesPage() {
           <button
             key={filter}
             onClick={() => setStatus(filter)}
-            className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${
+            className={`press-chip shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${
               status === filter
                 ? 'bg-primary text-white shadow-btn'
                 : 'bg-background text-foreground shadow-card hover:shadow-card-hover'
@@ -114,7 +114,7 @@ function EnquiryRow({ enquiry }: { enquiry: AdminEnquiry }) {
   return (
     <Link
       href={`/enquiries/${enquiry.id}`}
-      className="block rounded-2xl bg-background p-4 shadow-card transition hover:shadow-card-hover"
+      className="press-card block rounded-2xl bg-background p-4 shadow-card transition hover:shadow-card-hover"
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">

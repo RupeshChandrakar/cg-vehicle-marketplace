@@ -97,7 +97,7 @@ export function TractorInspectionChecklist() {
                 key={tab.key}
                 type="button"
                 onClick={() => setActiveTab(tab.key)}
-                className={`rounded-t-md border px-6 py-2.5 text-base font-medium transition ${
+                className={`press-chip rounded-t-md border px-6 py-2.5 text-base font-medium transition ${
                   active
                     ? 'border-foreground bg-background text-primary'
                     : 'border-line bg-background/70 text-foreground hover:bg-background'

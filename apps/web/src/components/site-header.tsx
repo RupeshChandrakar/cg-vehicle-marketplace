@@ -103,7 +103,7 @@ export function SiteHeader() {
           <button
             type="button"
             onClick={() => setMobileMenuOpen(true)}
-            className="rounded-xl border border-line p-2 text-foreground sm:hidden"
+            className="press-icon rounded-xl border border-line p-2 text-foreground sm:hidden"
             aria-label="Open menu"
           >
             <Menu className="h-4.5 w-4.5" strokeWidth={1.85} />
@@ -216,7 +216,7 @@ export function SiteHeader() {
           <button
             type="button"
             onClick={() => setMobileMenuOpen(false)}
-            className="rounded-lg p-1.5 text-foreground"
+            className="press-icon rounded-lg p-1.5 text-foreground"
             aria-label="Close menu"
           >
             <X className="h-4.5 w-4.5" strokeWidth={1.85} />
@@ -259,14 +259,14 @@ function ContactBar() {
       <div className="mx-auto flex max-w-6xl items-center justify-center gap-4 sm:justify-between">
         <a
           href={`mailto:${brand.supportEmail}`}
-          className="hidden min-w-0 items-center gap-1.5 truncate text-xs hover:underline sm:flex"
+          className="press-text hidden min-w-0 items-center gap-1.5 truncate text-xs hover:underline sm:flex"
         >
           <Mail className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
           <span className="truncate">{brand.supportEmail}</span>
         </a>
         <a
           href={`tel:${brand.supportPhone}`}
-          className="flex shrink-0 items-center gap-1.5 text-xs font-bold hover:underline sm:text-sm"
+          className="press-text flex shrink-0 items-center gap-1.5 text-xs font-bold hover:underline sm:text-sm"
         >
           <Phone className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
           Call Now: {formatPhoneDisplay(brand.supportPhone)}
@@ -331,7 +331,7 @@ function DistrictSelector({
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="block max-w-28 truncate text-left"
+        className="press-text block max-w-28 truncate text-left"
         aria-haspopup="listbox"
         aria-expanded={open}
       >
@@ -360,7 +360,7 @@ function DistrictSelector({
                     onChange(option.slug);
                     setOpen(false);
                   }}
-                  className="flex w-full items-center justify-between px-3 py-2 text-left text-sm text-foreground transition hover:bg-primary-light"
+                  className="press-chip flex w-full items-center justify-between px-3 py-2 text-left text-sm text-foreground transition hover:bg-primary-light"
                   role="option"
                   aria-selected={isActive}
                 >

@@ -147,7 +147,7 @@ function ReviewForm({ enquiry, accessToken }: { enquiry: MyEnquiry; accessToken:
             type="button"
             onClick={() => setRating(value)}
             aria-label={`${value} stars`}
-            className="p-0.5"
+            className="press-icon p-0.5"
           >
             <Star
               className={value <= rating ? 'h-5 w-5 fill-gold text-gold' : 'h-5 w-5 text-line'}

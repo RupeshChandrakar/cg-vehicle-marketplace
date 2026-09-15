@@ -267,7 +267,7 @@ function TractorQuickExplore({
             <Link
               key={brandName}
               href={hrefFor(brandName)}
-              className={`rounded-md border px-4 py-2 text-sm font-medium transition ${
+              className={`press-chip rounded-md border px-4 py-2 text-sm font-medium transition ${
                 isActiveBrand(brandName)
                   ? 'border-primary bg-primary text-white'
                   : 'border-primary text-primary hover:bg-primary-light'
@@ -286,7 +286,7 @@ function TractorQuickExplore({
             <Link
               key={item.label}
               href={hrefForHpRange(item.hpMin, item.hpMax)}
-              className={`rounded-md border px-4 py-2 text-sm font-medium transition ${
+              className={`press-chip rounded-md border px-4 py-2 text-sm font-medium transition ${
                 isActiveHpRange(item.hpMin, item.hpMax)
                   ? 'border-primary bg-primary text-white'
                   : 'border-primary text-primary hover:bg-primary-light'
@@ -299,7 +299,7 @@ function TractorQuickExplore({
           {(activeHpMin !== undefined || activeHpMax !== undefined) && (
             <Link
               href={hrefClearHp()}
-              className="rounded-md border border-muted px-4 py-2 text-sm font-medium text-muted transition hover:border-primary hover:text-primary"
+              className="press-chip rounded-md border border-muted px-4 py-2 text-sm font-medium text-muted transition hover:border-primary hover:text-primary"
             >
               Clear HP Filter
             </Link>
@@ -445,7 +445,7 @@ function Pagination({
       {page > 1 && (
         <Link
           href={hrefFor(page - 1)}
-          className="rounded-full px-4 py-2 font-medium text-primary transition hover:bg-primary-light"
+          className="press rounded-full px-4 py-2 font-medium text-primary transition hover:bg-primary-light"
         >
           Previous
         </Link>
@@ -456,7 +456,7 @@ function Pagination({
       {page < totalPages && (
         <Link
           href={hrefFor(page + 1)}
-          className="rounded-full px-4 py-2 font-medium text-primary transition hover:bg-primary-light"
+          className="press rounded-full px-4 py-2 font-medium text-primary transition hover:bg-primary-light"
         >
           Next
         </Link>

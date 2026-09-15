@@ -138,7 +138,7 @@ export function EnquiryActions({
               <p className="text-xs font-semibold uppercase tracking-wide text-muted">OR</p>
               <a
                 href={`tel:${brand.supportPhone}`}
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-line px-3 py-1.5 text-sm font-semibold text-foreground transition hover:bg-primary-light"
+                className="press inline-flex items-center justify-center gap-2 rounded-full border border-line px-3 py-1.5 text-sm font-semibold text-foreground transition hover:bg-primary-light"
               >
                 <Phone className="h-4 w-4" />
                 {brand.supportPhone.replace('+91', '')}

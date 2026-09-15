@@ -106,6 +106,78 @@ body {
   padding: 0.625rem 1rem;
 }
 
+/* --- Motion tokens + press/tactile feedback -----------------------------
+   Same primitive as apps/web's globals.css (kept in sync) -- one class per
+   tappable-surface shape: `.press` for standard buttons, `.press-icon` for
+   icon-only buttons, `.press-card` for clickable cards/rows, `.press-chip`
+   for filter pills. These live at the end of the file so they win over a
+   bare Tailwind `transition` utility on equal specificity. */
+:root {
+  --ease-snappy: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-snappy: 120ms var(--ease-snappy);
+}
+.press {
+  transition:
+    transform var(--transition-snappy),
+    box-shadow var(--transition-snappy),
+    background-color var(--transition-snappy),
+    color var(--transition-snappy);
+}
+.press:active:not(:disabled) {
+  transform: scale(0.97);
+  box-shadow: var(--shadow-btn);
+}
+.press-card {
+  transition:
+    transform var(--transition-snappy),
+    box-shadow var(--transition-snappy);
+}
+.press-card:active {
+  transform: scale(0.98);
+  box-shadow: var(--shadow-card);
+}
+.press-icon {
+  transition:
+    transform var(--transition-snappy),
+    background-color var(--transition-snappy),
+    color var(--transition-snappy);
+}
+.press-icon:active:not(:disabled) {
+  transform: scale(0.88);
+}
+.press-chip {
+  transition:
+    transform var(--transition-snappy),
+    background-color var(--transition-snappy),
+    color var(--transition-snappy);
+}
+.press-chip:active:not(:disabled) {
+  transform: scale(0.95);
+}
+.press-text {
+  transition:
+    opacity var(--transition-snappy),
+    color var(--transition-snappy);
+}
+.press-text:active {
+  opacity: 0.55;
+}
+@media (prefers-reduced-motion: reduce) {
+  .press:active:not(:disabled),
+  .press-card:active,
+  .press-icon:active:not(:disabled),
+  .press-chip:active:not(:disabled) {
+    transform: none;
+  }
+}
+.press,
+.press-icon,
+.press-card,
+.press-chip,
+.press-text {
+  -webkit-touch-callout: none;
+}
+
 /* --- Empty-state shell (zero-results tables/lists) ---------------------- */
 .empty-state {
   display: flex;

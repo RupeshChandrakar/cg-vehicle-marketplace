@@ -66,7 +66,7 @@ export function TopSearches() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="rounded-full border border-line bg-primary-light px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-background"
+                  className="press-chip rounded-full border border-line bg-primary-light px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-background"
                 >
                   {link.label}
                 </Link>
@@ -79,19 +79,19 @@ export function TopSearches() {
       <div className="flex flex-wrap gap-2 border-t border-line pt-3">
         <Link
           href="/second-hand-cars-in-raipur"
-          className="text-xs font-medium text-primary transition hover:text-primary-dark"
+          className="press-text text-xs font-medium text-primary transition hover:text-primary-dark"
         >
           Second Hand Cars in Raipur
         </Link>
         <Link
           href="/second-hand-bikes-in-bilaspur"
-          className="text-xs font-medium text-primary transition hover:text-primary-dark"
+          className="press-text text-xs font-medium text-primary transition hover:text-primary-dark"
         >
           Second Hand Bikes in Bilaspur
         </Link>
         <Link
           href="/second-hand-tractors-in-mahasamund"
-          className="text-xs font-medium text-primary transition hover:text-primary-dark"
+          className="press-text text-xs font-medium text-primary transition hover:text-primary-dark"
         >
           Second Hand Tractors in Mahasamund
         </Link>

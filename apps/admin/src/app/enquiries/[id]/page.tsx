@@ -209,7 +209,7 @@ function StatusActions({
             key={status}
             onClick={() => void moveTo(status)}
             disabled={isSubmitting}
-            className="rounded-full bg-background px-4 py-2 text-sm font-medium text-foreground shadow-card transition hover:shadow-card-hover disabled:opacity-60"
+            className="press rounded-full bg-background px-4 py-2 text-sm font-medium text-foreground shadow-card transition hover:shadow-card-hover disabled:opacity-60"
           >
             Mark {status.replace('_', ' ')}
           </button>
@@ -285,7 +285,7 @@ function ChatPanel({ accessToken, enquiryId }: { accessToken: string; enquiryId:
           type="button"
           onClick={() => void handleSuggest()}
           disabled={isSuggesting}
-          className="flex items-center gap-1.5 rounded-full bg-primary-light px-3 py-1.5 text-xs font-medium text-primary transition hover:shadow-card disabled:opacity-60"
+          className="press flex items-center gap-1.5 rounded-full bg-primary-light px-3 py-1.5 text-xs font-medium text-primary transition hover:shadow-card disabled:opacity-60"
         >
           <Sparkles className="h-3.5 w-3.5" strokeWidth={1.75} />
           {isSuggesting ? 'Drafting…' : 'Suggest Reply'}
@@ -316,7 +316,7 @@ function ChatPanel({ accessToken, enquiryId }: { accessToken: string; enquiryId:
         <button
           type="submit"
           disabled={!ready || draft.trim().length === 0}
-          className="shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] disabled:opacity-60"
+          className="press shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-btn transition hover:bg-[#12703a] disabled:opacity-60"
         >
           Send
         </button>
@@ -392,7 +392,7 @@ function CallLogPanel({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="rounded-full bg-background px-4 py-2 text-sm font-medium text-foreground shadow-card transition hover:shadow-card-hover disabled:opacity-60"
+          className="press rounded-full bg-background px-4 py-2 text-sm font-medium text-foreground shadow-card transition hover:shadow-card-hover disabled:opacity-60"
         >
           {isSubmitting ? 'Saving…' : 'Log Call'}
         </button>
