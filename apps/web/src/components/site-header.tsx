@@ -3,18 +3,33 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Bell, MapPin, ChevronDown, Check, Menu, X, Phone, Mail } from 'lucide-react';
+import {
+  Bell,
+  MapPin,
+  ChevronDown,
+  Check,
+  Menu,
+  X,
+  Phone,
+  Mail,
+  Tag,
+  Heart,
+  MessageSquare,
+  ClipboardList,
+  UserCircle,
+  type LucideIcon,
+} from 'lucide-react';
 import { brand } from '@cg/shared-config';
 import { useCustomerAuth } from '@/lib/customer-auth-context';
 import { getLocations, getNotifications } from '@/lib/api';
 import type { Location } from '@/types/vehicle';
 
-const SHARED_MENU_ITEMS: Array<{ label: string; href: string }> = [
-  { label: 'Sell Your Vehicle', href: '/sell' },
-  { label: 'Favorites', href: '/favorites' },
-  { label: 'My Enquiries', href: '/my-enquiries' },
-  { label: 'My Listings', href: '/my-listings' },
-  { label: 'My Account', href: '/account' },
+const SHARED_MENU_ITEMS: Array<{ label: string; href: string; icon: LucideIcon }> = [
+  { label: 'Sell Your Vehicle', href: '/sell', icon: Tag },
+  { label: 'Favorites', href: '/favorites', icon: Heart },
+  { label: 'My Enquiries', href: '/my-enquiries', icon: MessageSquare },
+  { label: 'My Listings', href: '/my-listings', icon: ClipboardList },
+  { label: 'My Account', href: '/account', icon: UserCircle },
 ];
 
 export function SiteHeader() {
@@ -128,16 +143,18 @@ export function SiteHeader() {
                 item.href === '/'
                   ? pathname === '/'
                   : pathname.startsWith(item.href.split('?')[0]);
+              const Icon = item.icon;
               return (
                 <Link
                   key={item.label}
                   href={item.href}
-                  className={`rounded-lg px-2.5 py-1.5 text-sm font-medium transition ${
+                  className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition ${
                     isActive
                       ? 'bg-primary-light text-primary-dark'
                       : 'text-foreground hover:bg-primary-light'
                   }`}
                 >
+                  <Icon className="h-4 w-4" strokeWidth={1.85} />
                   {item.label}
                 </Link>
               );
@@ -211,16 +228,18 @@ export function SiteHeader() {
               item.href === '/'
                 ? pathname === '/'
                 : pathname.startsWith(item.href.split('?')[0]);
+            const Icon = item.icon;
             return (
               <Link
                 key={item.label}
                 href={item.href}
-                className={`block rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
                   isActive
                     ? 'bg-primary-light text-primary-dark'
                     : 'text-foreground hover:bg-primary-light'
                 }`}
               >
+                <Icon className="h-4.5 w-4.5" strokeWidth={1.85} />
                 {item.label}
               </Link>
             );
