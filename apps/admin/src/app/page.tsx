@@ -257,7 +257,12 @@ function RecentVehiclesTable({ vehicles }: { vehicles: AdminVehicle[] }) {
         </Link>
       </div>
       {vehicles.length === 0 ? (
-        <p className="text-sm text-muted">No vehicles yet.</p>
+        <div className="empty-state py-8">
+          <span className="empty-state-icon">
+            <Car className="h-5 w-5" strokeWidth={1.75} />
+          </span>
+          <p className="text-sm text-muted">No vehicles yet.</p>
+        </div>
       ) : (
         <>
           <div className="space-y-3 sm:hidden">
@@ -330,7 +335,12 @@ function RecentEnquiriesTable({ enquiries }: { enquiries: AdminEnquiry[] }) {
         </Link>
       </div>
       {enquiries.length === 0 ? (
-        <p className="text-sm text-muted">No enquiries yet.</p>
+        <div className="empty-state py-8">
+          <span className="empty-state-icon">
+            <MessageCircle className="h-5 w-5" strokeWidth={1.75} />
+          </span>
+          <p className="text-sm text-muted">No enquiries yet.</p>
+        </div>
       ) : (
         <>
           <div className="space-y-3 sm:hidden">

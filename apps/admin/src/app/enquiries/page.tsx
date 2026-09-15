@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { MessageCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { getAdminEnquiries, ApiError } from '@/lib/api';
 import type { AdminEnquiry, EnquiryStatus } from '@/types/enquiry';
@@ -92,9 +93,12 @@ export default function EnquiriesPage() {
       {isLoading ? (
         <p className="text-sm text-muted">Loading…</p>
       ) : enquiries.length === 0 ? (
-        <p className="rounded-2xl bg-background px-4 py-12 text-center text-sm text-muted shadow-card">
-          No enquiries with this status.
-        </p>
+        <div className="empty-state">
+          <span className="empty-state-icon">
+            <MessageCircle className="h-6 w-6" strokeWidth={1.75} />
+          </span>
+          <p className="text-sm text-muted">No enquiries with this status.</p>
+        </div>
       ) : (
         <div className="space-y-4">
           {enquiries.map((enquiry) => (

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Users } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { getAdminSellers, ApiError } from '@/lib/api';
 import type { AdminSeller } from '@/types/seller';
@@ -94,9 +95,12 @@ export default function SellersPage() {
       {isLoading ? (
         <p className="text-sm text-muted">Loading…</p>
       ) : sellers.length === 0 ? (
-        <p className="rounded-2xl bg-background px-4 py-12 text-center text-sm text-muted shadow-card">
-          No sellers have listed a vehicle yet.
-        </p>
+        <div className="empty-state">
+          <span className="empty-state-icon">
+            <Users className="h-6 w-6" strokeWidth={1.75} />
+          </span>
+          <p className="text-sm text-muted">No sellers have listed a vehicle yet.</p>
+        </div>
       ) : (
         <div className="space-y-4">
           {sellers.map((seller) => (

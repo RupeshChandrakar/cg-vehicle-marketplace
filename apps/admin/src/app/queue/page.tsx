@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Share2, X } from 'lucide-react';
+import { Car, Share2, X } from 'lucide-react';
 import { brand } from '@cg/shared-config';
 import { useAuth } from '@/lib/auth-context';
 import { approveVehicle, getAdminVehicles, rejectVehicle, ApiError } from '@/lib/api';
@@ -148,9 +148,14 @@ function QueueContent() {
       {isLoading ? (
         <p className="text-sm text-muted">Loading…</p>
       ) : vehicles.length === 0 ? (
-        <p className="rounded-2xl bg-background px-4 py-12 text-center text-sm text-muted shadow-card">
-          No listings with status &quot;{status.replace('_', ' ')}&quot;.
-        </p>
+        <div className="empty-state">
+          <span className="empty-state-icon">
+            <Car className="h-6 w-6" strokeWidth={1.75} />
+          </span>
+          <p className="text-sm text-muted">
+            No listings with status &quot;{status.replace('_', ' ')}&quot;.
+          </p>
+        </div>
       ) : (
         <div className="space-y-4">
           {vehicles.map((vehicle) => (

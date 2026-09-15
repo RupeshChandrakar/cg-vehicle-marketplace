@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { SearchX } from 'lucide-react';
 import { brand } from '@cg/shared-config';
 import { getCategories, getLocations, getVehicles } from '@/lib/api';
 import { VehicleCard } from '@/features/vehicles/vehicle-card';
@@ -144,7 +145,7 @@ export default async function Home(props: PageProps<'/'>) {
         )}
 
         {result.data.length === 0 ? (
-          <EmptyState />
+          <EmptyState hasActiveFilters={hasActiveFilters} />
         ) : (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
             {result.data.map((vehicle) => (
@@ -382,10 +383,21 @@ function ResultsHeading({
   );
 }
 
-function EmptyState() {
+function EmptyState({ hasActiveFilters }: { hasActiveFilters: boolean }) {
   return (
-    <div className="rounded-2xl bg-primary-light px-4 py-16 text-center text-sm text-muted shadow-card">
-      Koi vehicle nahi mila. Category ya location badal ke dekhein.
+    <div className="empty-state">
+      <span className="empty-state-icon">
+        <SearchX className="h-6 w-6" strokeWidth={1.75} />
+      </span>
+      <p className="text-sm text-muted">Koi vehicle nahi mila. Category ya location badal ke dekhein.</p>
+      {hasActiveFilters && (
+        <Link
+          href="/"
+          className="press inline-flex rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-btn transition hover:bg-primary-dark"
+        >
+          Clear Filters
+        </Link>
+      )}
     </div>
   );
 }

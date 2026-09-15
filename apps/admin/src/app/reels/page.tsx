@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { Clapperboard } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import {
   createReel,
@@ -94,9 +95,12 @@ export default function ReelsPage() {
       {isLoading ? (
         <p className="text-sm text-muted">Loading…</p>
       ) : reels.length === 0 ? (
-        <p className="rounded-2xl bg-background px-4 py-12 text-center text-sm text-muted shadow-card">
-          No reels yet — create one from a vehicle with photos.
-        </p>
+        <div className="empty-state">
+          <span className="empty-state-icon">
+            <Clapperboard className="h-6 w-6" strokeWidth={1.75} />
+          </span>
+          <p className="text-sm text-muted">No reels yet — create one from a vehicle with photos.</p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {reels.map((reel) => (

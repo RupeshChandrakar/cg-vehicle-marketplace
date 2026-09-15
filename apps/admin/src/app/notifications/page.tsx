@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Bell } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import {
   getNotifications,
@@ -79,9 +80,12 @@ export default function NotificationsPage() {
       {isLoading ? (
         <p className="text-sm text-muted">Loading…</p>
       ) : notifications.length === 0 ? (
-        <p className="rounded-2xl bg-background px-4 py-12 text-center text-sm text-muted shadow-card">
-          No notifications.
-        </p>
+        <div className="empty-state">
+          <span className="empty-state-icon">
+            <Bell className="h-6 w-6" strokeWidth={1.75} />
+          </span>
+          <p className="text-sm text-muted">No notifications.</p>
+        </div>
       ) : (
         <div className="space-y-2">
           {notifications.map((notification) => (
