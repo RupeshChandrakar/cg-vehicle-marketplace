@@ -12,6 +12,7 @@ export const brand = {
   shortName: 'CGAM',
   tagline: 'Buy and sell vehicles in Chhattisgarh, the trusted way',
   supportPhone: '+917000144638',
+  supportEmail: 'cgautomart.info@gmail.com',
   colors: {
     primary: '#168A45',
     dark: '#171717',

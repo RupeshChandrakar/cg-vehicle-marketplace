@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Bell, MapPin, ChevronDown, Check, Menu, X } from 'lucide-react';
+import { Bell, MapPin, ChevronDown, Check, Menu, X, Phone, Mail } from 'lucide-react';
 import { brand } from '@cg/shared-config';
 import { useCustomerAuth } from '@/lib/customer-auth-context';
 import { getLocations, getNotifications } from '@/lib/api';
@@ -82,6 +82,7 @@ export function SiteHeader() {
     // for that once installed, and BottomNav (already the primary mobile
     // nav) plus each page's own heading for in-app wayfinding.
     <header className="safe-top sticky top-0 z-20 bg-background sm:border-b sm:border-line sm:bg-background/95 sm:backdrop-blur">
+      <ContactBar />
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:py-4">
         <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
           <button
@@ -228,6 +229,37 @@ export function SiteHeader() {
       </aside>
     </header>
   );
+}
+
+/** Any direct visitor should see the phone number before anything else on
+ *  the page and be able to tap-to-call immediately — this is intentionally
+ *  the first thing rendered inside the (sticky) header. */
+function ContactBar() {
+  return (
+    <div className="bg-primary px-4 py-1.5 text-white">
+      <div className="mx-auto flex max-w-6xl items-center justify-center gap-4 sm:justify-between">
+        <a
+          href={`mailto:${brand.supportEmail}`}
+          className="hidden min-w-0 items-center gap-1.5 truncate text-xs hover:underline sm:flex"
+        >
+          <Mail className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+          <span className="truncate">{brand.supportEmail}</span>
+        </a>
+        <a
+          href={`tel:${brand.supportPhone}`}
+          className="flex shrink-0 items-center gap-1.5 text-xs font-bold hover:underline sm:text-sm"
+        >
+          <Phone className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
+          Call Now: {formatPhoneDisplay(brand.supportPhone)}
+        </a>
+      </div>
+    </div>
+  );
+}
+
+function formatPhoneDisplay(e164Phone: string): string {
+  const digits = e164Phone.replace('+91', '');
+  return `+91 ${digits.slice(0, 5)} ${digits.slice(5)}`;
 }
 
 function DistrictSelector({

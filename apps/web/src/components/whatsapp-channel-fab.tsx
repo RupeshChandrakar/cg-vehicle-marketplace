@@ -1,12 +1,12 @@
 import Link from 'next/link';
 import { MessageCircle } from 'lucide-react';
+import { brand } from '@cg/shared-config';
 
-const WHATSAPP_PHONE = '917000144638';
 const DEFAULT_MESSAGE =
   'Namaste, mujhe aapke WhatsApp channel me direct add kar dijiye.';
 
 export function WhatsAppChannelFab() {
-  const href = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(DEFAULT_MESSAGE)}`;
+  const href = `https://wa.me/${brand.supportPhone.replace('+', '')}?text=${encodeURIComponent(DEFAULT_MESSAGE)}`;
 
   return (
     <Link

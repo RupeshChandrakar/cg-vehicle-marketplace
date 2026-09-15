@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { MessageCircle, Phone } from 'lucide-react';
+import { brand } from '@cg/shared-config';
 import { createEnquiry, ApiError } from '@/lib/api';
 
 const INDIAN_MOBILE_PATTERN = /^[6-9]\d{9}$/;
@@ -136,11 +137,11 @@ export function EnquiryActions({
             <div className="space-y-2 rounded-xl bg-background px-3 py-3 text-center">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted">OR</p>
               <a
-                href="tel:+917000144638"
+                href={`tel:${brand.supportPhone}`}
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-line px-3 py-1.5 text-sm font-semibold text-foreground transition hover:bg-primary-light"
               >
                 <Phone className="h-4 w-4" />
-                7000144638
+                {brand.supportPhone.replace('+91', '')}
               </a>
             </div>
           )}

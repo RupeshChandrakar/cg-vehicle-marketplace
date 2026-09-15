@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { Mail, Phone } from 'lucide-react';
+import { brand } from '@cg/shared-config';
 
 const POPULAR_LINK_GROUPS = [
   {
@@ -58,6 +60,26 @@ export function SeoFooterLinks() {
     <section className="border-t border-line bg-primary-light/45 pb-28 pt-8 sm:pb-8">
       <div className="mx-auto max-w-[88rem] px-4 lg:px-6">
         <div className="rounded-[28px] bg-background p-5 shadow-card sm:p-6">
+          <div className="mb-6 flex flex-col gap-3 rounded-2xl bg-primary-light/70 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-0.5">
+              <h2 className="text-sm font-semibold text-foreground">Need help? Talk to us directly</h2>
+              <a
+                href={`mailto:${brand.supportEmail}`}
+                className="flex items-center gap-1.5 text-sm text-muted hover:text-foreground hover:underline"
+              >
+                <Mail className="h-3.5 w-3.5" />
+                {brand.supportEmail}
+              </a>
+            </div>
+            <a
+              href={`tel:${brand.supportPhone}`}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-btn transition hover:bg-primary-dark active:scale-[0.97]"
+            >
+              <Phone className="h-4 w-4" />
+              Call Now: {brand.supportPhone.replace('+91', '+91 ')}
+            </a>
+          </div>
+
           <div className="space-y-1">
             <h2 className="text-base font-semibold text-foreground">Explore More Cities in Chhattisgarh</h2>
             <p className="text-sm text-muted">
