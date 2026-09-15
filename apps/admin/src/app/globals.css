@@ -54,3 +54,54 @@ body {
 .shadow-btn-hover-primary:hover {
   box-shadow: var(--shadow-btn-hover-primary);
 }
+
+/* --- Skeleton / shimmer loading primitive -------------------------------
+   Same primitive as apps/web's globals.css (kept in sync for one consistent
+   loading feel across both surfaces) — combine `.skeleton` with a shape
+   helper and a Tailwind size class, e.g. <div className="skeleton
+   skeleton-text w-1/2" />. */
+@keyframes shimmer-sweep {
+  0% {
+    background-position: -150% 0;
+  }
+  100% {
+    background-position: 150% 0;
+  }
+}
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-line);
+  background-image: linear-gradient(
+    100deg,
+    transparent 30%,
+    var(--color-primary-light) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: shimmer-sweep 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background-image: none;
+  }
+}
+.skeleton-text {
+  height: 0.875rem;
+  border-radius: 9999px;
+}
+.skeleton-title {
+  height: 1.125rem;
+  border-radius: 9999px;
+}
+.skeleton-circle {
+  border-radius: 9999px;
+  aspect-ratio: 1 / 1;
+}
+.skeleton-bubble {
+  max-width: 75%;
+  border-radius: 1.25rem;
+  padding: 0.625rem 1rem;
+}

@@ -81,7 +81,7 @@ export default function EnquiryDetailPage() {
       )}
 
       {!enquiry ? (
-        <p className="text-sm text-muted">Loading…</p>
+        <EnquiryDetailSkeleton />
       ) : (
         <>
           <Summary enquiry={enquiry} />
@@ -93,6 +93,51 @@ export default function EnquiryDetailPage() {
         </>
       )}
     </div>
+  );
+}
+
+/** Mirrors Summary + StatusActions + ChatPanel + CallLogPanel's shape so
+ *  opening an enquiry never shows a blank page or plain "Loading…" text. */
+function EnquiryDetailSkeleton() {
+  return (
+    <>
+      <div className="rounded-2xl bg-background p-5 shadow-card">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div className="space-y-2">
+            <div className="skeleton skeleton-title w-48" />
+            <div className="skeleton skeleton-text w-56" />
+            <div className="skeleton skeleton-text w-40" />
+          </div>
+          <div className="skeleton h-6 w-20 rounded-full" />
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <div className="skeleton h-9 w-32 rounded-full" />
+        <div className="skeleton h-9 w-28 rounded-full" />
+      </div>
+
+      <div className="space-y-3 rounded-2xl bg-background p-5 shadow-card">
+        <div className="flex items-center justify-between">
+          <div className="skeleton skeleton-title w-16" />
+          <div className="skeleton h-7 w-28 rounded-full" />
+        </div>
+        <div className="space-y-2">
+          <div className="skeleton-bubble mr-auto">
+            <div className="skeleton skeleton-text w-40" />
+          </div>
+          <div className="skeleton-bubble ml-auto">
+            <div className="skeleton skeleton-text w-28" />
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-3 rounded-2xl bg-background p-5 shadow-card">
+        <div className="skeleton skeleton-title w-24" />
+        <div className="skeleton h-10 w-full rounded-lg" />
+        <div className="skeleton h-16 w-full rounded-lg" />
+      </div>
+    </>
   );
 }
 
