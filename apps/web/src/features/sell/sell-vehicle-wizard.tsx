@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, Navigation, X } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Navigation, X } from 'lucide-react';
 import type { Category, Location, FuelType, Transmission } from '@/types/vehicle';
 import { createVehicle, uploadVehicleMedia, detectLocation, ApiError } from '@/lib/api';
 import {
@@ -245,20 +245,30 @@ export function SellVehicleWizard({
 
   if (submitted) {
     return (
-      <div className="rounded-2xl bg-background px-6 py-12 text-center shadow-card">
-        <p className="text-lg font-semibold text-foreground">
+      <div className="rounded-3xl bg-background px-6 py-12 text-center shadow-card sm:px-10">
+        <div className="animate-success-pop-in mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/15">
+          <CheckCircle2 className="h-9 w-9 text-success" strokeWidth={2} />
+        </div>
+        <p className="mt-5 text-xl font-bold text-foreground">
           Dhanyavaad — aapki listing submit ho gayi!
         </p>
-        <p className="mt-2 text-sm text-muted">
+        <p className="mx-auto mt-2 max-w-sm text-sm text-muted">
           Hamari team jald hi review karegi. Approve hone par hum aapke diye gaye number par contact
           karenge.
         </p>
         {uploadSummary && uploadSummary.failed > 0 && (
-          <p className="mt-3 rounded-xl bg-warning/15 px-3 py-2 text-sm text-foreground">
-            Listing submit ho gayi, lekin {uploadSummary.failed} photo upload nahi ho saki.
-            My Listings me जाकर edit se dobara add kar sakte hain.
-          </p>
+          <div className="mx-auto mt-4 flex max-w-sm items-start gap-2.5 rounded-xl bg-info/10 px-3.5 py-3 text-left text-sm text-foreground">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-info" />
+            <span>
+              Listing submit ho gayi, lekin {uploadSummary.failed} photo upload nahi ho saki. My
+              Listings me जाकर edit se dobara add kar sakte hain.
+            </span>
+          </div>
         )}
+        <p className="mt-6 flex items-center justify-center gap-1.5 text-xs text-muted">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-success" />
+          Home par redirect ho rahe hain…
+        </p>
       </div>
     );
   }
@@ -857,22 +867,6 @@ function StepSellerDetails({
             className="w-full border-l border-line px-3 py-2.5 text-sm text-foreground focus:outline-none"
             placeholder="98765 43210"
           />
-        </div>
-      </Field>
-      <Field label="Preferred Contact *">
-        <div className="flex gap-4 text-sm text-foreground">
-          {(['call', 'chat', 'both'] as const).map((option) => (
-            <label key={option} className="flex items-center gap-1.5">
-              <input
-                type="radio"
-                name="preferredContact"
-                checked={data.preferredContact === option}
-                onChange={() => update('preferredContact', option)}
-                className="accent-primary"
-              />
-              {option[0].toUpperCase() + option.slice(1)}
-            </label>
-          ))}
         </div>
       </Field>
       <Field label="Any Message (Optional)">

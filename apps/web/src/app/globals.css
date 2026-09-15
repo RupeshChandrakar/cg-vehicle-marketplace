@@ -366,6 +366,29 @@ body {
   }
 }
 
+/* --- Success checkmark pop-in (sell wizard's submitted state, etc.) ---- */
+@keyframes success-pop-in {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.animate-success-pop-in {
+  animation: success-pop-in 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-success-pop-in {
+    animation: none;
+  }
+}
+
 /* --- Skeleton / shimmer loading primitive -------------------------------
    Base fill for ANY loading placeholder — both a generic "Loading…" text
    replacement AND the "a real photo URL exists but hasn't finished
