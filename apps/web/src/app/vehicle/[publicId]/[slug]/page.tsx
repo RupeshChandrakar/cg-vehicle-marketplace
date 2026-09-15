@@ -1,7 +1,12 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { ShieldCheck, Gauge, Fuel, Settings2, User, Star, type LucideIcon } from 'lucide-react';
-import { getVehicleByPublicId, getVehicleReviews, type VehicleReviewSummary } from '@/lib/api';
+import {
+  getVehicleByPublicId,
+  getVehicleReviews,
+  getSimilarVehicles,
+  type VehicleReviewSummary,
+} from '@/lib/api';
 import { formatFuelType, formatKm, formatPrice, formatTransmission } from '@/lib/format';
 import { brand } from '@cg/shared-config';
 import type { Vehicle } from '@/types/vehicle';
@@ -13,6 +18,7 @@ import { FavoriteButton } from '@/features/favorites/favorite-button';
 import { getCategoryIconColor, getCategoryTint } from '@/features/vehicles/category-icons';
 import { getFilledSpecFields } from '@/features/vehicles/spec-fields';
 import { TractorInspectionChecklist } from '@/features/vehicles/tractor-inspection-checklist';
+import { VehicleCard } from '@/features/vehicles/vehicle-card';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
@@ -70,6 +76,7 @@ export default async function VehiclePage(props: PageProps<'/vehicle/[publicId]/
   const reviewSummary = await getVehicleReviews(vehicle.publicId).catch(
     (): VehicleReviewSummary => ({ reviews: [], average: null, count: 0 }),
   );
+  const similarVehicles = await getSimilarVehicles(vehicle).catch((): [] => []);
   const structuredData = buildVehicleStructuredData(vehicle, reviewSummary);
   const breadcrumbStructuredData = buildBreadcrumbStructuredData(vehicle);
   const priceValue = Number(vehicle.price);
@@ -184,6 +191,23 @@ export default async function VehiclePage(props: PageProps<'/vehicle/[publicId]/
           <TractorInspectionChecklist />
         </div>
       )}
+
+      <SimilarVehicles vehicles={similarVehicles} />
+    </div>
+  );
+}
+
+function SimilarVehicles({ vehicles }: { vehicles: Vehicle[] }) {
+  if (vehicles.length === 0) return null;
+
+  return (
+    <div className="mt-10 space-y-4 border-t border-line pt-8">
+      <h2 className="text-lg font-semibold text-foreground">Similar Vehicles</h2>
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+        {vehicles.map((vehicle) => (
+          <VehicleCard key={vehicle.id} vehicle={vehicle} />
+        ))}
+      </div>
     </div>
   );
 }

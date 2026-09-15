@@ -39,3 +39,6 @@ coverage/
 # "Environment constraints" for why these get downloaded/run per-session
 # rather than via docker-compose on this dev machine.
 .tools/
+
+.vercel
+.env*

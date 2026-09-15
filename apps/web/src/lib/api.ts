@@ -104,6 +104,22 @@ export function getVehicles(filters: VehicleFilters): Promise<PaginatedResult<Ve
   return request<PaginatedResult<Vehicle>>(`/vehicles${query ? `?${query}` : ''}`);
 }
 
+/**
+ * Same category + same district as the given listing, newest first, minus
+ * the listing itself. Reuses the public /vehicles search rather than a
+ * dedicated endpoint — this marketplace has no "similar" ranking model, so
+ * category+location is the honest signal already available, not a stand-in
+ * for one we don't have.
+ */
+export async function getSimilarVehicles(vehicle: Vehicle, limit = 6): Promise<Vehicle[]> {
+  const result = await getVehicles({
+    categorySlug: vehicle.category.slug,
+    locationSlug: vehicle.location.slug,
+    sort: 'newest',
+  });
+  return result.data.filter((item) => item.id !== vehicle.id).slice(0, limit);
+}
+
 export async function getVehicleByPublicId(publicId: number): Promise<Vehicle | null> {
   try {
     return await request<Vehicle>(`/vehicles/${publicId}`);
